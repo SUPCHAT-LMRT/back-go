@@ -31,10 +31,12 @@ func NewAddMemberToGroupUseCase(deps AddMemberToGroupUseCaseDeps) *AddMemberToGr
 // Todo transaction to be sure that if a problem occurs when adding the member to the group, the group is not created
 func (u *AddMemberToGroupUseCase) Execute(ctx context.Context, groupId *group_entity.GroupId, inviterUserId, inviteeUserId entity.UserId) (*group_entity.Group, error) {
 	var group *group_entity.Group
+	var groupMembers []*group_entity.GroupMember
 	if groupId == nil || *groupId == "" {
 		// First create the group and then add the member
 		group = &group_entity.Group{OwnerUserId: inviterUserId}
-		defaultGroupName, err := u.deps.DefaultGroupNameStrategy.Handle(ctx, group, []*group_entity.GroupMember{{UserId: inviterUserId}})
+		groupMembers = []*group_entity.GroupMember{{UserId: inviterUserId}}
+		defaultGroupName, err := u.deps.DefaultGroupNameStrategy.Handle(ctx, group, groupMembers)
 		if err != nil {
 			return nil, err
 		}
@@ -54,14 +56,22 @@ func (u *AddMemberToGroupUseCase) Execute(ctx context.Context, groupId *group_en
 		if err != nil {
 			return nil, err
 		}
+
+		groupMembers, err = u.deps.Repository.ListMembers(ctx, *groupId)
+		if err != nil {
+			return nil, err
+		}
 	}
+
+	// Add the member to the groupMembers
+	groupMembers = append(groupMembers, &group_entity.GroupMember{UserId: inviteeUserId})
 
 	err := u.deps.Repository.AddMember(ctx, *groupId, inviteeUserId)
 	if err != nil {
 		return nil, err
 	}
 
-	defaultGroupName, err := u.deps.DefaultGroupNameStrategy.Handle(ctx, group, []*group_entity.GroupMember{{UserId: inviterUserId}, {UserId: inviteeUserId}})
+	defaultGroupName, err := u.deps.DefaultGroupNameStrategy.Handle(ctx, group, groupMembers)
 	if err != nil {
 		return nil, err
 	}

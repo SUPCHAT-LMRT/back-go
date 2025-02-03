@@ -18,5 +18,6 @@ type GroupRepository interface {
 	ListRecentGroups(ctx context.Context) ([]*entity.Group, error)
 	Exists(ctx context.Context, groupId entity.GroupId) (bool, error)
 	AddMember(ctx context.Context, groupId entity.GroupId, userId user_entity.UserId) error
+	ListMembers(ctx context.Context, groupId entity.GroupId) ([]*entity.GroupMember, error)
 	UpdateGroupName(ctx context.Context, groupId entity.GroupId, name string) error
 }

@@ -175,6 +175,10 @@ func (r MongoGroupRepository) UpdateGroupName(ctx context.Context, groupId entit
 	return nil
 }
 
+func (r MongoGroupRepository) ListMembers(ctx context.Context, groupId entity.GroupId) ([]*entity.GroupMember, error) {
+
+}
+
 func (r MongoGroupRepository) isMember(ctx context.Context, groupId entity.GroupId, userId user_entity.UserId) (bool, error) {
 	groupObjectId, err := bson.ObjectIDFromHex(groupId.String())
 	if err != nil {
