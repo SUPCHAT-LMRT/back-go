@@ -8,9 +8,6 @@ RUN apk add git gcc build-base
 
 COPY go.mod go.sum ./
 
-RUN git config --global url."https://$TOKEN@git.goneworlds.dev".insteadOf "https://git.goneworlds.dev"
-RUN go env -w GOPRIVATE=git.goneworlds.dev/*
-
 # download dependencies and cache them using buildkit
 RUN --mount=type=cache,target=/root/go/pkg/mod \
     go mod download -x
@@ -25,7 +22,7 @@ RUN --mount=type=cache,target=/root/go/pkg/mod \
 
 RUN chmod +x /dist/app
 
-FROM alpine:3.19
+FROM alpine:3.21
 WORKDIR /app-data
 ENV TZ=Europe/Paris
 
