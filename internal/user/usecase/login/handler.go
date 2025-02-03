@@ -48,6 +48,7 @@ func (l LoginHandler) Handle(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error":          err.Error(),
 				"messageDisplay": "Email ou mot de passe incorrect",
+				"level":          "error",
 			})
 			return
 		}
@@ -56,6 +57,7 @@ func (l LoginHandler) Handle(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error":          err.Error(),
 				"messageDisplay": "Votre compte n'est pas encore vérifié, veuillez vérifier votre boîte de réception",
+				"level":          "warning",
 			})
 			return
 		}

@@ -59,6 +59,14 @@ func (l RegisterHandler) Handle(c *gin.Context) {
 
 	err = l.registerUserUseCase.Execute(c, *userRequest)
 	if err != nil {
+		if errors.Is(err, UserAlreadyExistsErr) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":          err.Error(),
+				"messageDisplay": "Un utilisateur existe déjà avec cet email.",
+				"level":          "warning",
+			})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
