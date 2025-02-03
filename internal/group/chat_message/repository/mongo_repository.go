@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"github.com/supchat-lmrt/back-go/internal/group/chat_groups/chat_message/entity"
-	group_chat_message_entity "github.com/supchat-lmrt/back-go/internal/group/chat_groups/entity"
+	"github.com/supchat-lmrt/back-go/internal/group/chat_message/entity"
+	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -22,7 +22,7 @@ type MongoChatMessageRepositoryDeps struct {
 	Mapper mapper.Mapper[*MongoGroupChatMessage, *entity.GroupChatMessage]
 }
 
-type MongoChatMessageRepository struct {
+type MongoGroupChatMessageRepository struct {
 	deps MongoChatMessageRepositoryDeps
 }
 
@@ -34,11 +34,12 @@ type MongoGroupChatMessage struct {
 	CreatedAt time.Time     `bson:"created_at"`
 }
 
-func NewMongoChatMessageRepository(deps MongoChatMessageRepositoryDeps) GroupChatMessageRepository {
-	return &MongoChatMessageRepository{deps: deps}
+func NewMongoGroupChatMessageRepository(deps MongoChatMessageRepositoryDeps) GroupChatMessageRepository {
+	return &MongoGroupChatMessageRepository{deps: deps}
 }
 
-func (m MongoChatMessageRepository) Create(ctx context.Context, message *entity.GroupChatMessage) error {
+func (m MongoGroupChatMessageRepository) Create(ctx context.Context, message *entity.GroupChatMessage) error {
+	message.Id = entity.GroupChatMessageId(bson.NewObjectID().Hex())
 	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
 
 	mongoMessage, err := m.deps.Mapper.MapFromEntity(message)
@@ -54,7 +55,7 @@ func (m MongoChatMessageRepository) Create(ctx context.Context, message *entity.
 	return nil
 }
 
-func (m MongoChatMessageRepository) ListByGroupId(ctx context.Context, groupId group_chat_message_entity.ChatGroupId) ([]*entity.GroupChatMessage, error) {
+func (m MongoGroupChatMessageRepository) ListByGroupId(ctx context.Context, groupId group_entity.GroupId) ([]*entity.GroupChatMessage, error) {
 	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
 
 	groupObjectId, err := bson.ObjectIDFromHex(string(groupId))

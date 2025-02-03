@@ -15,3 +15,7 @@ type ChannelMessage struct {
 	AuthorId  entity.UserId
 	CreatedAt time.Time
 }
+
+func (id ChannelMessageId) String() string {
+	return string(id)
+}

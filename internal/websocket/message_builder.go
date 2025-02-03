@@ -3,12 +3,11 @@ package websocket
 import "github.com/google/uuid"
 
 type MessageBuilder struct {
-	Action        string
-	Message       string
-	Target        *Room
-	Sender        *Client
-	MessageSender MessageSender
-	Payload       any
+	Action  string
+	Message string
+	Target  *Room
+	Sender  *Client
+	Payload any
 }
 
 func NewMessageBuilder() *MessageBuilder {
@@ -35,11 +34,6 @@ func (m *MessageBuilder) WithSender(sender *Client) *MessageBuilder {
 	return m
 }
 
-func (m *MessageBuilder) WithMessageSender(messageSender MessageSender) *MessageBuilder {
-	m.MessageSender = messageSender
-	return m
-}
-
 func (m *MessageBuilder) WithPayload(payload any) *MessageBuilder {
 	m.Payload = payload
 	return m
@@ -47,12 +41,11 @@ func (m *MessageBuilder) WithPayload(payload any) *MessageBuilder {
 
 func (m *MessageBuilder) Build() Message {
 	return Message{
-		Id:            uuid.New(),
-		Action:        m.Action,
-		Message:       m.Message,
-		Target:        m.Target,
-		Sender:        m.Sender,
-		MessageSender: m.MessageSender,
-		Payload:       m.Payload,
+		Id:      uuid.New(),
+		Action:  m.Action,
+		Message: m.Message,
+		Target:  m.Target,
+		Sender:  m.Sender,
+		Payload: m.Payload,
 	}
 }

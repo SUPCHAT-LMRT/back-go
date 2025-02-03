@@ -6,6 +6,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/usecase/list_recent_chats"
 	validator2 "github.com/supchat-lmrt/back-go/internal/gin/validator"
+	list_group_chat_messages "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/add_member"
 	"github.com/supchat-lmrt/back-go/internal/user/gin/middlewares"
 	request_forgot_password "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/request"
@@ -22,6 +23,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/validation/usecase/request"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/validation/usecase/validate"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
@@ -52,8 +54,9 @@ type GinRouterDeps struct {
 	CreateWorkspaceHandler     *create_workspace.CreateWorkspaceHandler
 	UpdateWorkspaceIconHandler *update_icon.UpdateWorkspaceIconHandler
 	// Workspaces channels
-	ListChannelsHandler  *list_channels.ListChannelsHandler
-	CreateChannelHandler *create_channel.CreateChannelHandler
+	ListChannelsHandler        *list_channels.ListChannelsHandler
+	CreateChannelHandler       *create_channel.CreateChannelHandler
+	ListChannelMessagesHandler *list_messages.ListChannelMessagesHandler
 	// User
 	GetMyAccountHandler                      *get_my_account.GetMyAccountHandler
 	LoginHandler                             *login.LoginHandler
@@ -77,6 +80,8 @@ type GinRouterDeps struct {
 	ListRecentChatsHandler *list_recent_chats.ListRecentChatsHandler
 	// Group
 	AddMemberToGroupHandler *add_member.AddMemberToGroupHandler
+	// Group chat
+	ListGroupChatMessagesHandler *list_group_chat_messages.ListGroupChatMessagesHandler
 }
 
 func NewGinRouter(deps GinRouterDeps) GinRouter {
@@ -89,20 +94,6 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 
 	apiGroup := d.Router.Group("/api")
 	apiGroup.GET("/ws", authMiddleware, d.deps.WebsocketHandler.Handle)
-
-	workspacesGroup := apiGroup.Group("/workspaces")
-	{
-		workspacesGroup.Use(authMiddleware)
-		workspacesGroup.GET("", d.deps.ListWorkspaceHandler.Handle)
-		workspacesGroup.POST("", d.deps.CreateWorkspaceHandler.Handle)
-		workspacesGroup.PUT("/:workspaceId/icon", d.deps.UpdateWorkspaceIconHandler.Handle)
-
-		channelGroup := workspacesGroup.Group("/:workspaceId/channels")
-		{
-			channelGroup.GET("", d.deps.ListChannelsHandler.Handle)
-			channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
-		}
-	}
 
 	accountGroup := apiGroup.Group("/account")
 	{
@@ -145,6 +136,22 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	groupGroup := apiGroup.Group("/groups")
 	{
 		groupGroup.POST("/members", authMiddleware, d.deps.AddMemberToGroupHandler.Handle)
+		groupGroup.GET("/:groupId/messages", authMiddleware, d.deps.ListGroupChatMessagesHandler.Handle)
+	}
+
+	workspacesGroup := apiGroup.Group("/workspaces")
+	{
+		workspacesGroup.Use(authMiddleware)
+		workspacesGroup.GET("", d.deps.ListWorkspaceHandler.Handle)
+		workspacesGroup.POST("", d.deps.CreateWorkspaceHandler.Handle)
+		workspacesGroup.PUT("/:workspaceId/icon", d.deps.UpdateWorkspaceIconHandler.Handle)
+
+		channelGroup := workspacesGroup.Group("/:workspaceId/channels")
+		{
+			channelGroup.GET("", d.deps.ListChannelsHandler.Handle)
+			channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
+			channelGroup.GET("/:channelId/messages", d.deps.ListChannelMessagesHandler.Handle)
+		}
 	}
 }
 

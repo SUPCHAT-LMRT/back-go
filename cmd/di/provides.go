@@ -5,6 +5,9 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/usecase/list_recent_chats"
 	"github.com/supchat-lmrt/back-go/internal/dig"
 	"github.com/supchat-lmrt/back-go/internal/gin"
+	group_chat_message_repository "github.com/supchat-lmrt/back-go/internal/group/chat_message/repository"
+	list_group_chat_messages "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/list_messages"
+	save_group_chat_message "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/save_message"
 	group_repository "github.com/supchat-lmrt/back-go/internal/group/repository"
 	"github.com/supchat-lmrt/back-go/internal/group/strategies"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/add_member"
@@ -44,9 +47,9 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/validation/usecase/request"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/validation/usecase/validate"
 	"github.com/supchat-lmrt/back-go/internal/utils"
-	websocket "github.com/supchat-lmrt/back-go/internal/websocket"
+	"github.com/supchat-lmrt/back-go/internal/websocket"
 	chat_message_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/repository"
-	list_messages2 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/save_message"
 	channel_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
@@ -114,9 +117,11 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(chat_message_repository.NewMongoChannelMessageRepository),
 		dig.NewProvider(chat_message_repository.NewChannelMessageMapper),
 		// Workspace channels chat usecases
-		dig.NewProvider(list_messages2.NewListMessageUseCase),
+		dig.NewProvider(list_messages.NewListMessageUseCase),
+		// Workspace channels chat handlers
+		dig.NewProvider(list_messages.NewListChannelMessagesHandler),
 		// Workspace channels chat messages usecases
-		dig.NewProvider(save_message.NewSaveMessageUseCase),
+		dig.NewProvider(save_message.NewSaveChannelMessageUseCase),
 		// User
 		dig.NewProvider(user_repository.NewMongoUserRepository),
 		dig.NewProvider(user_repository.NewMongoUserMapper),
@@ -220,8 +225,15 @@ func NewDi() *uberdig.Container {
 		// Group handlers
 		dig.NewProvider(add_member.NewAddMemberToGroupHandler),
 		// Group chats
+		// Group chats repository
+		dig.NewProvider(group_chat_message_repository.NewMongoGroupChatMessageRepository),
+		dig.NewProvider(group_chat_message_repository.NewGroupChatMessageMapper),
 		// Group chats usecases
 		dig.NewProvider(list_recent_groups.NewListRecentGroupsUseCase),
+		dig.NewProvider(list_group_chat_messages.NewListGroupChatMessagesUseCase),
+		dig.NewProvider(save_group_chat_message.NewSaveGroupChatMessageUseCase),
+		// Group chats handlers
+		dig.NewProvider(list_group_chat_messages.NewListGroupChatMessagesHandler),
 	}
 
 	for _, provider := range providers {

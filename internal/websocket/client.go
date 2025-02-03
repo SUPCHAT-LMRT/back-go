@@ -49,7 +49,7 @@ func NewClient(user *user_entity.User, conn *websocket.Conn, wsServer *WsServer)
 func (c *Client) handleNewMessage(jsonMessage []byte) {
 	var message Message
 	if err := json.Unmarshal(jsonMessage, &message); err != nil {
-		log.Printf("Error on unmarshal JSON message %s", err)
+		log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
 	}
 
 	message.Id = uuid.New()
@@ -81,8 +81,10 @@ func (c *Client) handleSendMessage(message Message) {
 		return
 	}
 
+	message.Target = room
+
 	var err error
-	message.MessageSender, err = c.toMessageSender(room)
+	message.Payload, err = c.toMessageSender(room)
 	if err != nil {
 		log.Printf("Error getting sender: %s", err)
 		return

@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"github.com/supchat-lmrt/back-go/internal/group/chat_groups/chat_message/entity"
-	group_chat_message_entity "github.com/supchat-lmrt/back-go/internal/group/chat_groups/entity"
+	"github.com/supchat-lmrt/back-go/internal/group/chat_message/entity"
+	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -17,7 +17,7 @@ func NewGroupChatMessageMapper() mapper.Mapper[*MongoGroupChatMessage, *entity.G
 func (m GroupChatMessageMapper) MapToEntity(mongo *MongoGroupChatMessage) (*entity.GroupChatMessage, error) {
 	return &entity.GroupChatMessage{
 		Id:        entity.GroupChatMessageId(mongo.Id.Hex()),
-		GroupId:   group_chat_message_entity.ChatGroupId(mongo.GroupId.Hex()),
+		GroupId:   group_entity.GroupId(mongo.GroupId.Hex()),
 		AuthorId:  user_entity.UserId(mongo.AuthorId.Hex()),
 		Content:   mongo.Content,
 		CreatedAt: mongo.CreatedAt,

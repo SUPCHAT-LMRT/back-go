@@ -20,12 +20,11 @@ const RoomJoinedAction = "room-joined"
 const ChannelCreatedAction = "channel-created"
 
 type Message struct {
-	Id            uuid.UUID     `json:"id"`
-	Action        string        `json:"action"`
-	Message       string        `json:"message"`
-	Target        *Room         `json:"target"`
-	Sender        *Client       `json:"sender"`
-	MessageSender MessageSender `json:"messageSender"`
+	Id      uuid.UUID `json:"id"`
+	Action  string    `json:"action"`
+	Message string    `json:"message"`
+	Target  *Room     `json:"target"`
+	Sender  *Client   `json:"sender"`
 	// Payload is a placeholder for any additional data that needs to be sent with the message, depending on the action.
 	Payload any `json:"payload"`
 }

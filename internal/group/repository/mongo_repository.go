@@ -176,7 +176,39 @@ func (r MongoGroupRepository) UpdateGroupName(ctx context.Context, groupId entit
 }
 
 func (r MongoGroupRepository) ListMembers(ctx context.Context, groupId entity.GroupId) ([]*entity.GroupMember, error) {
+	groupObjectId, err := bson.ObjectIDFromHex(groupId.String())
+	if err != nil {
+		return nil, err
+	}
 
+	pipeline := mongo2.Pipeline{
+		{{Key: "$match", Value: bson.D{{Key: "_id", Value: groupObjectId}}}},
+		{{Key: "$unwind", Value: "$members"}},
+		{{Key: "$replaceRoot", Value: bson.D{{Key: "newRoot", Value: "$members"}}}},
+	}
+
+	cursor, err := r.deps.Client.Client.Database(databaseName).Collection(collectionName).Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var members []MongoGroupMember
+	if err = cursor.All(ctx, &members); err != nil {
+		return nil, err
+	}
+
+	groupMembers := make([]*entity.GroupMember, len(members))
+	for i, member := range members {
+		groupMember, err := r.deps.GroupMemberMapper.MapToEntity(&member)
+		if err != nil {
+			return nil, err
+		}
+
+		groupMembers[i] = groupMember
+	}
+
+	return groupMembers, nil
 }
 
 func (r MongoGroupRepository) isMember(ctx context.Context, groupId entity.GroupId, userId user_entity.UserId) (bool, error) {

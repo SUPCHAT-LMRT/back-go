@@ -10,3 +10,7 @@ type Channel struct {
 	Topic       string
 	WorkspaceId workspace_entity.WorkspaceId
 }
+
+func (id ChannelId) String() string {
+	return string(id)
+}

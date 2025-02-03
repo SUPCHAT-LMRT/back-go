@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-const JwtAccessTokenLifespan = 150000 * time.Minute
-const JwtRefreshTokenLifespan = 240000 * time.Hour
-const JwtRefreshTokenLongLivedLifespan = 720000 * time.Hour
+const JwtAccessTokenLifespan = 15 * time.Minute
+const JwtRefreshTokenLifespan = 24 * time.Hour
+const JwtRefreshTokenLongLivedLifespan = 3 * 24 * time.Hour
 
 var UnableToSignAccessTokenErr = fmt.Errorf("unable to sign access token")
 var UnableToSignRefreshTokenErr = fmt.Errorf("unable to sign refresh token")
