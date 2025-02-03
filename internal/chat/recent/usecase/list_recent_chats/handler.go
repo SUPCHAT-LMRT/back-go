@@ -1,0 +1,49 @@
+package list_recent_chats
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/supchat-lmrt/back-go/internal/chat/recent/entity"
+	"github.com/supchat-lmrt/back-go/internal/mapper"
+	uberdig "go.uber.org/dig"
+	"net/http"
+)
+
+type ListRecentChatsHandlerDeps struct {
+	uberdig.In
+	UseCase        *ListRecentChatsUseCase
+	ResponseMapper mapper.Mapper[*entity.RecentChat, *RecentChatResponse]
+}
+
+type ListRecentChatsHandler struct {
+	deps ListRecentChatsHandlerDeps
+}
+
+func NewListRecentChatsHandler(deps ListRecentChatsHandlerDeps) *ListRecentChatsHandler {
+	return &ListRecentChatsHandler{deps: deps}
+}
+
+func (h *ListRecentChatsHandler) Handle(c *gin.Context) {
+	recentChats, err := h.deps.UseCase.Execute(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "message": "failed to list recent chats"})
+		return
+	}
+
+	response := make([]*RecentChatResponse, len(recentChats))
+	for i, recentChat := range recentChats {
+		response[i], err = h.deps.ResponseMapper.MapToEntity(recentChat)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "message": "failed to map recent chat"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+type RecentChatResponse struct {
+	Id        entity.RecentChatId   `json:"id"`
+	Kind      entity.RecentChatKind `json:"kind"`
+	AvatarUrl string                `json:"avatarUrl"`
+	Name      string                `json:"name"`
+}

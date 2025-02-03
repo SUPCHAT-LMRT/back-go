@@ -1,0 +1,6 @@
+[tools]
+go = "1.23.5"
+
+[tasks.start]
+run = "go run cmd/main.go"
+description = "Start the server"
