@@ -86,26 +86,6 @@ func (s *WsServer) createRoom(name string, kind RoomKind) *Room {
 	return room
 }
 
-func (s *WsServer) notifyClientConnect(client *Client) {
-	message := &Message{
-		Id:     uuid.New(),
-		Action: UserConnectAction,
-		Sender: client,
-	}
-
-	s.broadcastToClients(message.encode())
-}
-
-func (s *WsServer) notifyClientDisconnect(client *Client) {
-	message := &Message{
-		Id:     uuid.New(),
-		Action: UserDisconnectAction,
-		Sender: client,
-	}
-
-	s.broadcastToClients(message.encode())
-}
-
 func (s *WsServer) IterateClients(fn func(client *Client) bool) {
 	for client := range s.clients {
 		if fn(client) {

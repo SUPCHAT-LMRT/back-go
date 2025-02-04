@@ -52,7 +52,7 @@ func (l RegisterHandler) Handle(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   err.Error(),
-			"message": "Invalid birth date format. Must be in RFC3339 format.",
+			"message": "Cannot parse request",
 		})
 		return
 	}

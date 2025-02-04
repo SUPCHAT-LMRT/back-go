@@ -9,6 +9,7 @@ import (
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"log"
+	"sync/atomic"
 	"time"
 )
 
@@ -27,23 +28,29 @@ const (
 )
 
 type Client struct {
-	Id       uuid.UUID
-	UserId   user_entity.UserId `json:"userId"`
-	conn     *websocket.Conn
-	wsServer *WsServer
-	rooms    map[*Room]bool
-	send     chan []byte
+	Id                uuid.UUID
+	UserId            user_entity.UserId `json:"userId"`
+	SelectedWorkspace atomic.Value
+	conn              *websocket.Conn
+	wsServer          *WsServer
+	rooms             map[*Room]bool
+	send              chan []byte
 }
 
 func NewClient(user *user_entity.User, conn *websocket.Conn, wsServer *WsServer) *Client {
-	return &Client{
-		Id:       uuid.New(),
-		UserId:   user.Id,
-		conn:     conn,
-		wsServer: wsServer,
-		rooms:    make(map[*Room]bool),
-		send:     make(chan []byte, 256),
+	c := &Client{
+		Id:                uuid.New(),
+		UserId:            user.Id,
+		SelectedWorkspace: atomic.Value{},
+		conn:              conn,
+		wsServer:          wsServer,
+		rooms:             make(map[*Room]bool),
+		send:              make(chan []byte, 256),
 	}
+
+	c.SelectedWorkspace.Store("")
+
+	return c
 }
 
 func (c *Client) handleNewMessage(jsonMessage []byte) {
@@ -57,18 +64,20 @@ func (c *Client) handleNewMessage(jsonMessage []byte) {
 	message.Sender = c
 
 	switch message.Action {
-	case SendMessageAction:
+	case OutboundSendMessageAction:
 		c.handleSendMessage(message)
-	case JoinDirectRoomAction:
+	case InboundJoinDirectRoomAction:
 		c.handleJoinDirectRoomMessage(message)
-	case JoinGroupRoomAction:
+	case InboundJoinGroupRoomAction:
 		c.handleJoinGroupRoomMessage(message)
-	case JoinChannelRoomAction:
+	case InboundJoinChannelRoomAction:
 		c.handleJoinChannelRoomMessage(message)
-	case LeaveRoomAction:
+	case InboundLeaveRoomAction:
 		c.handleLeaveRoomMessage(message)
-	case JoinRoomPrivateAction:
-		c.handleJoinRoomPrivateMessage(message)
+	case InboundUnselectWorkspaceAction:
+		c.handleUnselectWorkspaceMessage(message)
+	case InboundSelectWorkspaceAction:
+		c.handleSelectWorkspaceMessage(message)
 	}
 }
 
@@ -133,6 +142,15 @@ func (c *Client) handleLeaveRoomMessage(message Message) {
 	room.unregister <- c
 }
 
+func (c *Client) handleSelectWorkspaceMessage(message Message) {
+	workspaceId := message.Message
+	c.SelectedWorkspace.Store(workspaceId)
+}
+
+func (c *Client) handleUnselectWorkspaceMessage(message Message) {
+	c.SelectedWorkspace.Store("")
+}
+
 func (c *Client) handleJoinRoomPrivateMessage(message Message) {
 	clientId, err := uuid.Parse(message.Message)
 	if err != nil {
@@ -180,7 +198,7 @@ func (c *Client) SendMessage(message Message) {
 func (c *Client) notifyRoomJoined(room *Room, sender *Client) {
 	message := Message{
 		Id:     uuid.New(),
-		Action: RoomJoinedAction,
+		Action: OutboundRoomJoinedAction,
 		Target: room,
 		Sender: sender,
 	}

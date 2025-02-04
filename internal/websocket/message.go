@@ -8,16 +8,16 @@ import (
 	"log"
 )
 
-const SendMessageAction = "send-message"
-const JoinDirectRoomAction = "join-direct-room"
-const JoinGroupRoomAction = "join-group-room"
-const JoinChannelRoomAction = "join-channel-room"
-const LeaveRoomAction = "leave-room"
-const UserConnectAction = "user-connect"
-const UserDisconnectAction = "user-disconnect"
-const JoinRoomPrivateAction = "join-room-private"
-const RoomJoinedAction = "room-joined"
-const ChannelCreatedAction = "channel-created"
+const OutboundSendMessageAction = "send-message"
+const OutboundRoomJoinedAction = "room-joined"
+const OutboundChannelCreatedAction = "channel-created"
+
+const InboundJoinDirectRoomAction = "join-direct-room"
+const InboundJoinGroupRoomAction = "join-group-room"
+const InboundJoinChannelRoomAction = "join-channel-room"
+const InboundLeaveRoomAction = "leave-room"
+const InboundUnselectWorkspaceAction = "unselect-workspace"
+const InboundSelectWorkspaceAction = "select-workspace"
 
 type Message struct {
 	Id      uuid.UUID `json:"id"`
