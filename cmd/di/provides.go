@@ -99,6 +99,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(list_workspaces.NewListWorkspaceHandler),
 		dig.NewProvider(create_workspace.NewCreateWorkspaceHandler),
 		dig.NewProvider(update_icon.NewUpdateWorkspaceIconHandler),
+		dig.NewProvider(list_workpace_members.NewListWorkspaceHandler),
 		// Workspace channels
 		// Workspace channels repository
 		dig.NewProvider(channel_repository.NewMongoChannelRepository),

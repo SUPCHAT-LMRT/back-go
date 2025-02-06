@@ -27,6 +27,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workpace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_icon"
 	uberdig "go.uber.org/dig"
@@ -53,6 +54,7 @@ type GinRouterDeps struct {
 	ListWorkspaceHandler       *list_workspaces.ListWorkspaceHandler
 	CreateWorkspaceHandler     *create_workspace.CreateWorkspaceHandler
 	UpdateWorkspaceIconHandler *update_icon.UpdateWorkspaceIconHandler
+	ListWorspaceMembersHandler *list_workpace_members.ListWorkspaceMembersHandler
 	// Workspaces channels
 	ListChannelsHandler        *list_channels.ListChannelsHandler
 	CreateChannelHandler       *create_channel.CreateChannelHandler
@@ -145,6 +147,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		workspacesGroup.GET("", d.deps.ListWorkspaceHandler.Handle)
 		workspacesGroup.POST("", d.deps.CreateWorkspaceHandler.Handle)
 		workspacesGroup.PUT("/:workspaceId/icon", d.deps.UpdateWorkspaceIconHandler.Handle)
+		workspacesGroup.GET("/:workspaceId/members", d.deps.ListWorspaceMembersHandler.Handle)
 
 		channelGroup := workspacesGroup.Group("/:workspaceId/channels")
 		{
