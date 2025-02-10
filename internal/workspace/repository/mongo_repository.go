@@ -138,6 +138,31 @@ func (m MongoWorkspaceRepository) List(ctx context.Context) ([]*entity.Workspace
 	return workspaces, nil
 }
 
+func (m MongoWorkspaceRepository) ListPublics(ctx context.Context) ([]*entity.Workspace, error) {
+	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{"type": entity.WorkspaceTypePublic})
+	if err != nil {
+		return nil, err
+	}
+
+	var workspaces []*entity.Workspace
+	for cursor.Next(ctx) {
+		var mongoWorkspace MongoWorkspace
+		err = cursor.Decode(&mongoWorkspace)
+		if err != nil {
+			return nil, err
+		}
+
+		workspace, err := m.deps.WorkspaceMapper.MapToEntity(&mongoWorkspace)
+		if err != nil {
+			return nil, err
+		}
+
+		workspaces = append(workspaces, workspace)
+	}
+
+	return workspaces, nil
+}
+
 func (m MongoWorkspaceRepository) ListByUserId(ctx context.Context, userId user_entity.UserId) ([]*entity.Workspace, error) {
 	userObjectId, err := bson.ObjectIDFromHex(userId.String())
 	if err != nil {

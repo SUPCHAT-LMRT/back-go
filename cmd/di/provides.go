@@ -57,6 +57,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
 	workspace_repository "github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
+	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workpace_member"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workpace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
@@ -90,6 +91,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(workspace_repository.NewMongoWorkspaceMemberMapper),
 		// Workspace usecases
 		dig.NewProvider(list_workspaces.NewListWorkspacesUseCase),
+		dig.NewProvider(discovery_list_workspaces.NewDiscoveryListWorkspacesUseCase),
 		dig.NewProvider(create_workspace.NewCreateWorkspaceUseCase),
 		dig.NewProvider(get_workpace_member.NewGetWorkspaceMemberUseCase),
 		dig.NewProvider(update_icon.NewUpdateWorkspaceIconUseCase),
@@ -97,6 +99,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(list_workpace_members.NewListWorkspaceMembersUseCase),
 		// Workspace handlers
 		dig.NewProvider(list_workspaces.NewListWorkspaceHandler),
+		dig.NewProvider(discovery_list_workspaces.NewDiscoverListWorkspaceHandler),
 		dig.NewProvider(create_workspace.NewCreateWorkspaceHandler),
 		dig.NewProvider(update_icon.NewUpdateWorkspaceIconHandler),
 		dig.NewProvider(list_workpace_members.NewListWorkspaceHandler),

@@ -27,6 +27,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
+	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workpace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_icon"
@@ -51,10 +52,11 @@ type GinRouterDeps struct {
 	AuthMiddleware *middlewares.AuthMiddleware
 	// Handlers
 	// Workspace
-	ListWorkspaceHandler       *list_workspaces.ListWorkspaceHandler
-	CreateWorkspaceHandler     *create_workspace.CreateWorkspaceHandler
-	UpdateWorkspaceIconHandler *update_icon.UpdateWorkspaceIconHandler
-	ListWorspaceMembersHandler *list_workpace_members.ListWorkspaceMembersHandler
+	ListWorkspaceHandler         *list_workspaces.ListWorkspaceHandler
+	CreateWorkspaceHandler       *create_workspace.CreateWorkspaceHandler
+	UpdateWorkspaceIconHandler   *update_icon.UpdateWorkspaceIconHandler
+	ListWorkspaceMembersHandler  *list_workpace_members.ListWorkspaceMembersHandler
+	DiscoverListWorkspaceHandler *discovery_list_workspaces.DiscoverListWorkspaceHandler
 	// Workspaces channels
 	ListChannelsHandler        *list_channels.ListChannelsHandler
 	CreateChannelHandler       *create_channel.CreateChannelHandler
@@ -146,8 +148,9 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		workspacesGroup.Use(authMiddleware)
 		workspacesGroup.GET("", d.deps.ListWorkspaceHandler.Handle)
 		workspacesGroup.POST("", d.deps.CreateWorkspaceHandler.Handle)
+		workspacesGroup.GET("/discover", d.deps.DiscoverListWorkspaceHandler.Handle)
 		workspacesGroup.PUT("/:workspaceId/icon", d.deps.UpdateWorkspaceIconHandler.Handle)
-		workspacesGroup.GET("/:workspaceId/members", d.deps.ListWorspaceMembersHandler.Handle)
+		workspacesGroup.GET("/:workspaceId/members", d.deps.ListWorkspaceMembersHandler.Handle)
 
 		channelGroup := workspacesGroup.Group("/:workspaceId/channels")
 		{

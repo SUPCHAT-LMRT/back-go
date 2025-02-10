@@ -18,6 +18,7 @@ type WorkspaceRepository interface {
 	GetById(ctx context.Context, id entity.WorkspaceId) (*entity.Workspace, error)
 	ExistsById(ctx context.Context, id entity.WorkspaceId) (bool, error)
 	List(ctx context.Context) ([]*entity.Workspace, error)
+	ListPublics(ctx context.Context) ([]*entity.Workspace, error)
 	ListByUserId(ctx context.Context, userId user_entity.UserId) ([]*entity.Workspace, error)
 	ListMembers(ctx context.Context, workspaceId entity.WorkspaceId) ([]*entity.WorkspaceMember, error)
 	GetMemberByUserId(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (*entity.WorkspaceMember, error)
