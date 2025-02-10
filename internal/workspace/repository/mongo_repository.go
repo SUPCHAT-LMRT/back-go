@@ -290,6 +290,35 @@ func (m MongoWorkspaceRepository) unsafeAddMember(ctx context.Context, workspace
 	return nil
 }
 
+func (m MongoWorkspaceRepository) CountMembers(ctx context.Context, workspaceId entity.WorkspaceId) (uint, error) {
+	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId.String())
+	if err != nil {
+		return 0, err
+	}
+
+	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).Aggregate(ctx, mongo2.Pipeline{
+		{{Key: "$match", Value: bson.M{"_id": workspaceObjectId}}},
+		{{Key: "$project", Value: bson.M{"members": 1}}},
+		{{Key: "$unwind", Value: "$members"}},
+		{{Key: "$count", Value: "count"}},
+	})
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var result struct {
+		Count uint `bson:"count"`
+	}
+	if cursor.Next(ctx) {
+		if err = cursor.Decode(&result); err != nil {
+			return 0, err
+		}
+	}
+
+	return result.Count, nil
+}
+
 func (m MongoWorkspaceRepository) GetMemberByUserId(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (*entity.WorkspaceMember, error) {
 	// Get the workspace member only
 	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId.String())

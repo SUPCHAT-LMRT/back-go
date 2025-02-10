@@ -2,6 +2,7 @@ package list_workspaces
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	"net/http"
 )
@@ -25,7 +26,7 @@ func (h DiscoverListWorkspaceHandler) Handle(c *gin.Context) {
 	}
 	result := make([]gin.H, len(workspaces))
 	for i, workspace := range workspaces {
-		ownerUser, err := h.getUserByIdUseCase.Execute(c, workspace.OwnerId)
+		ownerUser, err := h.getUserByIdUseCase.Execute(c, entity.UserId(workspace.OwnerId))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
@@ -34,10 +35,10 @@ func (h DiscoverListWorkspaceHandler) Handle(c *gin.Context) {
 		}
 
 		result[i] = gin.H{
-			"id":        workspace.Id,
-			"name":      workspace.Name,
-			"type":      workspace.Type,
-			"ownerName": ownerUser.Pseudo,
+			"id":           workspace.Id,
+			"name":         workspace.Name,
+			"ownerName":    ownerUser.Pseudo,
+			"membersCount": workspace.MembersCount,
 		}
 	}
 

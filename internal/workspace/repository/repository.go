@@ -21,6 +21,7 @@ type WorkspaceRepository interface {
 	ListPublics(ctx context.Context) ([]*entity.Workspace, error)
 	ListByUserId(ctx context.Context, userId user_entity.UserId) ([]*entity.Workspace, error)
 	ListMembers(ctx context.Context, workspaceId entity.WorkspaceId) ([]*entity.WorkspaceMember, error)
+	CountMembers(ctx context.Context, workspaceId entity.WorkspaceId) (uint, error)
 	GetMemberByUserId(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (*entity.WorkspaceMember, error)
 	AddMember(ctx context.Context, workspaceId entity.WorkspaceId, member *entity.WorkspaceMember) error
 	Update(ctx context.Context, workspace *entity.Workspace) error
