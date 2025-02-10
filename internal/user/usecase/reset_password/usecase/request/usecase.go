@@ -29,7 +29,7 @@ func (u *RequestResetPasswordUseCase) Execute(ctx context.Context, userId user_e
 	}
 
 	for _, observer := range u.deps.Observers {
-		go observer.NotifyRequestResetPasswordCreated(*resetPasswordRequest)
+		observer.NotifyRequestResetPasswordCreated(*resetPasswordRequest)
 	}
 
 	return resetPasswordRequest, err

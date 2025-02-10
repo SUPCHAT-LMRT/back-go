@@ -131,7 +131,7 @@ func (m MongoUserRepository) Update(ctx context.Context, user *entity.User) erro
 		return err
 	}
 
-	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"_id": user.Id}, bson.M{"$set": mongoEntity})
+	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"_id": mongoEntity.Id}, bson.M{"$set": mongoEntity})
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
 			return UserNotFoundErr
