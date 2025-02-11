@@ -61,6 +61,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workpace_member"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workpace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_banner"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_icon"
 	uberdig "go.uber.org/dig"
 	"log"
@@ -96,12 +97,15 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(get_workpace_member.NewGetWorkspaceMemberUseCase),
 		dig.NewProvider(update_icon.NewUpdateWorkspaceIconUseCase),
 		dig.NewProvider(update_icon.NewS3UpdateWorkspaceIconStrategy),
+		dig.NewProvider(update_banner.NewUpdateWorkspaceBannerUseCase),
+		dig.NewProvider(update_banner.NewS3UpdateWorkspaceBannerStrategy),
 		dig.NewProvider(list_workpace_members.NewListWorkspaceMembersUseCase),
 		// Workspace handlers
 		dig.NewProvider(list_workspaces.NewListWorkspaceHandler),
 		dig.NewProvider(discovery_list_workspaces.NewDiscoverListWorkspaceHandler),
 		dig.NewProvider(create_workspace.NewCreateWorkspaceHandler),
 		dig.NewProvider(update_icon.NewUpdateWorkspaceIconHandler),
+		dig.NewProvider(update_banner.NewUpdateWorkspaceBannerHandler),
 		dig.NewProvider(list_workpace_members.NewListWorkspaceHandler),
 		// Workspace channels
 		// Workspace channels repository

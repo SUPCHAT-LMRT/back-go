@@ -30,6 +30,7 @@ import (
 	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workpace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_banner"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_icon"
 	uberdig "go.uber.org/dig"
 	"os"
@@ -55,6 +56,7 @@ type GinRouterDeps struct {
 	ListWorkspaceHandler         *list_workspaces.ListWorkspaceHandler
 	CreateWorkspaceHandler       *create_workspace.CreateWorkspaceHandler
 	UpdateWorkspaceIconHandler   *update_icon.UpdateWorkspaceIconHandler
+	UpdateWorkspaceBannerHandler *update_banner.UpdateWorkspaceBannerHandler
 	ListWorkspaceMembersHandler  *list_workpace_members.ListWorkspaceMembersHandler
 	DiscoverListWorkspaceHandler *discovery_list_workspaces.DiscoverListWorkspaceHandler
 	// Workspaces channels
@@ -150,6 +152,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		workspacesGroup.POST("", d.deps.CreateWorkspaceHandler.Handle)
 		workspacesGroup.GET("/discover", d.deps.DiscoverListWorkspaceHandler.Handle)
 		workspacesGroup.PUT("/:workspaceId/icon", d.deps.UpdateWorkspaceIconHandler.Handle)
+		workspacesGroup.PUT("/:workspaceId/banner", d.deps.UpdateWorkspaceBannerHandler.Handle)
 		workspacesGroup.GET("/:workspaceId/members", d.deps.ListWorkspaceMembersHandler.Handle)
 
 		channelGroup := workspacesGroup.Group("/:workspaceId/channels")
