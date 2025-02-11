@@ -26,8 +26,10 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
+	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
 	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace_details"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workpace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_banner"
@@ -50,7 +52,8 @@ type DefaultGinRouter struct {
 type GinRouterDeps struct {
 	uberdig.In
 	// Middlewares
-	AuthMiddleware *middlewares.AuthMiddleware
+	AuthMiddleware            *middlewares.AuthMiddleware
+	UserInWorkspaceMiddleware *workspace_middlewares.UserInWorkspaceMiddleware
 	// Handlers
 	// Workspace
 	ListWorkspaceHandler         *list_workspaces.ListWorkspaceHandler
@@ -59,6 +62,7 @@ type GinRouterDeps struct {
 	UpdateWorkspaceBannerHandler *update_banner.UpdateWorkspaceBannerHandler
 	ListWorkspaceMembersHandler  *list_workpace_members.ListWorkspaceMembersHandler
 	DiscoverListWorkspaceHandler *discovery_list_workspaces.DiscoverListWorkspaceHandler
+	GetWorkspaceDetailsHandler   *get_workspace_details.GetWorkspaceDetailsHandler
 	// Workspaces channels
 	ListChannelsHandler        *list_channels.ListChannelsHandler
 	CreateChannelHandler       *create_channel.CreateChannelHandler
@@ -97,6 +101,7 @@ func NewGinRouter(deps GinRouterDeps) GinRouter {
 
 func (d *DefaultGinRouter) RegisterRoutes() {
 	authMiddleware := d.deps.AuthMiddleware.Execute
+	userInWorkspaceMiddleware := d.deps.UserInWorkspaceMiddleware.Execute
 
 	apiGroup := d.Router.Group("/api")
 	apiGroup.GET("/ws", authMiddleware, d.deps.WebsocketHandler.Handle)
@@ -151,16 +156,23 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		workspacesGroup.GET("", d.deps.ListWorkspaceHandler.Handle)
 		workspacesGroup.POST("", d.deps.CreateWorkspaceHandler.Handle)
 		workspacesGroup.GET("/discover", d.deps.DiscoverListWorkspaceHandler.Handle)
-		workspacesGroup.PUT("/:workspaceId/icon", d.deps.UpdateWorkspaceIconHandler.Handle)
-		workspacesGroup.PUT("/:workspaceId/banner", d.deps.UpdateWorkspaceBannerHandler.Handle)
-		workspacesGroup.GET("/:workspaceId/members", d.deps.ListWorkspaceMembersHandler.Handle)
 
-		channelGroup := workspacesGroup.Group("/:workspaceId/channels")
+		specificWorkspaceGroup := workspacesGroup.Group("/:workspaceId")
 		{
-			channelGroup.GET("", d.deps.ListChannelsHandler.Handle)
-			channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
-			channelGroup.GET("/:channelId/messages", d.deps.ListChannelMessagesHandler.Handle)
+			specificWorkspaceGroup.Use(userInWorkspaceMiddleware)
+			specificWorkspaceGroup.PUT("/:workspaceId/icon", d.deps.UpdateWorkspaceIconHandler.Handle)
+			specificWorkspaceGroup.PUT("/:workspaceId/banner", d.deps.UpdateWorkspaceBannerHandler.Handle)
+			specificWorkspaceGroup.GET("/:workspaceId/members", d.deps.ListWorkspaceMembersHandler.Handle)
+			specificWorkspaceGroup.GET("/details", d.deps.GetWorkspaceDetailsHandler.Handle)
+
+			channelGroup := specificWorkspaceGroup.Group("/channels")
+			{
+				channelGroup.GET("", d.deps.ListChannelsHandler.Handle)
+				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
+				channelGroup.GET("/:channelId/messages", d.deps.ListChannelMessagesHandler.Handle)
+			}
 		}
+
 	}
 }
 

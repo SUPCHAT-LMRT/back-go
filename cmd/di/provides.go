@@ -55,10 +55,13 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
+	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
 	workspace_repository "github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
 	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workpace_member"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace_details"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/is_user_in_workspace"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workpace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_banner"
@@ -95,6 +98,8 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(discovery_list_workspaces.NewDiscoveryListWorkspacesUseCase),
 		dig.NewProvider(create_workspace.NewCreateWorkspaceUseCase),
 		dig.NewProvider(get_workpace_member.NewGetWorkspaceMemberUseCase),
+		dig.NewProvider(is_user_in_workspace.NewIsUserInWorkspaceUseCase),
+		dig.NewProvider(get_workspace_details.NewGetWorkspaceDetailsUseCase),
 		dig.NewProvider(update_icon.NewUpdateWorkspaceIconUseCase),
 		dig.NewProvider(update_icon.NewS3UpdateWorkspaceIconStrategy),
 		dig.NewProvider(update_banner.NewUpdateWorkspaceBannerUseCase),
@@ -104,6 +109,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(list_workspaces.NewListWorkspaceHandler),
 		dig.NewProvider(discovery_list_workspaces.NewDiscoverListWorkspaceHandler),
 		dig.NewProvider(create_workspace.NewCreateWorkspaceHandler),
+		dig.NewProvider(get_workspace_details.NewGetWorkspaceDetailsHandler),
 		dig.NewProvider(update_icon.NewUpdateWorkspaceIconHandler),
 		dig.NewProvider(update_banner.NewUpdateWorkspaceBannerHandler),
 		dig.NewProvider(list_workpace_members.NewListWorkspaceHandler),
@@ -130,6 +136,8 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(list_messages.NewListChannelMessagesHandler),
 		// Workspace channels chat messages usecases
 		dig.NewProvider(save_message.NewSaveChannelMessageUseCase),
+		// Workspace misc
+		dig.NewProvider(workspace_middlewares.NewUserInWorkspaceMiddleware),
 		// User
 		dig.NewProvider(user_repository.NewMongoUserRepository),
 		dig.NewProvider(user_repository.NewMongoUserMapper),

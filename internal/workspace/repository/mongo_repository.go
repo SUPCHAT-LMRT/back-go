@@ -309,7 +309,6 @@ func (m MongoWorkspaceRepository) CountMembers(ctx context.Context, workspaceId 
 }
 
 func (m MongoWorkspaceRepository) GetMemberByUserId(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (*entity.WorkspaceMember, error) {
-	// Get the workspace member only
 	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId.String())
 	if err != nil {
 		return nil, err
@@ -330,6 +329,25 @@ func (m MongoWorkspaceRepository) GetMemberByUserId(ctx context.Context, workspa
 	}
 
 	return m.deps.WorkspaceMemberMapper.MapToEntity(&mongoWorkspaceMember)
+}
+
+func (m MongoWorkspaceRepository) IsMemberExists(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (bool, error) {
+	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId.String())
+	if err != nil {
+		return false, err
+	}
+
+	userObjectId, err := bson.ObjectIDFromHex(userId.String())
+	if err != nil {
+		return false, err
+	}
+
+	count, err := m.deps.Client.Client.Database(databaseName).Collection(membersCollectionName).CountDocuments(ctx, bson.M{"workspace_id": workspaceObjectId, "user_id": userObjectId})
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }
 
 func (m MongoWorkspaceRepository) Update(ctx context.Context, workspace *entity.Workspace) error {
