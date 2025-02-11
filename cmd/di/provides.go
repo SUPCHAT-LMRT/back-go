@@ -49,6 +49,8 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/utils"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
 	chat_message_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/repository"
+	time_series_message_sent_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/repository"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/usecase/get_minutely"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/save_message"
 	channel_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
@@ -136,6 +138,14 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(list_messages.NewListChannelMessagesHandler),
 		// Workspace channels chat messages usecases
 		dig.NewProvider(save_message.NewSaveChannelMessageUseCase),
+		// Workspace time series
+		// Workspace time series message sent
+		// Workspace time series message sent repository
+		dig.NewProvider(time_series_message_sent_repository.NewMongoMessageSentTimeSeriesWorkspaceRepository),
+		// Workspace time series message sent usecases
+		dig.NewProvider(get_minutely.NewGetMinutelyMessageSentUseCase),
+		// Workspace time series message sent handlers
+		dig.NewProvider(get_minutely.NewGetMinutelyMessageSentHandler),
 		// Workspace misc
 		dig.NewProvider(workspace_middlewares.NewUserInWorkspaceMiddleware),
 		// User

@@ -23,6 +23,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/validation/usecase/request"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/validation/usecase/validate"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/usecase/get_minutely"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
@@ -56,13 +57,14 @@ type GinRouterDeps struct {
 	UserInWorkspaceMiddleware *workspace_middlewares.UserInWorkspaceMiddleware
 	// Handlers
 	// Workspace
-	ListWorkspaceHandler         *list_workspaces.ListWorkspaceHandler
-	CreateWorkspaceHandler       *create_workspace.CreateWorkspaceHandler
-	UpdateWorkspaceIconHandler   *update_icon.UpdateWorkspaceIconHandler
-	UpdateWorkspaceBannerHandler *update_banner.UpdateWorkspaceBannerHandler
-	ListWorkspaceMembersHandler  *list_workpace_members.ListWorkspaceMembersHandler
-	DiscoverListWorkspaceHandler *discovery_list_workspaces.DiscoverListWorkspaceHandler
-	GetWorkspaceDetailsHandler   *get_workspace_details.GetWorkspaceDetailsHandler
+	ListWorkspaceHandler          *list_workspaces.ListWorkspaceHandler
+	CreateWorkspaceHandler        *create_workspace.CreateWorkspaceHandler
+	UpdateWorkspaceIconHandler    *update_icon.UpdateWorkspaceIconHandler
+	UpdateWorkspaceBannerHandler  *update_banner.UpdateWorkspaceBannerHandler
+	ListWorkspaceMembersHandler   *list_workpace_members.ListWorkspaceMembersHandler
+	DiscoverListWorkspaceHandler  *discovery_list_workspaces.DiscoverListWorkspaceHandler
+	GetWorkspaceDetailsHandler    *get_workspace_details.GetWorkspaceDetailsHandler
+	GetMinutelyMessageSentHandler *get_minutely.GetMinutelyMessageSentHandler
 	// Workspaces channels
 	ListChannelsHandler        *list_channels.ListChannelsHandler
 	CreateChannelHandler       *create_channel.CreateChannelHandler
@@ -160,10 +162,11 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		specificWorkspaceGroup := workspacesGroup.Group("/:workspaceId")
 		{
 			specificWorkspaceGroup.Use(userInWorkspaceMiddleware)
-			specificWorkspaceGroup.PUT("/:workspaceId/icon", d.deps.UpdateWorkspaceIconHandler.Handle)
-			specificWorkspaceGroup.PUT("/:workspaceId/banner", d.deps.UpdateWorkspaceBannerHandler.Handle)
-			specificWorkspaceGroup.GET("/:workspaceId/members", d.deps.ListWorkspaceMembersHandler.Handle)
+			specificWorkspaceGroup.PUT("/icon", d.deps.UpdateWorkspaceIconHandler.Handle)
+			specificWorkspaceGroup.PUT("/banner", d.deps.UpdateWorkspaceBannerHandler.Handle)
+			specificWorkspaceGroup.GET("/members", d.deps.ListWorkspaceMembersHandler.Handle)
 			specificWorkspaceGroup.GET("/details", d.deps.GetWorkspaceDetailsHandler.Handle)
+			specificWorkspaceGroup.GET("/time-series/messages", d.deps.GetMinutelyMessageSentHandler.Handle)
 
 			channelGroup := specificWorkspaceGroup.Group("/channels")
 			{

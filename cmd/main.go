@@ -5,8 +5,10 @@ import (
 	"github.com/supchat-lmrt/back-go/cmd/di"
 	"github.com/supchat-lmrt/back-go/internal/gin"
 	"github.com/supchat-lmrt/back-go/internal/logger"
+	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"github.com/supchat-lmrt/back-go/internal/s3"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
 	"log"
 	"os"
@@ -50,6 +52,20 @@ func main() {
 		}
 
 		logg.Info().Any("bucketsCreated", bucketsCreated).Msg("Buckets created!")
+	})
+	invokeFatal(logg, diContainer, func(client *mongo.Client) {
+		// Create the time series collection "workspace_message_sent_ts" if it doesn't exist
+		err := client.Client.Database("supchat").CreateCollection(context.Background(), "workspace_message_sent_ts", options.CreateCollection().
+			SetTimeSeriesOptions(options.TimeSeries().
+				SetTimeField("sent_at").
+				SetMetaField("metadata").
+				SetGranularity("minutes"),
+			))
+		if err != nil {
+			logg.Fatal().Err(err).Msg("Unable to create collection")
+		}
+
+		logg.Info().Str("collection", "workspace_message_sent_ts").Msg("Time-Series Collection created!")
 	})
 
 	logg.Info().Msg("App started!")
