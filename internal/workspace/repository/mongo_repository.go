@@ -10,12 +10,12 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 	mongo2 "go.mongodb.org/mongo-driver/v2/mongo"
 	uberdig "go.uber.org/dig"
-	"strings"
 )
 
 var (
-	databaseName   = "supchat"
-	collectionName = "workspaces"
+	databaseName          = "supchat"
+	collectionName        = "workspaces"
+	membersCollectionName = "workspace_members"
 )
 
 type MongoWorkspaceRepositoryDeps struct {
@@ -37,9 +37,10 @@ type MongoWorkspace struct {
 }
 
 type MongoWorkspaceMember struct {
-	Id     bson.ObjectID `bson:"_id"`
-	UserId bson.ObjectID `bson:"user_id"`
-	Pseudo string        `bson:"pseudo"`
+	Id          bson.ObjectID `bson:"_id"`
+	WorkspaceId bson.ObjectID `bson:"workspace_id"`
+	UserId      bson.ObjectID `bson:"user_id"`
+	Pseudo      string        `bson:"pseudo"`
 }
 
 func NewMongoWorkspaceRepository(deps MongoWorkspaceRepositoryDeps) WorkspaceRepository {
@@ -48,6 +49,8 @@ func NewMongoWorkspaceRepository(deps MongoWorkspaceRepositoryDeps) WorkspaceRep
 
 func (m MongoWorkspaceRepository) Create(ctx context.Context, workspace *entity.Workspace, ownerMember *entity.WorkspaceMember) error {
 	workspace.Id = entity.WorkspaceId(bson.NewObjectID().Hex())
+	ownerMember.WorkspaceId = workspace.Id
+
 	mongoWorkspace, err := m.deps.WorkspaceMapper.MapFromEntity(workspace)
 	if err != nil {
 		return err
@@ -66,7 +69,7 @@ func (m MongoWorkspaceRepository) Create(ctx context.Context, workspace *entity.
 		}
 
 		// Add the owner as a member
-		err = m.unsafeAddMember(sessionContext, workspace.Id, ownerMember)
+		err = m.unsafeAddMember(sessionContext, ownerMember)
 		if err != nil {
 			return nil, err
 		}
@@ -169,10 +172,28 @@ func (m MongoWorkspaceRepository) ListByUserId(ctx context.Context, userId user_
 		return nil, err
 	}
 
-	// Filtre pour trouver les workspaces où l'userId est présent dans members.user_id
-	filter := bson.M{"members.user_id": userObjectId}
+	// Find all workspace IDs where the user is a member
+	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(membersCollectionName).Find(ctx, bson.M{"user_id": userObjectId})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
 
-	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, filter)
+	var workspaceIds []bson.ObjectID
+	for cursor.Next(ctx) {
+		var mongoWorkspaceMember MongoWorkspaceMember
+		if err = cursor.Decode(&mongoWorkspaceMember); err != nil {
+			return nil, err
+		}
+		workspaceIds = append(workspaceIds, mongoWorkspaceMember.WorkspaceId)
+	}
+
+	if len(workspaceIds) == 0 {
+		return []*entity.Workspace{}, nil
+	}
+
+	// Find all workspaces with the collected workspace IDs
+	cursor, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{"_id": bson.M{"$in": workspaceIds}})
 	if err != nil {
 		return nil, err
 	}
@@ -193,11 +214,6 @@ func (m MongoWorkspaceRepository) ListByUserId(ctx context.Context, userId user_
 		workspaces = append(workspaces, workspace)
 	}
 
-	// Vérifier les erreurs éventuelles après l'itération
-	if err := cursor.Err(); err != nil {
-		return nil, err
-	}
-
 	return workspaces, nil
 }
 
@@ -207,45 +223,38 @@ func (m MongoWorkspaceRepository) ListMembers(ctx context.Context, workspaceId e
 		return nil, err
 	}
 
-	pipeline := mongo2.Pipeline{
-		{{Key: "$match", Value: bson.M{"_id": workspaceObjectId}}},
-		{{Key: "$project", Value: bson.M{"_id": 0, "members": 1}}},
-		{{Key: "$unwind", Value: "$members"}},
-		{{Key: "$replaceRoot", Value: bson.M{"newRoot": "$members"}}},
-	}
-
-	// Execute aggregation
-	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).Aggregate(ctx, pipeline)
+	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(membersCollectionName).Find(ctx, bson.M{"workspace_id": workspaceObjectId})
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(context.TODO())
+	defer cursor.Close(ctx)
 
-	var members []*entity.WorkspaceMember
+	var mongoWorkspaceMembers []*MongoWorkspaceMember
 	for cursor.Next(ctx) {
 		var mongoWorkspaceMember MongoWorkspaceMember
-		err = cursor.Decode(&mongoWorkspaceMember)
-		if err != nil {
+		if err := cursor.Decode(&mongoWorkspaceMember); err != nil {
 			return nil, err
 		}
 
-		member, err := m.deps.WorkspaceMemberMapper.MapToEntity(&mongoWorkspaceMember)
-		if err != nil {
-			return nil, err
-		}
-
-		members = append(members, member)
+		mongoWorkspaceMembers = append(mongoWorkspaceMembers, &mongoWorkspaceMember)
 	}
 
-	return members, nil
+	workspaceMembers := make([]*entity.WorkspaceMember, len(mongoWorkspaceMembers))
+	for i, mongoWorkspaceMember := range mongoWorkspaceMembers {
+		workspaceMember, err := m.deps.WorkspaceMemberMapper.MapToEntity(mongoWorkspaceMember)
+		if err != nil {
+			return nil, err
+		}
+
+		workspaceMembers[i] = workspaceMember
+	}
+
+	return workspaceMembers, nil
 }
 
 func (m MongoWorkspaceRepository) AddMember(ctx context.Context, workspaceId entity.WorkspaceId, member *entity.WorkspaceMember) error {
 	member.Id = entity.WorkspaceMemberId(bson.NewObjectID().Hex())
-	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId.String())
-	if err != nil {
-		return err
-	}
+	member.WorkspaceId = workspaceId
 
 	// Check if the user is already in the workspace
 	workspaceMember, err := m.GetMemberByUserId(ctx, workspaceId, member.UserId)
@@ -257,12 +266,7 @@ func (m MongoWorkspaceRepository) AddMember(ctx context.Context, workspaceId ent
 		return WorkspaceMemberExistsErr
 	}
 
-	mappedMember, err := m.deps.WorkspaceMemberMapper.MapFromEntity(member)
-	if err != nil {
-		return err
-	}
-
-	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"_id": workspaceObjectId}, bson.M{"$addToSet": bson.M{"members": mappedMember}})
+	err = m.unsafeAddMember(ctx, member)
 	if err != nil {
 		return err
 	}
@@ -270,19 +274,19 @@ func (m MongoWorkspaceRepository) AddMember(ctx context.Context, workspaceId ent
 	return nil
 }
 
-func (m MongoWorkspaceRepository) unsafeAddMember(ctx context.Context, workspaceId entity.WorkspaceId, member *entity.WorkspaceMember) error {
+func (m MongoWorkspaceRepository) unsafeAddMember(ctx context.Context, member *entity.WorkspaceMember) error {
 	member.Id = entity.WorkspaceMemberId(bson.NewObjectID().Hex())
-	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId.String())
-	if err != nil {
-		return err
-	}
-
 	mappedMember, err := m.deps.WorkspaceMemberMapper.MapFromEntity(member)
 	if err != nil {
 		return err
 	}
 
-	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"_id": workspaceObjectId}, bson.M{"$addToSet": bson.M{"members": mappedMember}})
+	mappedMember.WorkspaceId, err = bson.ObjectIDFromHex(member.WorkspaceId.String())
+	if err != nil {
+		return err
+	}
+
+	_, err = m.deps.Client.Client.Database(databaseName).Collection(membersCollectionName).InsertOne(ctx, mappedMember)
 	if err != nil {
 		return err
 	}
@@ -296,27 +300,12 @@ func (m MongoWorkspaceRepository) CountMembers(ctx context.Context, workspaceId 
 		return 0, err
 	}
 
-	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).Aggregate(ctx, mongo2.Pipeline{
-		{{Key: "$match", Value: bson.M{"_id": workspaceObjectId}}},
-		{{Key: "$project", Value: bson.M{"members": 1}}},
-		{{Key: "$unwind", Value: "$members"}},
-		{{Key: "$count", Value: "count"}},
-	})
+	count, err := m.deps.Client.Client.Database(databaseName).Collection(membersCollectionName).CountDocuments(ctx, bson.M{"workspace_id": workspaceObjectId})
 	if err != nil {
 		return 0, err
 	}
-	defer cursor.Close(ctx)
 
-	var result struct {
-		Count uint `bson:"count"`
-	}
-	if cursor.Next(ctx) {
-		if err = cursor.Decode(&result); err != nil {
-			return 0, err
-		}
-	}
-
-	return result.Count, nil
+	return uint(count), nil
 }
 
 func (m MongoWorkspaceRepository) GetMemberByUserId(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (*entity.WorkspaceMember, error) {
@@ -331,53 +320,16 @@ func (m MongoWorkspaceRepository) GetMemberByUserId(ctx context.Context, workspa
 		return nil, err
 	}
 
-	// MongoDB aggregation pipeline
-	pipeline := mongo2.Pipeline{
-		{{Key: "$match", Value: bson.M{"_id": workspaceObjectId}}},
-		{
-			{Key: "$project", Value: bson.M{
-				"member": bson.M{
-					"$arrayElemAt": []any{
-						bson.M{
-							"$filter": bson.M{
-								"input": "$members",
-								"as":    "member",
-								"cond":  bson.M{"$eq": []any{"$$member.user_id", userObjectId}},
-							},
-						},
-						0,
-					},
-				},
-			}},
-		},
-		{{Key: "$replaceRoot", Value: bson.M{"newRoot": "$member"}}},
-	}
-
-	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).Aggregate(ctx, pipeline)
+	var mongoWorkspaceMember MongoWorkspaceMember
+	err = m.deps.Client.Client.Database(databaseName).Collection(membersCollectionName).FindOne(ctx, bson.M{"workspace_id": workspaceObjectId, "user_id": userObjectId}).Decode(&mongoWorkspaceMember)
 	if err != nil {
-		// Handle (Location40228) PlanExecutor error during aggregation :: caused by :: 'newRoot' expression  must evaluate to an object, but resulting value was: MISSING. Type of resulting value: 'missing'. Input document: {_id: 679b9beb4e1ac8e34475f53c} error
-		if strings.Contains(err.Error(), "but resulting value was: MISSING") {
+		if errors.Is(err, mongo2.ErrNoDocuments) {
 			return nil, WorkspaceMemberNotFoundErr
 		}
 		return nil, err
 	}
-	defer cursor.Close(ctx)
 
-	var mongoWorkspaceMember MongoWorkspaceMember
-	if cursor.Next(ctx) {
-		if err = cursor.Decode(&mongoWorkspaceMember); err != nil {
-			return nil, err
-		}
-
-		member, err := m.deps.WorkspaceMemberMapper.MapToEntity(&mongoWorkspaceMember)
-		if err != nil {
-			return nil, err
-		}
-
-		return member, nil
-	}
-
-	return nil, nil
+	return m.deps.WorkspaceMemberMapper.MapToEntity(&mongoWorkspaceMember)
 }
 
 func (m MongoWorkspaceRepository) Update(ctx context.Context, workspace *entity.Workspace) error {
