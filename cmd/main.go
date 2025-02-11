@@ -35,7 +35,7 @@ func main() {
 	go invokeFatal(logg, diContainer, runWebsocketServer(logg))
 	invokeFatal(logg, diContainer, func(client *s3.S3Client) {
 		logg.Info().Msg("Creating buckets...")
-		bucketsToCreate := []string{"workspaces-icons", "users-avatars", "messages-files"}
+		bucketsToCreate := []string{"workspaces-icons", "workspaces-banners", "users-avatars", "messages-files"}
 
 		bucketsCreated := make([]string, 0, len(bucketsToCreate))
 		for _, bucket := range bucketsToCreate {

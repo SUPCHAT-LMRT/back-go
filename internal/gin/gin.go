@@ -62,7 +62,7 @@ type GinRouterDeps struct {
 	CreateChannelHandler       *create_channel.CreateChannelHandler
 	ListChannelMessagesHandler *list_messages.ListChannelMessagesHandler
 	// User
-	GetMyAccountHandler                      *get_my_account.GetMyAccountHandler
+	GetMyAccountHandler                      *get_my_account.GetMyUserAccountHandler
 	LoginHandler                             *login.LoginHandler
 	RegisterHandler                          *register.RegisterHandler
 	RefreshTokenHandler                      *token.RefreshTokenHandler

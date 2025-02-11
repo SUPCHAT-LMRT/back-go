@@ -185,7 +185,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(reset_password_request_usecase.NewRequestResetPasswordHandler),
 		dig.NewProvider(reset_password_validate_usecase.NewValidateResetPasswordHandler),
 		// User handlers
-		dig.NewProvider(get_my_account.NewGetMyAccountHandler),
+		dig.NewProvider(get_my_account.NewGetMyUserAccountHandler),
 		dig.NewProvider(login.NewLoginHandler),
 		dig.NewProvider(token.NewRefreshTokenHandler),
 		dig.NewProvider(register.NewRegisterHandler),

@@ -8,7 +8,7 @@ CORS_ORIGIN = "http://localhost:5173"
 DOMAIN = "localhost"
 
 [tasks.build-push]
-run = "docker compose -f ../docker-compose.yaml build back && docker-compose -f ../docker-compose.yaml push back"
+run = "docker compose -f ../docker-compose.yaml build back && docker compose -f ../docker-compose.yaml push back"
 
 [tasks.start-mongo]
 run = "docker compose -f ../docker-compose.yaml up -d mongo"
