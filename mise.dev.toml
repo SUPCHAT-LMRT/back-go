@@ -1,28 +1,29 @@
 [env]
-MONGO_URI = "mongodb://localhost:27017"
-REDIS_URI = "redis://localhost:6379"
-FRONT_ACCOUNT_VALIDATE_URL = "http://localhost:5173/account/validate?validationToken={token}"
+MONGO_URI = "mongodb://localhost:27017/supchat?authSource=admin&directConnection=true&serverSelectionTimeoutMS=2000"
+REDIS_URI = "redis://:password@localhost:6379"
+FRONT_ACCOUNT_VALIDATE_URL = "http://localhost:5173/validate-account/{token}"
+FRONT_ACCOUNT_RESET_PASSWORD_URL = "http://localhost:5173/reset-password/{token}"
 HTTP_SERVER_PORT = "3000"
 CORS_ORIGIN = "http://localhost:5173"
 DOMAIN = "localhost"
 
 [tasks.build-push]
-run = "docker-compose -f ../docker-compose.yaml build back && docker-compose -f ../docker-compose.yaml push back"
+run = "docker compose -f ../docker-compose.yaml build back && docker compose -f ../docker-compose.yaml push back"
 
 [tasks.start-mongo]
-run = "docker-compose -f ../docker-compose.yaml up -d mongo"
+run = "docker compose -f ../docker-compose.yaml up -d mongo"
 
 [tasks.start-redis]
-run = "docker-compose -f ../docker-compose.yaml up -d redis"
+run = "docker compose -f ../docker-compose.yaml up -d redis"
 
 [tasks.start-minio]
-run = "docker-compose -f ../docker-compose.yaml up -d minio"
+run = "docker compose -f ../docker-compose.yaml up -d minio"
 
 [tasks.stop-mongo]
-run = "docker-compose -f ../docker-compose.yaml stop mongo"
+run = "docker compose -f ../docker-compose.yaml stop mongo"
 
 [tasks.stop-redis]
-run = "docker-compose -f ../docker-compose.yaml stop redis"
+run = "docker compose -f ../docker-compose.yaml stop redis"
 
 [tasks.stop-minio]
-run = "docker-compose -f ../docker-compose.yaml stop minio"
+run = "docker compose -f ../docker-compose.yaml stop minio"

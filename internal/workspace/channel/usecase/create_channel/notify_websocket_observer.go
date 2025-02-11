@@ -33,17 +33,19 @@ func (o *NotifyWebSocketObserver) ChannelCreated(channel *channel_entity.Channel
 		return
 	}
 
+	// Todo make iteration run once and once all the clients have been iterated, stop the iteration.
 	for _, member := range workspaceMembers {
 		o.deps.WsServer.IterateClients(func(client *websocket.Client) (stop bool) {
 			// Then, notify all the clients that a new channel has been created.
-			if client.UserId == member.UserId {
+			if client.UserId == member.UserId && client.SelectedWorkspace.Load() == channel.WorkspaceId.String() {
 				client.SendMessage(
 					websocket.NewMessageBuilder().
-						WithAction(websocket.ChannelCreatedAction).
+						WithAction(websocket.OutboundChannelCreatedAction).
 						WithPayload(ChannelPayload{
-							Id:    string(channel.Id),
-							Name:  channel.Name,
-							Topic: channel.Topic,
+							Id:          string(channel.Id),
+							Name:        channel.Name,
+							Topic:       channel.Topic,
+							WorkspaceId: channel.WorkspaceId.String(),
 						}).
 						Build(),
 				)
@@ -56,7 +58,8 @@ func (o *NotifyWebSocketObserver) ChannelCreated(channel *channel_entity.Channel
 }
 
 type ChannelPayload struct {
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	Topic string `json:"topic"`
+	Id          string `json:"id"`
+	Name        string `json:"name"`
+	Topic       string `json:"topic"`
+	WorkspaceId string `json:"workspaceId"`
 }

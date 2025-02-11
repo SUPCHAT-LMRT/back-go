@@ -23,11 +23,17 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/validation/usecase/request"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/validation/usecase/validate"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/usecase/get_minutely"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
+	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
+	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace_details"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workpace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_banner"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_icon"
 	uberdig "go.uber.org/dig"
 	"os"
@@ -47,18 +53,24 @@ type DefaultGinRouter struct {
 type GinRouterDeps struct {
 	uberdig.In
 	// Middlewares
-	AuthMiddleware *middlewares.AuthMiddleware
+	AuthMiddleware            *middlewares.AuthMiddleware
+	UserInWorkspaceMiddleware *workspace_middlewares.UserInWorkspaceMiddleware
 	// Handlers
 	// Workspace
-	ListWorkspaceHandler       *list_workspaces.ListWorkspaceHandler
-	CreateWorkspaceHandler     *create_workspace.CreateWorkspaceHandler
-	UpdateWorkspaceIconHandler *update_icon.UpdateWorkspaceIconHandler
+	ListWorkspaceHandler          *list_workspaces.ListWorkspaceHandler
+	CreateWorkspaceHandler        *create_workspace.CreateWorkspaceHandler
+	UpdateWorkspaceIconHandler    *update_icon.UpdateWorkspaceIconHandler
+	UpdateWorkspaceBannerHandler  *update_banner.UpdateWorkspaceBannerHandler
+	ListWorkspaceMembersHandler   *list_workpace_members.ListWorkspaceMembersHandler
+	DiscoverListWorkspaceHandler  *discovery_list_workspaces.DiscoverListWorkspaceHandler
+	GetWorkspaceDetailsHandler    *get_workspace_details.GetWorkspaceDetailsHandler
+	GetMinutelyMessageSentHandler *get_minutely.GetMinutelyMessageSentHandler
 	// Workspaces channels
 	ListChannelsHandler        *list_channels.ListChannelsHandler
 	CreateChannelHandler       *create_channel.CreateChannelHandler
 	ListChannelMessagesHandler *list_messages.ListChannelMessagesHandler
 	// User
-	GetMyAccountHandler                      *get_my_account.GetMyAccountHandler
+	GetMyAccountHandler                      *get_my_account.GetMyUserAccountHandler
 	LoginHandler                             *login.LoginHandler
 	RegisterHandler                          *register.RegisterHandler
 	RefreshTokenHandler                      *token.RefreshTokenHandler
@@ -91,6 +103,7 @@ func NewGinRouter(deps GinRouterDeps) GinRouter {
 
 func (d *DefaultGinRouter) RegisterRoutes() {
 	authMiddleware := d.deps.AuthMiddleware.Execute
+	userInWorkspaceMiddleware := d.deps.UserInWorkspaceMiddleware.Execute
 
 	apiGroup := d.Router.Group("/api")
 	apiGroup.GET("/ws", authMiddleware, d.deps.WebsocketHandler.Handle)
@@ -105,7 +118,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		{
 			authGroup.POST("/login", d.deps.LoginHandler.Handle)
 			authGroup.POST("/register", d.deps.RegisterHandler.Handle)
-			authGroup.POST("/token/access/renew", authMiddleware, d.deps.RefreshTokenHandler.Handle)
+			authGroup.POST("/token/access/renew", d.deps.RefreshTokenHandler.Handle)
 			authGroup.POST("/logout", authMiddleware, authMiddleware, d.deps.LogoutHandler.Handle)
 		}
 
@@ -144,14 +157,25 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		workspacesGroup.Use(authMiddleware)
 		workspacesGroup.GET("", d.deps.ListWorkspaceHandler.Handle)
 		workspacesGroup.POST("", d.deps.CreateWorkspaceHandler.Handle)
-		workspacesGroup.PUT("/:workspaceId/icon", d.deps.UpdateWorkspaceIconHandler.Handle)
+		workspacesGroup.GET("/discover", d.deps.DiscoverListWorkspaceHandler.Handle)
 
-		channelGroup := workspacesGroup.Group("/:workspaceId/channels")
+		specificWorkspaceGroup := workspacesGroup.Group("/:workspaceId")
 		{
-			channelGroup.GET("", d.deps.ListChannelsHandler.Handle)
-			channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
-			channelGroup.GET("/:channelId/messages", d.deps.ListChannelMessagesHandler.Handle)
+			specificWorkspaceGroup.Use(userInWorkspaceMiddleware)
+			specificWorkspaceGroup.PUT("/icon", d.deps.UpdateWorkspaceIconHandler.Handle)
+			specificWorkspaceGroup.PUT("/banner", d.deps.UpdateWorkspaceBannerHandler.Handle)
+			specificWorkspaceGroup.GET("/members", d.deps.ListWorkspaceMembersHandler.Handle)
+			specificWorkspaceGroup.GET("/details", d.deps.GetWorkspaceDetailsHandler.Handle)
+			specificWorkspaceGroup.GET("/time-series/messages", d.deps.GetMinutelyMessageSentHandler.Handle)
+
+			channelGroup := specificWorkspaceGroup.Group("/channels")
+			{
+				channelGroup.GET("", d.deps.ListChannelsHandler.Handle)
+				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
+				channelGroup.GET("/:channelId/messages", d.deps.ListChannelMessagesHandler.Handle)
+			}
 		}
+
 	}
 }
 

@@ -49,17 +49,24 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/utils"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
 	chat_message_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/repository"
+	time_series_message_sent_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/repository"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/usecase/get_minutely"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/save_message"
 	channel_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
+	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
 	workspace_repository "github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
+	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workpace_member"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace_details"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/is_user_in_workspace"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workpace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_banner"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_icon"
 	uberdig "go.uber.org/dig"
 	"log"
@@ -90,15 +97,24 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(workspace_repository.NewMongoWorkspaceMemberMapper),
 		// Workspace usecases
 		dig.NewProvider(list_workspaces.NewListWorkspacesUseCase),
+		dig.NewProvider(discovery_list_workspaces.NewDiscoveryListWorkspacesUseCase),
 		dig.NewProvider(create_workspace.NewCreateWorkspaceUseCase),
 		dig.NewProvider(get_workpace_member.NewGetWorkspaceMemberUseCase),
+		dig.NewProvider(is_user_in_workspace.NewIsUserInWorkspaceUseCase),
+		dig.NewProvider(get_workspace_details.NewGetWorkspaceDetailsUseCase),
 		dig.NewProvider(update_icon.NewUpdateWorkspaceIconUseCase),
 		dig.NewProvider(update_icon.NewS3UpdateWorkspaceIconStrategy),
+		dig.NewProvider(update_banner.NewUpdateWorkspaceBannerUseCase),
+		dig.NewProvider(update_banner.NewS3UpdateWorkspaceBannerStrategy),
 		dig.NewProvider(list_workpace_members.NewListWorkspaceMembersUseCase),
 		// Workspace handlers
 		dig.NewProvider(list_workspaces.NewListWorkspaceHandler),
+		dig.NewProvider(discovery_list_workspaces.NewDiscoverListWorkspaceHandler),
 		dig.NewProvider(create_workspace.NewCreateWorkspaceHandler),
+		dig.NewProvider(get_workspace_details.NewGetWorkspaceDetailsHandler),
 		dig.NewProvider(update_icon.NewUpdateWorkspaceIconHandler),
+		dig.NewProvider(update_banner.NewUpdateWorkspaceBannerHandler),
+		dig.NewProvider(list_workpace_members.NewListWorkspaceHandler),
 		// Workspace channels
 		// Workspace channels repository
 		dig.NewProvider(channel_repository.NewMongoChannelRepository),
@@ -122,6 +138,16 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(list_messages.NewListChannelMessagesHandler),
 		// Workspace channels chat messages usecases
 		dig.NewProvider(save_message.NewSaveChannelMessageUseCase),
+		// Workspace time series
+		// Workspace time series message sent
+		// Workspace time series message sent repository
+		dig.NewProvider(time_series_message_sent_repository.NewMongoMessageSentTimeSeriesWorkspaceRepository),
+		// Workspace time series message sent usecases
+		dig.NewProvider(get_minutely.NewGetMinutelyMessageSentUseCase),
+		// Workspace time series message sent handlers
+		dig.NewProvider(get_minutely.NewGetMinutelyMessageSentHandler),
+		// Workspace misc
+		dig.NewProvider(workspace_middlewares.NewUserInWorkspaceMiddleware),
 		// User
 		dig.NewProvider(user_repository.NewMongoUserRepository),
 		dig.NewProvider(user_repository.NewMongoUserMapper),
@@ -181,7 +207,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(reset_password_request_usecase.NewRequestResetPasswordHandler),
 		dig.NewProvider(reset_password_validate_usecase.NewValidateResetPasswordHandler),
 		// User handlers
-		dig.NewProvider(get_my_account.NewGetMyAccountHandler),
+		dig.NewProvider(get_my_account.NewGetMyUserAccountHandler),
 		dig.NewProvider(login.NewLoginHandler),
 		dig.NewProvider(token.NewRefreshTokenHandler),
 		dig.NewProvider(register.NewRegisterHandler),
