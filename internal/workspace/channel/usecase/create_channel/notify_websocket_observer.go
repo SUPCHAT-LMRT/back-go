@@ -47,6 +47,7 @@ func (o *NotifyWebSocketObserver) ChannelCreated(channel *channel_entity.Channel
 							Topic:       channel.Topic,
 							WorkspaceId: channel.WorkspaceId.String(),
 						}).
+						WithCreatedAt(channel.CreatedAt).
 						Build(),
 				)
 			}

@@ -1,6 +1,9 @@
 package entity
 
-import workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
+import (
+	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	"time"
+)
 
 type ChannelId string
 
@@ -9,6 +12,7 @@ type Channel struct {
 	Name        string
 	Topic       string
 	WorkspaceId workspace_entity.WorkspaceId
+	CreatedAt   time.Time
 }
 
 func (id ChannelId) String() string {

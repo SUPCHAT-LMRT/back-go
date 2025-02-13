@@ -60,6 +60,7 @@ func (c *Client) handleNewMessage(jsonMessage []byte) {
 	}
 
 	message.Id = uuid.New()
+	message.CreatedAt = time.Now()
 	// Attach the client object as the sender of the messsage.
 	message.Sender = c
 
