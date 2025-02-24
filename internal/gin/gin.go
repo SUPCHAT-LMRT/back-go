@@ -119,7 +119,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			authGroup.POST("/login", d.deps.LoginHandler.Handle)
 			authGroup.POST("/register", d.deps.RegisterHandler.Handle)
 			authGroup.POST("/token/access/renew", d.deps.RefreshTokenHandler.Handle)
-			authGroup.POST("/logout", authMiddleware, authMiddleware, d.deps.LogoutHandler.Handle)
+			authGroup.POST("/logout", authMiddleware, d.deps.LogoutHandler.Handle)
 		}
 
 		validationGroup := accountGroup.Group("/validation")
