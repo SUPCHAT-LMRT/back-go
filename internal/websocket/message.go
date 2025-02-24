@@ -6,6 +6,7 @@ import (
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"log"
+	"time"
 )
 
 const OutboundSendMessageAction = "send-message"
@@ -26,7 +27,8 @@ type Message struct {
 	Target  *Room     `json:"target"`
 	Sender  *Client   `json:"sender"`
 	// Payload is a placeholder for any additional data that needs to be sent with the message, depending on the action.
-	Payload any `json:"payload"`
+	Payload   any       `json:"payload"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type MessageSender interface{}

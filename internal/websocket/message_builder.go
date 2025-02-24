@@ -1,13 +1,17 @@
 package websocket
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"time"
+)
 
 type MessageBuilder struct {
-	Action  string
-	Message string
-	Target  *Room
-	Sender  *Client
-	Payload any
+	Action    string
+	Message   string
+	Target    *Room
+	Sender    *Client
+	Payload   any
+	CreatedAt time.Time
 }
 
 func NewMessageBuilder() *MessageBuilder {
@@ -39,13 +43,19 @@ func (m *MessageBuilder) WithPayload(payload any) *MessageBuilder {
 	return m
 }
 
+func (m *MessageBuilder) WithCreatedAt(date time.Time) *MessageBuilder {
+	m.CreatedAt = date
+	return m
+}
+
 func (m *MessageBuilder) Build() Message {
 	return Message{
-		Id:      uuid.New(),
-		Action:  m.Action,
-		Message: m.Message,
-		Target:  m.Target,
-		Sender:  m.Sender,
-		Payload: m.Payload,
+		Id:        uuid.New(),
+		Action:    m.Action,
+		Message:   m.Message,
+		Target:    m.Target,
+		Sender:    m.Sender,
+		Payload:   m.Payload,
+		CreatedAt: m.CreatedAt,
 	}
 }
