@@ -40,7 +40,6 @@ type MongoWorkspaceMember struct {
 	Id          bson.ObjectID `bson:"_id"`
 	WorkspaceId bson.ObjectID `bson:"workspace_id"`
 	UserId      bson.ObjectID `bson:"user_id"`
-	Pseudo      string        `bson:"pseudo"`
 }
 
 func NewMongoWorkspaceRepository(deps MongoWorkspaceRepositoryDeps) WorkspaceRepository {

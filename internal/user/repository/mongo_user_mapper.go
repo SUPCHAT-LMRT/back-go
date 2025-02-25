@@ -19,28 +19,22 @@ func (m MongoUserMapper) MapFromEntity(entity *entity.User) (*MongoUser, error) 
 	}
 
 	return &MongoUser{
-		Id:         userObjectId,
-		FirstName:  entity.FirstName,
-		LastName:   entity.LastName,
-		Email:      entity.Email,
-		Pseudo:     entity.Pseudo,
-		Password:   entity.Password,
-		BirthDate:  entity.BirthDate,
-		IsVerified: entity.IsVerified,
-		CreatedAt:  entity.CreatedAt,
+		Id:        userObjectId,
+		FirstName: entity.FirstName,
+		LastName:  entity.LastName,
+		Email:     entity.Email,
+		Password:  entity.Password,
+		CreatedAt: entity.CreatedAt,
 	}, nil
 }
 
 func (m MongoUserMapper) MapToEntity(databaseUser *MongoUser) (*entity.User, error) {
 	return &entity.User{
-		Id:         entity.UserId(databaseUser.Id.Hex()),
-		FirstName:  databaseUser.FirstName,
-		LastName:   databaseUser.LastName,
-		Email:      databaseUser.Email,
-		Pseudo:     databaseUser.Pseudo,
-		Password:   databaseUser.Password,
-		BirthDate:  databaseUser.BirthDate,
-		IsVerified: databaseUser.IsVerified,
-		CreatedAt:  databaseUser.CreatedAt,
+		Id:        entity.UserId(databaseUser.Id.Hex()),
+		FirstName: databaseUser.FirstName,
+		LastName:  databaseUser.LastName,
+		Email:     databaseUser.Email,
+		Password:  databaseUser.Password,
+		CreatedAt: databaseUser.CreatedAt,
 	}, nil
 }

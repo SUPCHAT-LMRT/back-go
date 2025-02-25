@@ -20,7 +20,6 @@ type UserResponse struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Email     string `json:"email"`
-	Pseudo    string `json:"pseudo"`
 }
 
 func (g *GetMyUserAccountHandler) Handle(c *gin.Context) {
@@ -39,6 +38,5 @@ func (g *GetMyUserAccountHandler) Response(user *entity.User) *UserResponse {
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
-		Pseudo:    user.Pseudo,
 	}
 }

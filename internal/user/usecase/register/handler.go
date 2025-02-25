@@ -3,27 +3,25 @@ package register
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/entity"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
 	"io"
 	"net/http"
-	"time"
 )
 
 type RegisterHandler struct {
-	registerUserUseCase *RegisterUserUseCase
+	registerUserUseCase      *RegisterUserUseCase
+	getInviteLinkDataUseCase *get_data_token_invite.GetInviteLinkDataUseCase
 }
 
-func NewRegisterHandler(useCase *RegisterUserUseCase) *RegisterHandler {
-	return &RegisterHandler{registerUserUseCase: useCase}
+func NewRegisterHandler(useCase *RegisterUserUseCase, getInviteLinkDataUseCase *get_data_token_invite.GetInviteLinkDataUseCase) *RegisterHandler {
+	return &RegisterHandler{registerUserUseCase: useCase, getInviteLinkDataUseCase: getInviteLinkDataUseCase}
 }
 
 type RegisterRequest struct {
-	Email                string `json:"email" binding:"required"`
-	FirstName            string `json:"firstName" binding:"required"`
-	LastName             string `json:"lastName" binding:"required"`
-	Pseudo               string `json:"pseudo" binding:"required"`
+	Token                string `json:"token" binding:"required"`
 	Password             string `json:"password" binding:"required,min=3"`
 	PasswordConfirmation string `json:"passwordConfirmation" binding:"required,eqfield=Password"`
-	BirthDate            string `json:"birthDate" binding:"required,ISO8601date"`
 }
 
 func (l RegisterHandler) Handle(c *gin.Context) {
@@ -48,7 +46,15 @@ func (l RegisterHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	userRequest, err := l.RegisterUserRequest(request)
+	inviteLinkData, err := l.getInviteLinkDataUseCase.GetInviteLinkData(c, request.Token)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	userRequest, err := l.RegisterUserRequest(request, inviteLinkData)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   err.Error(),
@@ -76,18 +82,12 @@ func (l RegisterHandler) Handle(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (l RegisterHandler) RegisterUserRequest(request RegisterRequest) (*RegisterUserRequest, error) {
-	parsedBirthDate, err := time.Parse("2006-01-02", request.BirthDate)
-	if err != nil {
-		return nil, err
-	}
+func (l RegisterHandler) RegisterUserRequest(request RegisterRequest, inviteLinkData *entity.InviteLink) (*RegisterUserRequest, error) {
 
 	return &RegisterUserRequest{
-		Email:     request.Email,
-		FirstName: request.FirstName,
-		LastName:  request.LastName,
-		Pseudo:    request.Pseudo,
+		FirstName: inviteLinkData.FirstName,
+		LastName:  inviteLinkData.LastName,
+		Email:     inviteLinkData.Email,
 		Password:  request.Password,
-		BirthDate: parsedBirthDate,
 	}, nil
 }

@@ -12,6 +12,8 @@ import (
 	request_forgot_password "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/request"
 	validate_forgot_password "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/validate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_my_account"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/generate"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login_oauth"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/logout"
@@ -21,8 +23,6 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/token"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/update_user"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/update_user_avatar"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/validation/usecase/request"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/validation/usecase/validate"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/usecase/get_minutely"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
@@ -78,15 +78,15 @@ type GinRouterDeps struct {
 	LogoutHandler                            *logout.LogoutHandler
 	UpdateAccountPersonalInformationsHandler *update_user.UpdateAccountPersonalInformationsHandler
 	UpdateUserAvatarHandler                  *update_user_avatar.UpdateUserAvatarHandler
-	// User validate
-	RequestAccountValidationHandler *request.RequestAccountValidationHandler
-	ValidateAccountHandler          *validate.ValidateAccountHandler
 	// User forgot password
 	RequestForgotPasswordHandler  *request_forgot_password.RequestForgotPasswordHandler
 	ValidateForgotPasswordHandler *validate_forgot_password.ValidateForgotPasswordHandler
 	// User reset password
 	RequestResetPasswordHandler  *request_reset_password.RequestResetPasswordHandler
 	ValidateResetPasswordHandler *validate_reset_password.ValidateResetPasswordHandler
+	// Invite link
+	CreateInviteLinkHandler  *generate.CreateInviteLinkHandler
+	GetInviteLinkDataHandler *get_data_token_invite.GetInviteLinkDataHandler
 	// User OAuth connection
 	OAuthHandler *login_oauth.OAuthHandler
 	// Ws
@@ -126,13 +126,6 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			authGroup.GET("/oauth/:provider", d.deps.OAuthHandler.AuthProvider)
 			authGroup.GET("/oauth/:provider/callback", d.deps.OAuthHandler.AuthCallback)
 		}
-
-		validationGroup := accountGroup.Group("/validation")
-		{
-			validationGroup.POST("/request", d.deps.RequestAccountValidationHandler.Handle)
-			validationGroup.POST("/validate", d.deps.ValidateAccountHandler.Handle)
-		}
-
 		forgotPasswordGroup := accountGroup.Group("/forgot-password")
 		{
 			forgotPasswordGroup.POST("/request", d.deps.RequestForgotPasswordHandler.Handle)
@@ -143,6 +136,12 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		{
 			resetPasswordGroup.POST("/request", authMiddleware, d.deps.RequestResetPasswordHandler.Handle)
 			resetPasswordGroup.POST("/validate", d.deps.ValidateResetPasswordHandler.Handle)
+		}
+
+		inviteLinkGroup := accountGroup.Group("/invite-link")
+		{
+			inviteLinkGroup.POST("", d.deps.CreateInviteLinkHandler.Handle)
+			inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkDataHandler.Handle)
 		}
 	}
 

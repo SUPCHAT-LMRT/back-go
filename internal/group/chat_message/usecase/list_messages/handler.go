@@ -55,7 +55,6 @@ func (h *ListGroupChatMessagesHandler) Handle(c *gin.Context) {
 
 		response[i].Author = GroupMessageAuthorResponse{
 			UserId: user.Id.String(),
-			Pseudo: user.Pseudo,
 		}
 	}
 
@@ -72,5 +71,4 @@ type GroupChatMessageResponse struct {
 
 type GroupMessageAuthorResponse struct {
 	UserId string `json:"userId"`
-	Pseudo string `json:"pseudo"`
 }

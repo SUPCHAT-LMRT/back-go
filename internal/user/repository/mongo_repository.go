@@ -28,15 +28,12 @@ type MongoUserRepository struct {
 }
 
 type MongoUser struct {
-	Id         bson.ObjectID `bson:"_id"`
-	FirstName  string        `bson:"first_name"`
-	LastName   string        `bson:"last_name"`
-	Email      string        `bson:"email"`
-	Pseudo     string        `bson:"pseudo"`
-	Password   string        `bson:"password"`
-	BirthDate  time.Time     `bson:"birth_date"`
-	IsVerified bool          `bson:"is_verified"`
-	CreatedAt  time.Time     `bson:"created_at"`
+	Id        bson.ObjectID `bson:"_id"`
+	FirstName string        `bson:"first_name"`
+	LastName  string        `bson:"last_name"`
+	Email     string        `bson:"email"`
+	Password  string        `bson:"password"`
+	CreatedAt time.Time     `bson:"created_at"`
 }
 
 func NewMongoUserRepository(deps MongoUserRepositoryDeps) UserRepository {
@@ -144,23 +141,6 @@ func (m MongoUserRepository) Update(ctx context.Context, user *entity.User) erro
 
 func (m MongoUserRepository) Delete(ctx context.Context, userId entity.UserId) error {
 	_, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).DeleteOne(ctx, bson.M{"_id": userId})
-	if err != nil {
-		if errors.Is(err, mongo2.ErrNoDocuments) {
-			return UserNotFoundErr
-		}
-		return err
-	}
-
-	return nil
-}
-
-func (m MongoUserRepository) SetAsVerified(ctx context.Context, userId entity.UserId) error {
-	userObjectId, err := bson.ObjectIDFromHex(userId.String())
-	if err != nil {
-		return err
-	}
-
-	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"_id": userObjectId}, bson.M{"$set": bson.M{"is_verified": true}})
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
 			return UserNotFoundErr

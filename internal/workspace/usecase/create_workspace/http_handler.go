@@ -44,7 +44,6 @@ func (l CreateWorkspaceHandler) Handle(c *gin.Context) {
 	}
 	err := l.useCase.Execute(c, &workspace, &entity.WorkspaceMember{
 		UserId: user.Id,
-		Pseudo: user.Pseudo,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

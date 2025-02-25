@@ -9,7 +9,6 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 var (
@@ -33,6 +32,7 @@ func NewRegisterUserUseCase(deps RegisterUserDeps) *RegisterUserUseCase {
 }
 
 func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserRequest) error {
+
 	userExists, err := r.deps.ExistsUserUseCase.Execute(ctx, request.Email)
 	if err != nil {
 		return fmt.Errorf("error checking if user exists: %w", err)
@@ -66,9 +66,7 @@ func (r *RegisterUserUseCase) EntityUser(user RegisterUserRequest) *entity.User 
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
-		Pseudo:    user.Pseudo,
 		Password:  user.Password,
-		BirthDate: user.BirthDate,
 	}
 }
 
@@ -76,7 +74,5 @@ type RegisterUserRequest struct {
 	FirstName string
 	LastName  string
 	Email     string
-	Pseudo    string
 	Password  string
-	BirthDate time.Time
 }

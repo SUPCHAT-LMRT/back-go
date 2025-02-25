@@ -310,7 +310,6 @@ func (c *Client) toWorkspaceMessageSender(roomId string) (MessageSender, error) 
 
 	return &WorkspaceMessageSender{
 		UserId:            user.Id,
-		Pseudo:            user.Pseudo,
 		WorkspaceMemberId: workspaceMember.Id,
 		WorkspacePseudo:   workspaceMember.Pseudo,
 	}, nil
@@ -324,6 +323,5 @@ func (c *Client) toGroupDirectMessageSender() (MessageSender, error) {
 
 	return &GroupDirectMessageSender{
 		UserId: user.Id,
-		Pseudo: user.Pseudo,
 	}, nil
 }

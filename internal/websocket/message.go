@@ -35,14 +35,12 @@ type MessageSender interface{}
 
 type WorkspaceMessageSender struct {
 	UserId            user_entity.UserId       `json:"userId"`
-	Pseudo            string                   `json:"pseudo"`
 	WorkspaceMemberId entity.WorkspaceMemberId `json:"workspaceMemberId"`
 	WorkspacePseudo   string                   `json:"workspacePseudo"`
 }
 
 type GroupDirectMessageSender struct {
 	UserId user_entity.UserId `json:"userId"`
-	Pseudo string             `json:"pseudo"`
 }
 
 func (m *Message) encode() []byte {

@@ -54,11 +54,6 @@ func (a *AuthMiddleware) Execute(c *gin.Context) {
 		return
 	}
 
-	if !user.IsVerified {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "User is not verified"})
-		return
-	}
-
 	c.Set("user", user)
 }
 

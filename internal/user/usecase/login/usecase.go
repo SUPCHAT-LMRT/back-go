@@ -33,10 +33,6 @@ func (l *LoginUserUseCase) Execute(ctx context.Context, request LoginUserRequest
 		return nil, InvalidUsernameOrPasswordErr
 	}
 
-	if !user.IsVerified {
-		return nil, UserNotVerifiedErr
-	}
-
 	accessToken, err := l.tokenStrategy.GenerateAccessToken(map[string]any{
 		"email": request.Email,
 	})

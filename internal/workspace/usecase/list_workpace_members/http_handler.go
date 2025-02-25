@@ -37,7 +37,6 @@ func (h *ListWorkspaceMembersHandler) Handle(c *gin.Context) {
 		result[i] = MemberResponse{
 			Id:     string(member.Id),
 			UserId: string(member.UserId),
-			Pseudo: member.Pseudo,
 		}
 	}
 
@@ -47,5 +46,4 @@ func (h *ListWorkspaceMembersHandler) Handle(c *gin.Context) {
 type MemberResponse struct {
 	Id     string `json:"id"`
 	UserId string `json:"userId"`
-	Pseudo string `json:"pseudo"`
 }

@@ -67,7 +67,6 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 
 		response[i].Author = ChannelMessageAuthorResponse{
 			UserId:            user.Id.String(),
-			Pseudo:            user.Pseudo,
 			WorkspaceMemberId: member.Id.String(),
 			WorkspacePseudo:   member.Pseudo,
 		}
@@ -86,7 +85,6 @@ type ChannelMessageResponse struct {
 
 type ChannelMessageAuthorResponse struct {
 	UserId            string `json:"userId"`
-	Pseudo            string `json:"pseudo"`
 	WorkspaceMemberId string `json:"workspaceMemberId"`
 	WorkspacePseudo   string `json:"workspacePseudo"`
 }

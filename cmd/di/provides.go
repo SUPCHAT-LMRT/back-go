@@ -30,6 +30,9 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_email"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_my_account"
+	repository2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/repository"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/generate"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login_oauth"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/logout"
@@ -43,10 +46,6 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/update_password"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/update_user"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/update_user_avatar"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/validation/repository"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/validation/service"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/validation/usecase/request"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/validation/usecase/validate"
 	"github.com/supchat-lmrt/back-go/internal/utils"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
 	chat_message_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/repository"
@@ -165,22 +164,6 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_user_avatar.NewS3UpdateUserAvatarStrategy),
 		// User handlers
 		dig.NewProvider(update_user_avatar.NewUpdateUserAvatarHandler),
-		// User register observers
-		dig.NewProvider(register.NewRequestValidationObserver, uberdig.Group("register_user_observers")),
-		// User validate repository
-		dig.NewProvider(repository.NewRedisValidationRepository),
-		dig.NewProvider(repository.NewRedisValidationRequestMapper),
-		// User validate service
-		dig.NewProvider(service.NewDefaultValidationRequestService),
-		// User validate usecases
-		dig.NewProvider(request.NewRequestAccountValidationUseCase),
-		dig.NewProvider(validate.NewValidateAccountUseCase),
-		// User validate observers
-		dig.NewProvider(request.NewLogRequestValidationObserver, uberdig.Group("validation_request_observers")),
-		dig.NewProvider(request.NewSendMailRequestValidationObserver, uberdig.Group("validation_request_observers")),
-		// User validate handlers
-		dig.NewProvider(request.NewRequestAccountValidationHandler),
-		dig.NewProvider(validate.NewValidateAccountHandler),
 		// User forgot password repository
 		dig.NewProvider(forgot_password_repository.NewRedisForgotPasswordRepository),
 		// User forgot password service
@@ -207,6 +190,15 @@ func NewDi() *uberdig.Container {
 		// User reset password handlers
 		dig.NewProvider(reset_password_request_usecase.NewRequestResetPasswordHandler),
 		dig.NewProvider(reset_password_validate_usecase.NewValidateResetPasswordHandler),
+		// User invite link repository
+		dig.NewProvider(repository2.NewMongoInviteLinkRepository),
+		dig.NewProvider(repository2.NewMongoInviteLinkMapper),
+		// User invite link usecases
+		dig.NewProvider(generate.NewInviteLinkUseCase),
+		dig.NewProvider(get_data_token_invite.NewGetInviteLinkDataUseCase),
+		// User invite link handlers
+		dig.NewProvider(generate.NewCreateInviteLinkHandler),
+		dig.NewProvider(get_data_token_invite.NewGetInviteLinkDataHandler),
 		// User handlers
 		dig.NewProvider(get_my_account.NewGetMyUserAccountHandler),
 		dig.NewProvider(login.NewLoginHandler),

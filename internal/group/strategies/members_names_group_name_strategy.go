@@ -24,7 +24,7 @@ func (s MembersNamesDefaultGroupNameStrategy) Handle(ctx context.Context, group 
 			return "", err
 		}
 
-		builder.WriteString(user.Pseudo)
+		builder.WriteString(user.FirstName + " " + user.LastName)
 		if i != len(members)-1 {
 			builder.WriteString(", ")
 		}
