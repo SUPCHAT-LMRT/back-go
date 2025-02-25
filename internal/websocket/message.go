@@ -2,17 +2,16 @@ package websocket
 
 import (
 	"github.com/goccy/go-json"
-	"github.com/google/uuid"
-	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
-	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"log"
 	"time"
 )
 
+// Outbound actions are actions that are sent from the server to the client.
 const OutboundSendMessageAction = "send-message"
 const OutboundRoomJoinedAction = "room-joined"
 const OutboundChannelCreatedAction = "channel-created"
 
+// Inbound actions are actions that are sent from the client to the server.
 const InboundJoinDirectRoomAction = "join-direct-room"
 const InboundJoinGroupRoomAction = "join-group-room"
 const InboundJoinChannelRoomAction = "join-channel-room"
@@ -20,32 +19,33 @@ const InboundLeaveRoomAction = "leave-room"
 const InboundUnselectWorkspaceAction = "unselect-workspace"
 const InboundSelectWorkspaceAction = "select-workspace"
 
-type Message struct {
-	Id      uuid.UUID `json:"id"`
-	Action  string    `json:"action"`
-	Message string    `json:"message"`
-	Target  *Room     `json:"target"`
-	Sender  *Client   `json:"sender"`
-	// Payload is a placeholder for any additional data that needs to be sent with the message, depending on the action.
-	Payload   any       `json:"payload"`
+type Message interface {
+	GetActionName() string
+	SetId(string)
+	SetCreatedAt(time.Time)
+	encode() []byte
+	SetEmittedBy(*Client)
+}
+
+type DefaultMessage struct {
+	Id        string    `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
+	EmittedBy *Client   `json:"emittedBy"`
 }
 
-type MessageSender interface{}
-
-type WorkspaceMessageSender struct {
-	UserId            user_entity.UserId       `json:"userId"`
-	Pseudo            string                   `json:"pseudo"`
-	WorkspaceMemberId entity.WorkspaceMemberId `json:"workspaceMemberId"`
-	WorkspacePseudo   string                   `json:"workspacePseudo"`
+func (m *DefaultMessage) SetId(id string) {
+	m.Id = id
 }
 
-type GroupDirectMessageSender struct {
-	UserId user_entity.UserId `json:"userId"`
-	Pseudo string             `json:"pseudo"`
+func (m *DefaultMessage) SetCreatedAt(createdAt time.Time) {
+	m.CreatedAt = createdAt
 }
 
-func (m *Message) encode() []byte {
+func (m *DefaultMessage) SetEmittedBy(client *Client) {
+	m.EmittedBy = client
+}
+
+func (m *DefaultMessage) encode() []byte {
 	result, err := json.Marshal(m)
 	if err != nil {
 		log.Println(err)

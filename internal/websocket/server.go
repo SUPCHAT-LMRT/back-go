@@ -25,6 +25,9 @@ func NewWsServer(deps WebSocketDeps) *WsServer {
 }
 
 func (s *WsServer) Run() {
+	//pubsub := s.Deps.RedisClient.Client.Subscribe(context.Background(), "ws-messages")
+	//defer pubsub.Close()
+
 	for {
 		select {
 		case client := <-s.Register:
@@ -33,6 +36,8 @@ func (s *WsServer) Run() {
 			s.unregisterClient(client)
 		case message := <-s.Broadcast:
 			s.broadcastToClients(message)
+			//case msg := <-pubsub.Channel():
+			//	s.ForwardToClients([]byte(msg.Payload))
 		}
 	}
 }

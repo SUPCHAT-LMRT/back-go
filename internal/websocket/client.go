@@ -1,13 +1,11 @@
 package websocket
 
 import (
-	"context"
 	"fmt"
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
-	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"log"
 	"sync/atomic"
 	"time"
@@ -53,52 +51,43 @@ func NewClient(user *user_entity.User, conn *websocket.Conn, wsServer *WsServer)
 	return c
 }
 
-func (c *Client) handleNewMessage(jsonMessage []byte) {
+func (c *Client) HandleNewMessage(jsonMessage []byte) {
 	var message Message
 	if err := json.Unmarshal(jsonMessage, &message); err != nil {
 		log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
 	}
 
-	message.Id = uuid.New()
-	message.CreatedAt = time.Now()
-	// Attach the client object as the sender of the messsage.
-	message.Sender = c
+	message.SetId(uuid.NewString())
+	message.SetCreatedAt(time.Now())
+	message.SetEmittedBy(c)
 
-	switch message.Action {
-	case OutboundSendMessageAction:
-		c.handleSendMessage(message)
-	case InboundJoinDirectRoomAction:
-		c.handleJoinDirectRoomMessage(message)
-	case InboundJoinGroupRoomAction:
-		c.handleJoinGroupRoomMessage(message)
-	case InboundJoinChannelRoomAction:
-		c.handleJoinChannelRoomMessage(message)
-	case InboundLeaveRoomAction:
-		c.handleLeaveRoomMessage(message)
-	case InboundUnselectWorkspaceAction:
-		c.handleUnselectWorkspaceMessage(message)
-	case InboundSelectWorkspaceAction:
-		c.handleSelectWorkspaceMessage(message)
+	switch msg := message.(type) {
+	case *SendMessageToChannel:
+		c.handleSendMessageToChannel(msg)
+	//case InboundJoinDirectRoomAction:
+	//	c.handleJoinDirectRoomMessage(message)
+	//case InboundJoinGroupRoomAction:
+	//	c.handleJoinGroupRoomMessage(message)
+	case *JoinChannel:
+		c.handleJoinChannelRoomMessage(msg)
+	//case InboundLeaveRoomAction:
+	//	c.handleLeaveRoomMessage(message)
+	case *SelectWorkspace:
+		c.handleSelectWorkspaceMessage(msg)
+		//case InboundUnselectWorkspaceAction:
+		//	c.handleUnselectWorkspaceMessage(message)
 	}
 }
 
-func (c *Client) handleSendMessage(message Message) {
+func (c *Client) handleSendMessageToChannel(message *SendMessageToChannel) {
 	// The send-message action, this will send messages to a specific room now.
 	// Which room wil depend on the message Target
-	roomId := message.Target.Id
+	roomId := message.ChannelId.String()
 	room := c.wsServer.findRoomById(roomId)
 	if room == nil {
 		return
 	}
 
-	message.Target = room
-
-	var err error
-	message.Payload, err = c.toMessageSender(room)
-	if err != nil {
-		log.Printf("Error getting sender: %s", err)
-		return
-	}
 	// Use the ChatServer method to find the room, and if found, broadcast!
 	if room = c.wsServer.findRoomById(roomId); room != nil {
 		room.SendMessage(message)
@@ -110,66 +99,64 @@ func (c *Client) handleSendMessage(message Message) {
 	}
 }
 
-func (c *Client) handleJoinDirectRoomMessage(message Message) {
-	roomId := message.Message
+//	func (c *Client) handleJoinDirectRoomMessage(message Message) {
+//		roomId := message.Message
+//		// Todo: Check if the room exists
+//		c.joinRoom(roomId, DirectRoomKind, message.Sender)
+//	}
+//
+//	func (c *Client) handleJoinGroupRoomMessage(message Message) {
+//		roomId := message.Message
+//		// Todo: Check if the room exists
+//		c.joinRoom(roomId, GroupRoomKind, message.Sender)
+//	}
+func (c *Client) handleJoinChannelRoomMessage(message *JoinChannel) {
 	// Todo: Check if the room exists
-	c.joinRoom(roomId, DirectRoomKind, message.Sender)
+	c.joinRoom(message.ChannelId.String(), ChannelRoomKind, c)
 }
 
-func (c *Client) handleJoinGroupRoomMessage(message Message) {
-	roomId := message.Message
-	// Todo: Check if the room exists
-	c.joinRoom(roomId, GroupRoomKind, message.Sender)
+//
+//func (c *Client) handleLeaveRoomMessage(message Message) {
+//	roomId := message.Message
+//
+//	room := c.wsServer.findRoomById(roomId)
+//	if room == nil {
+//		return
+//	}
+//
+//	if _, ok := c.rooms[room]; ok {
+//		delete(c.rooms, room)
+//	}
+//
+//	room.unregister <- c
+//}
+
+func (c *Client) handleSelectWorkspaceMessage(message *SelectWorkspace) {
+	c.SelectedWorkspace.Store(message.WorkspaceId)
 }
 
-func (c *Client) handleJoinChannelRoomMessage(message Message) {
-	roomId := message.Message
-	// Todo: Check if the room exists
-	c.joinRoom(roomId, ChannelRoomKind, message.Sender)
-}
-
-func (c *Client) handleLeaveRoomMessage(message Message) {
-	roomId := message.Message
-
-	room := c.wsServer.findRoomById(roomId)
-	if room == nil {
-		return
-	}
-
-	if _, ok := c.rooms[room]; ok {
-		delete(c.rooms, room)
-	}
-
-	room.unregister <- c
-}
-
-func (c *Client) handleSelectWorkspaceMessage(message Message) {
-	workspaceId := message.Message
-	c.SelectedWorkspace.Store(workspaceId)
-}
-
-func (c *Client) handleUnselectWorkspaceMessage(message Message) {
+func (c *Client) handleUnselectWorkspaceMessage(message *UnselectWorkspace) {
 	c.SelectedWorkspace.Store("")
 }
 
-func (c *Client) handleJoinRoomPrivateMessage(message Message) {
-	clientId, err := uuid.Parse(message.Message)
-	if err != nil {
-		log.Println("Error parsing room id")
-		return
-	}
-
-	target := c.wsServer.findClientById(clientId)
-	if target == nil {
-		return
-	}
-
-	// create unique room name combined to the two IDs
-	roomName := message.Message + c.Id.String()
-
-	c.joinRoom(roomName, DirectRoomKind, target)
-	target.joinRoom(roomName, DirectRoomKind, c)
-}
+//func (c *Client) handleJoinRoomPrivateMessage(message Message) {
+//	clientId, err := uuid.Parse(message.Message)
+//	if err != nil {
+//		log.Println("Error parsing room id")
+//		return
+//	}
+//
+//	target := c.wsServer.findClientById(clientId)
+//	if target == nil {
+//		return
+//	}
+//
+//	// create unique room name combined to the two IDs
+//	roomName := message.Message + c.Id.String()
+//
+//	c.joinRoom(roomName, DirectRoomKind, target)
+//	target.joinRoom(roomName, DirectRoomKind, c)
+//}
 
 func (c *Client) joinRoom(roomId string, kind RoomKind, sender *Client) {
 	room := c.wsServer.findRoomById(roomId)
@@ -181,7 +168,7 @@ func (c *Client) joinRoom(roomId string, kind RoomKind, sender *Client) {
 	if !c.isInRoom(room) {
 		c.rooms[room] = true
 		room.register <- c
-		c.notifyRoomJoined(room, sender)
+		//c.notifyRoomJoined(room, sender)
 	}
 }
 
@@ -194,18 +181,19 @@ func (c *Client) isInRoom(room *Room) bool {
 
 func (c *Client) SendMessage(message Message) {
 	c.send <- message.encode()
+	// TODO Notify on redis
 }
 
-func (c *Client) notifyRoomJoined(room *Room, sender *Client) {
-	message := Message{
-		Id:     uuid.New(),
-		Action: OutboundRoomJoinedAction,
-		Target: room,
-		Sender: sender,
-	}
-
-	c.send <- message.encode()
-}
+//func (c *Client) notifyRoomJoined(room *Room, sender *Client) {
+//	message := Message{
+//		Id:     uuid.New(),
+//		Action: OutboundRoomJoinedAction,
+//		Target: room,
+//		Sender: sender,
+//	}
+//
+//	c.send <- message.encode()
+//}
 
 func (c *Client) ReadPump() {
 	defer c.disconnect()
@@ -223,7 +211,7 @@ func (c *Client) ReadPump() {
 			break
 		}
 
-		c.handleNewMessage(jsonMessage)
+		c.HandleNewMessage(jsonMessage)
 	}
 }
 
@@ -283,47 +271,47 @@ func (c *Client) disconnect() {
 	c.conn.Close()
 }
 
-func (c *Client) toMessageSender(room *Room) (MessageSender, error) {
-	if room.Kind == ChannelRoomKind {
-		return c.toWorkspaceMessageSender(room.Id)
-	}
-
-	return c.toGroupDirectMessageSender()
-}
-
-func (c *Client) toWorkspaceMessageSender(roomId string) (MessageSender, error) {
-	// The room id is the channel id
-	channel, err := c.wsServer.Deps.GetChannelUseCase.Execute(context.Background(), channel_entity.ChannelId(roomId))
-	if err != nil {
-		return nil, err
-	}
-
-	workspaceMember, err := c.wsServer.Deps.GetWorkspaceMemberUseCase.Execute(context.Background(), channel.WorkspaceId, c.UserId)
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := c.wsServer.Deps.GetUserByIdUseCase.Execute(context.Background(), c.UserId)
-	if err != nil {
-		return nil, err
-	}
-
-	return &WorkspaceMessageSender{
-		UserId:            user.Id,
-		Pseudo:            user.Pseudo,
-		WorkspaceMemberId: workspaceMember.Id,
-		WorkspacePseudo:   workspaceMember.Pseudo,
-	}, nil
-}
-
-func (c *Client) toGroupDirectMessageSender() (MessageSender, error) {
-	user, err := c.wsServer.Deps.GetUserByIdUseCase.Execute(context.Background(), c.UserId)
-	if err != nil {
-		return nil, err
-	}
-
-	return &GroupDirectMessageSender{
-		UserId: user.Id,
-		Pseudo: user.Pseudo,
-	}, nil
-}
+//func (c *Client) toMessageSender(room *Room) (MessageSender, error) {
+//	if room.Kind == ChannelRoomKind {
+//		return c.toWorkspaceMessageSender(room.Id)
+//	}
+//
+//	return c.toGroupDirectMessageSender()
+//}
+//
+//func (c *Client) toWorkspaceMessageSender(roomId string) (MessageSender, error) {
+//	// The room id is the channel id
+//	channel, err := c.wsServer.Deps.GetChannelUseCase.Execute(context.Background(), channel_entity.ChannelId(roomId))
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	workspaceMember, err := c.wsServer.Deps.GetWorkspaceMemberUseCase.Execute(context.Background(), channel.WorkspaceId, c.UserId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	user, err := c.wsServer.Deps.GetUserByIdUseCase.Execute(context.Background(), c.UserId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return &WorkspaceMessageSender{
+//		UserId:            user.Id,
+//		Pseudo:            user.Pseudo,
+//		WorkspaceMemberId: workspaceMember.Id,
+//		WorkspacePseudo:   workspaceMember.Pseudo,
+//	}, nil
+//}
+//
+//func (c *Client) toGroupDirectMessageSender() (MessageSender, error) {
+//	user, err := c.wsServer.Deps.GetUserByIdUseCase.Execute(context.Background(), c.UserId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return &GroupDirectMessageSender{
+//		UserId: user.Id,
+//		Pseudo: user.Pseudo,
+//	}, nil
+//}

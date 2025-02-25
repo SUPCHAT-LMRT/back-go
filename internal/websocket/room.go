@@ -15,7 +15,7 @@ type Room struct {
 	clients    map[*Client]bool
 	register   chan *Client
 	unregister chan *Client
-	broadcast  chan *Message
+	broadcast  chan Message
 }
 
 // NewRoom creates a new Room
@@ -27,7 +27,7 @@ func NewRoom(deps WebSocketDeps, id string, kind RoomKind) *Room {
 		clients:    make(map[*Client]bool),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		broadcast:  make(chan *Message),
+		broadcast:  make(chan Message),
 	}
 }
 
