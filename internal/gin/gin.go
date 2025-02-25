@@ -123,8 +123,8 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			authGroup.POST("/register", d.deps.RegisterHandler.Handle)
 			authGroup.POST("/token/access/renew", d.deps.RefreshTokenHandler.Handle)
 			authGroup.POST("/logout", authMiddleware, d.deps.LogoutHandler.Handle)
-			authGroup.GET("/provider", d.deps.OAuthHandler.AuthProvider)
-			authGroup.GET("/callback", d.deps.OAuthHandler.AuthCallback)
+			authGroup.GET("/oauth/:provider", d.deps.OAuthHandler.AuthProvider)
+			authGroup.GET("/oauth/:provider/callback", d.deps.OAuthHandler.AuthCallback)
 		}
 
 		validationGroup := accountGroup.Group("/validation")
