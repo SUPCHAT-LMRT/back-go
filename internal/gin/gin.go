@@ -13,6 +13,7 @@ import (
 	validate_forgot_password "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/validate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_my_account"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/login_oauth"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/logout"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/register"
 	request_reset_password "github.com/supchat-lmrt/back-go/internal/user/usecase/reset_password/usecase/request"
@@ -86,6 +87,8 @@ type GinRouterDeps struct {
 	// User reset password
 	RequestResetPasswordHandler  *request_reset_password.RequestResetPasswordHandler
 	ValidateResetPasswordHandler *validate_reset_password.ValidateResetPasswordHandler
+	// User OAuth connection
+	OAuthHandler *login_oauth.OAuthHandler
 	// Ws
 	WebsocketHandler *websocket.WebsocketHandler
 	// Chat
@@ -120,6 +123,8 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			authGroup.POST("/register", d.deps.RegisterHandler.Handle)
 			authGroup.POST("/token/access/renew", d.deps.RefreshTokenHandler.Handle)
 			authGroup.POST("/logout", authMiddleware, d.deps.LogoutHandler.Handle)
+			authGroup.GET("/provider", d.deps.OAuthHandler.AuthProvider)
+			authGroup.GET("/callback", d.deps.OAuthHandler.AuthCallback)
 		}
 
 		validationGroup := accountGroup.Group("/validation")

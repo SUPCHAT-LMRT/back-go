@@ -31,6 +31,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_my_account"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/login_oauth"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/logout"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/register"
 	reset_password_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/reset_password/repository"
@@ -223,6 +224,9 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(user_chat_direct_repository.NewChatDirectMapper),
 		// User chat direct usecases
 		dig.NewProvider(list_recent_chats_direct.NewListRecentChatDirectUseCase),
+		// User Oauth handler & usecase
+		dig.NewProvider(login_oauth.NewOAuthHandler),
+		dig.NewProvider(login_oauth.NewOAuthUseCase),
 		// Mail usecases
 		dig.NewProvider(sendmail.NewSendMailUseCase),
 		// Ws
