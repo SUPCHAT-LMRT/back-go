@@ -33,8 +33,6 @@ func main() {
 
 	logg.Info().Msg("Starting app...")
 
-	go invokeFatal(logg, diContainer, runGinServer(logg))
-	go invokeFatal(logg, diContainer, runWebsocketServer(logg))
 	invokeFatal(logg, diContainer, func(client *s3.S3Client) {
 		logg.Info().Msg("Creating buckets...")
 		bucketsToCreate := []string{"workspaces-icons", "workspaces-banners", "users-avatars", "messages-files"}
@@ -67,6 +65,9 @@ func main() {
 
 		logg.Info().Str("collection", "workspace_message_sent_ts").Msg("Time-Series Collection created!")
 	})
+
+	go invokeFatal(logg, diContainer, runGinServer(logg))
+	go invokeFatal(logg, diContainer, runWebsocketServer(logg))
 
 	logg.Info().Msg("App started!")
 

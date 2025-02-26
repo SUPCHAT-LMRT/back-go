@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"github.com/google/uuid"
+	"github.com/supchat-lmrt/back-go/internal/websocket/room"
 )
 
 type WsServer struct {
@@ -83,12 +84,12 @@ func (s *WsServer) findClientById(clientId uuid.UUID) *Client {
 
 }
 
-func (s *WsServer) createRoom(name string, kind RoomKind) *Room {
-	room := NewRoom(s.Deps, name, kind)
-	go room.RunRoom()
-	s.rooms[room] = true
+func (s *WsServer) createRoom(name string, kind room.RoomKind) *Room {
+	createdRoom := NewRoom(s.Deps, name, kind)
+	go createdRoom.RunRoom()
+	s.rooms[createdRoom] = true
 
-	return room
+	return createdRoom
 }
 
 func (s *WsServer) IterateClients(fn func(client *Client) bool) {

@@ -1,25 +1,22 @@
 package websocket
 
-type RoomKind string
-
-const (
-	ChannelRoomKind RoomKind = "channel"
-	GroupRoomKind   RoomKind = "group"
-	DirectRoomKind  RoomKind = "direct"
+import (
+	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
+	"github.com/supchat-lmrt/back-go/internal/websocket/messages/outbound"
+	"github.com/supchat-lmrt/back-go/internal/websocket/room"
 )
 
 type Room struct {
 	deps       WebSocketDeps
-	Id         string   `json:"id"`
-	Kind       RoomKind `json:"kind"`
+	Id         string        `json:"id"`
+	Kind       room.RoomKind `json:"kind"`
 	clients    map[*Client]bool
 	register   chan *Client
 	unregister chan *Client
-	broadcast  chan Message
 }
 
 // NewRoom creates a new Room
-func NewRoom(deps WebSocketDeps, id string, kind RoomKind) *Room {
+func NewRoom(deps WebSocketDeps, id string, kind room.RoomKind) *Room {
 	return &Room{
 		deps:       deps,
 		Id:         id,
@@ -27,7 +24,6 @@ func NewRoom(deps WebSocketDeps, id string, kind RoomKind) *Room {
 		clients:    make(map[*Client]bool),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		broadcast:  make(chan Message),
 	}
 }
 
@@ -37,15 +33,8 @@ func (room *Room) RunRoom() {
 		select {
 		case client := <-room.register:
 			room.registerClientInRoom(client)
-
 		case client := <-room.unregister:
 			room.unregisterClientInRoom(client)
-
-		case message := <-room.broadcast:
-			// If the user is not in the room he broadcasted to, don't send the message.
-			if message.Sender.isInRoom(room) {
-				room.broadcastToClientsInRoom(message.encode())
-			}
 		}
 	}
 }
@@ -65,6 +54,22 @@ func (room *Room) broadcastToClientsInRoom(message []byte) {
 		client.send <- message
 	}
 }
-func (room *Room) SendMessage(message Message) {
-	room.broadcastToClientsInRoom(message.encode())
+func (room *Room) SendMessage(message messages.Message) error {
+	encoded, err := message.Encode()
+	if err != nil {
+		return err
+	}
+
+	room.broadcastToClientsInRoom(encoded)
+	return nil
+}
+
+func (room *Room) SendChannelMessage(message outbound.OutboundSendMessageToChannel) error {
+	encoded, err := message.Encode()
+	if err != nil {
+		return err
+	}
+
+	room.broadcastToClientsInRoom(encoded)
+	return nil
 }
