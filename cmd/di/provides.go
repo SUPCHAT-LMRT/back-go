@@ -53,6 +53,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/usecase/get_minutely"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/save_message"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/toggle_reaction"
 	channel_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
@@ -134,6 +135,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(chat_message_repository.NewChannelMessageMapper),
 		// Workspace channels chat usecases
 		dig.NewProvider(list_messages.NewListMessageUseCase),
+		dig.NewProvider(toggle_reaction.NewToggleReactionUseCase),
 		// Workspace channels chat handlers
 		dig.NewProvider(list_messages.NewListChannelMessagesHandler),
 		// Workspace channels chat messages usecases
