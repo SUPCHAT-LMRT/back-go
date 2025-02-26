@@ -18,3 +18,7 @@ type User struct {
 func (id UserId) String() string {
 	return string(id)
 }
+
+func (u User) FullName() string {
+	return u.FirstName + " " + u.LastName
+}

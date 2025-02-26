@@ -419,7 +419,7 @@ func (c *Client) toOutboundSendChannelMessage(roomId string) (*outbound.Outbound
 
 	return &outbound.OutboundSendMessageToChannelSender{
 		UserId:            user.Id,
-		Pseudo:            user.Pseudo,
+		Pseudo:            user.FullName(),
 		WorkspaceMemberId: workspaceMember.Id,
 		WorkspacePseudo:   workspaceMember.Pseudo,
 	}, nil
@@ -443,7 +443,7 @@ func (c *Client) toOutboundChannelMessageReactionMember(roomId string) (*outboun
 		if err != nil {
 			return nil, err
 		}
-		username = user.Pseudo
+		username = user.FullName()
 	}
 
 	return &outbound.OutboundMessageReactionMember{

@@ -55,7 +55,7 @@ func (s *WsServer) ForwardToClients(message []byte) {
 			continue
 		}
 
-		client.HandleNewMessage(forwardMessage.Payload)
+		client.send <- message
 	}
 }
 

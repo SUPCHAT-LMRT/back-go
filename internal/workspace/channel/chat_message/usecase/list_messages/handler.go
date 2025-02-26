@@ -63,7 +63,7 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 						continue
 					}
 
-					reactionUsers[k] = ChannelMessageReactionUserResponse{Id: userId.String(), Name: userReacted.Pseudo}
+					reactionUsers[k] = ChannelMessageReactionUserResponse{Id: userId.String(), Name: userReacted.FullName()}
 					continue
 				}
 
