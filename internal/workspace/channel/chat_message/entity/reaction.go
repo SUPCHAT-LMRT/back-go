@@ -7,7 +7,7 @@ type ChannelMessageReactionId string
 type ChannelMessageReaction struct {
 	Id        ChannelMessageReactionId
 	MessageId ChannelMessageId
-	UserId    user_entity.UserId
+	UserIds   []user_entity.UserId
 	Reaction  string
 }
 

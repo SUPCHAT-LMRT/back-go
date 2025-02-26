@@ -5,25 +5,39 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
 )
 
-type OutboundMessageReactionCreate struct {
+type OutboundMessageReactionAdded struct {
 	messages.DefaultMessage
-	ReactionId string                              `json:"reactionId"`
-	MessageId  string                              `json:"messageId"`
-	Member     OutboundMessageReactionCreateMember `json:"member"`
-	Reaction   string                              `json:"reaction"`
+	MessageId string                        `json:"messageId"`
+	Member    OutboundMessageReactionMember `json:"member"`
+	Reaction  string                        `json:"reaction"`
 }
 
-type OutboundMessageReactionCreateMember struct {
-	UserId        string `json:"userId"`
-	Username      string `json:"username"`
-	WorkspaceName string `json:"workspaceName"`
+type OutboundMessageReactionMember struct {
+	UserId   string `json:"userId"`
+	Username string `json:"username"`
 }
 
-func (o OutboundMessageReactionCreate) GetActionName() messages.Action {
-	return messages.OutboundChannelMessageReactionCreate
+func (o OutboundMessageReactionAdded) GetActionName() messages.Action {
+	return messages.OutboundChannelMessageReactionAdded
 }
 
-func (o OutboundMessageReactionCreate) Encode() ([]byte, error) {
+func (o OutboundMessageReactionAdded) Encode() ([]byte, error) {
+	o.DefaultMessage = messages.NewDefaultMessage(o.GetActionName())
+	return json.Marshal(o)
+}
+
+type OutboundMessageReactionRemoved struct {
+	messages.DefaultMessage
+	MessageId string                        `json:"messageId"`
+	Member    OutboundMessageReactionMember `json:"member"`
+	Reaction  string                        `json:"reaction"`
+}
+
+func (o OutboundMessageReactionRemoved) GetActionName() messages.Action {
+	return messages.OutboundChannelMessageReactionRemoved
+}
+
+func (o OutboundMessageReactionRemoved) Encode() ([]byte, error) {
 	o.DefaultMessage = messages.NewDefaultMessage(o.GetActionName())
 	return json.Marshal(o)
 }

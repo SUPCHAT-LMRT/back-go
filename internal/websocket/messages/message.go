@@ -9,10 +9,11 @@ type Action string
 
 // Outbound actions are actions that are sent from the server to the client.
 const (
-	OutboundSendChannelMessageAction     Action = "send-channel-message"
-	OutboundRoomJoinedAction             Action = "room-joined"
-	OutboundChannelCreatedAction         Action = "channel-created"
-	OutboundChannelMessageReactionCreate Action = "channel-message-reaction-create"
+	OutboundSendChannelMessageAction      Action = "send-channel-message"
+	OutboundRoomJoinedAction              Action = "room-joined"
+	OutboundChannelCreatedAction          Action = "channel-created"
+	OutboundChannelMessageReactionAdded   Action = "channel-message-reaction-added"
+	OutboundChannelMessageReactionRemoved Action = "channel-message-reaction-removed"
 )
 
 // Inbound actions are actions that are sent from the client to the server.
@@ -24,7 +25,7 @@ const (
 	InboundLeaveRoomAction              Action = "leave-room"
 	InboundUnselectWorkspaceAction      Action = "unselect-workspace"
 	InboundSelectWorkspaceAction        Action = "select-workspace"
-	InboundChannelMessageReactionCreate Action = "channel-message-reaction-create"
+	InboundChannelMessageReactionToggle Action = "channel-message-reaction-toggle"
 )
 
 type Message interface {

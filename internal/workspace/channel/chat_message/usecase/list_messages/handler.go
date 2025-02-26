@@ -49,9 +49,30 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 	for i, message := range channelMessages {
 		reactions := make([]ChannelMessageReactionResponse, len(message.Reactions))
 		for j, reaction := range message.Reactions {
+
+			reactionUsers := make([]ChannelMessageReactionUserResponse, len(reaction.UserIds))
+			for k, userId := range reaction.UserIds {
+				memberReacted, err := h.deps.GetWorkspaceMemberUseCase.Execute(c, entity.WorkspaceId(workspaceId), userId)
+				if err != nil {
+					continue
+				}
+
+				if memberReacted.Pseudo == "" {
+					userReacted, err := h.deps.GetUserByIdUseCase.Execute(c, userId)
+					if err != nil {
+						continue
+					}
+
+					reactionUsers[k] = ChannelMessageReactionUserResponse{Id: userId.String(), Name: userReacted.Pseudo}
+					continue
+				}
+
+				reactionUsers[k] = ChannelMessageReactionUserResponse{Id: userId.String(), Name: memberReacted.Pseudo}
+			}
+
 			reactions[j] = ChannelMessageReactionResponse{
 				Id:       reaction.Id.String(),
-				UserId:   reaction.UserId.String(),
+				Users:    reactionUsers,
 				Reaction: reaction.Reaction,
 			}
 		}
@@ -103,7 +124,12 @@ type ChannelMessageAuthorResponse struct {
 }
 
 type ChannelMessageReactionResponse struct {
-	Id       string `json:"id"`
-	UserId   string `json:"userId"`
-	Reaction string `json:"reaction"`
+	Id       string                               `json:"id"`
+	Users    []ChannelMessageReactionUserResponse `json:"users"`
+	Reaction string                               `json:"reaction"`
+}
+
+type ChannelMessageReactionUserResponse struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }

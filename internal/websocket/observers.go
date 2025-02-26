@@ -9,7 +9,3 @@ import (
 type SendMessageObserver interface {
 	OnSendMessage(message messages.Message, messageId entity.ChannelMessageId, userId user_entity.UserId)
 }
-
-type CreateChannelMessageReactionObserver interface {
-	OnCreateChannelMessageReaction(messageId entity.ChannelMessageId, reactionId entity.ChannelMessageReactionId, userId user_entity.UserId, reaction string)
-}
