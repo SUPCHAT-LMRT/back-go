@@ -1,6 +1,8 @@
 package websocket
 
 import (
+	"context"
+	"github.com/goccy/go-json"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages/outbound"
 	"github.com/supchat-lmrt/back-go/internal/websocket/room"
@@ -53,7 +55,17 @@ func (room *Room) broadcastToClientsInRoom(message []byte) {
 	for client := range room.clients {
 		client.send <- message
 	}
+
+	// TODO impl forwardMessage.EmitterServerId
+	forwardedMessage, err := json.Marshal(ForwardMessage{EmitterServerId: "1", Payload: message})
+	if err != nil {
+		room.deps.Logger.Error().Err(err).Msg("Error on forwarding message to clients")
+		return
+	}
+
+	room.deps.RedisClient.Client.Publish(context.Background(), "ws-messages", forwardedMessage)
 }
+
 func (room *Room) SendMessage(message messages.Message) error {
 	encoded, err := message.Encode()
 	if err != nil {

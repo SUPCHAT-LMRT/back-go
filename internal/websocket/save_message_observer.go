@@ -28,10 +28,10 @@ func NewSaveMessageObserver(deps SaveMessageObserverDeps) SendMessageObserver {
 	return &SaveMessageObserver{deps: deps}
 }
 
-func (s SaveMessageObserver) OnSendMessage(message messages.Message, userId user_entity.UserId) {
+func (s SaveMessageObserver) OnSendMessage(message messages.Message, messageId entity.ChannelMessageId, userId user_entity.UserId) {
 	switch msg := message.(type) {
 	case *inbound.InboundSendMessageToChannel:
-		s.handleChannelMessage(msg, userId)
+		s.handleChannelMessage(msg, messageId, userId)
 	}
 	//switch message.Target.Kind {
 	//case ChannelRoomKind:
@@ -46,8 +46,9 @@ func (s SaveMessageObserver) OnSendMessage(message messages.Message, userId user
 	//}
 }
 
-func (s SaveMessageObserver) handleChannelMessage(message *inbound.InboundSendMessageToChannel, userId user_entity.UserId) {
+func (s SaveMessageObserver) handleChannelMessage(message *inbound.InboundSendMessageToChannel, messageId entity.ChannelMessageId, userId user_entity.UserId) {
 	err := s.deps.SaveChannelMessageUseCase.Execute(context.Background(), &entity.ChannelMessage{
+		Id:        messageId,
 		ChannelId: message.ChannelId,
 		Content:   message.Content,
 		AuthorId:  userId,

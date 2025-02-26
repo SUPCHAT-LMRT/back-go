@@ -1,6 +1,8 @@
 package websocket
 
 import (
+	"context"
+	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/supchat-lmrt/back-go/internal/websocket/room"
 )
@@ -10,7 +12,6 @@ type WsServer struct {
 	clients    map[*Client]bool
 	Register   chan *Client
 	Unregister chan *Client
-	Broadcast  chan []byte
 	rooms      map[*Room]bool
 }
 
@@ -20,14 +21,13 @@ func NewWsServer(deps WebSocketDeps) *WsServer {
 		clients:    make(map[*Client]bool),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
-		Broadcast:  make(chan []byte),
 		rooms:      make(map[*Room]bool),
 	}
 }
 
 func (s *WsServer) Run() {
-	//pubsub := s.Deps.RedisClient.Client.Subscribe(context.Background(), "ws-messages")
-	//defer pubsub.Close()
+	pubsub := s.Deps.RedisClient.Client.Subscribe(context.Background(), "ws-messages")
+	defer pubsub.Close()
 
 	for {
 		select {
@@ -35,11 +35,27 @@ func (s *WsServer) Run() {
 			s.registerClient(client)
 		case client := <-s.Unregister:
 			s.unregisterClient(client)
-		case message := <-s.Broadcast:
-			s.broadcastToClients(message)
-			//case msg := <-pubsub.Channel():
-			//	s.ForwardToClients([]byte(msg.Payload))
+		case msg := <-pubsub.Channel():
+			s.ForwardToClients([]byte(msg.Payload))
 		}
+	}
+}
+
+func (s *WsServer) ForwardToClients(message []byte) {
+	for client := range s.clients {
+		var forwardMessage ForwardMessage
+		err := json.Unmarshal(message, &forwardMessage)
+		if err != nil {
+			s.Deps.Logger.Error().Err(err).Msg("Error on unmarshalling message")
+			continue
+		}
+
+		// TODO impl forwardMessage.EmitterServerId
+		if forwardMessage.EmitterServerId == "1" {
+			continue
+		}
+
+		client.HandleNewMessage(forwardMessage.Payload)
 	}
 }
 
@@ -50,12 +66,6 @@ func (s *WsServer) registerClient(client *Client) {
 func (s *WsServer) unregisterClient(client *Client) {
 	if _, ok := s.clients[client]; ok {
 		delete(s.clients, client)
-	}
-}
-
-func (s *WsServer) broadcastToClients(message []byte) {
-	for client := range s.clients {
-		client.send <- message
 	}
 }
 

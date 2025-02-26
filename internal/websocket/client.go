@@ -11,7 +11,9 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages/inbound"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages/outbound"
 	"github.com/supchat-lmrt/back-go/internal/websocket/room"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/entity"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"log"
 	"sync/atomic"
 	"time"
@@ -119,6 +121,14 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 
 		c.handleLeaveRoomMessage(&leaveRoomMessage)
 		break
+	case messages.InboundChannelMessageReactionCreate:
+		reactionMessage := inbound.InboundMessageReactionCreate{DefaultMessage: message}
+		if err := json.Unmarshal(jsonMessage, &reactionMessage); err != nil {
+			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
+			return
+		}
+
+		c.handleReactionCreateMessage(&reactionMessage)
 	default:
 		log.Printf("Unknown action %s", message.Action)
 	}
@@ -141,7 +151,9 @@ func (c *Client) handleSendMessageToChannel(message *inbound.InboundSendMessageT
 
 	// Use the ChatServer method to find the room, and if found, broadcast!
 	if foundRoom = c.wsServer.findRoomById(roomId); foundRoom != nil {
+		messageId := bson.NewObjectID().Hex()
 		err = foundRoom.SendChannelMessage(outbound.OutboundSendMessageToChannel{
+			MessageId: messageId,
 			Content:   message.Content,
 			ChannelId: message.ChannelId,
 			Sender:    channelSender,
@@ -149,12 +161,13 @@ func (c *Client) handleSendMessageToChannel(message *inbound.InboundSendMessageT
 		if err != nil {
 			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
 		}
+
+		// Notify observers
+		for _, observer := range c.wsServer.Deps.SendMessageObservers {
+			observer.OnSendMessage(message, entity.ChannelMessageId(messageId), c.UserId)
+		}
 	}
 
-	// Notify observers
-	for _, observer := range c.wsServer.Deps.SendMessageObservers {
-		observer.OnSendMessage(message, c.UserId)
-	}
 }
 
 //	func (c *Client) handleJoinDirectRoomMessage(message Message) {
@@ -216,6 +229,46 @@ func (c *Client) handleUnselectWorkspaceMessage(message *inbound.InboundUnselect
 //	target.joinRoom(roomName, DirectRoomKind, c)
 //}
 
+func (c *Client) handleReactionCreateMessage(message *inbound.InboundMessageReactionCreate) {
+	// The send-message action, this will send messages to a specific room now.
+	// Which room wil depend on the message Target
+	roomId := message.RoomId
+	foundRoom := c.wsServer.findRoomById(roomId)
+	if foundRoom == nil {
+		return
+	}
+
+	// Use the ChatServer method to find the room, and if found, broadcast!
+	if foundRoom = c.wsServer.findRoomById(roomId); foundRoom != nil {
+		member, err := c.toOutboundChannelMessageReactionCreateMember(roomId)
+		if err != nil {
+			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on creating sender")
+			return
+		}
+
+		reactionId := bson.NewObjectID().Hex()
+		err = foundRoom.SendMessage(&outbound.OutboundMessageReactionCreate{
+			ReactionId: reactionId,
+			MessageId:  message.MessageId,
+			Reaction:   message.Reaction,
+			Member:     *member,
+		})
+		if err != nil {
+			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+		}
+
+		// Notify observers
+		for _, observer := range c.wsServer.Deps.CreateChannelMessageReactionObservers {
+			observer.OnCreateChannelMessageReaction(
+				entity.ChannelMessageId(message.MessageId),
+				entity.ChannelMessageReactionId(reactionId),
+				c.UserId,
+				message.Reaction,
+			)
+		}
+	}
+}
+
 func (c *Client) joinRoom(roomId string, kind room.RoomKind, sender *Client) {
 	foundRoom := c.wsServer.findRoomById(roomId)
 	if foundRoom == nil {
@@ -251,11 +304,6 @@ func (c *Client) SendMessage(message messages.Message) error {
 
 func (c *Client) notifyRoomJoined(room *Room) {
 	message := outbound.OutboundRoomJoined{
-		DefaultMessage: messages.DefaultMessage{
-			Id:        uuid.NewString(),
-			CreatedAt: time.Now(),
-			Action:    messages.OutboundRoomJoinedAction,
-		},
 		Room: outbound.OutboundRoomJoinedRoom{
 			Id:   room.Id,
 			Kind: room.Kind,
@@ -369,5 +417,28 @@ func (c *Client) toOutboundSendChannelMessage(roomId string) (*outbound.Outbound
 		Pseudo:            user.Pseudo,
 		WorkspaceMemberId: workspaceMember.Id,
 		WorkspacePseudo:   workspaceMember.Pseudo,
+	}, nil
+}
+
+func (c *Client) toOutboundChannelMessageReactionCreateMember(roomId string) (*outbound.OutboundMessageReactionCreateMember, error) {
+	user, err := c.wsServer.Deps.GetUserByIdUseCase.Execute(context.Background(), c.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	channel, err := c.wsServer.Deps.GetChannelUseCase.Execute(context.Background(), channel_entity.ChannelId(roomId))
+	if err != nil {
+		return nil, err
+	}
+
+	workspaceMember, err := c.wsServer.Deps.GetWorkspaceMemberUseCase.Execute(context.Background(), channel.WorkspaceId, c.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &outbound.OutboundMessageReactionCreateMember{
+		UserId:        user.Id.String(),
+		Username:      user.Pseudo,
+		WorkspaceName: workspaceMember.Pseudo,
 	}, nil
 }

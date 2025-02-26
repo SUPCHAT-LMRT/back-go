@@ -47,12 +47,22 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 
 	response := make([]ChannelMessageResponse, len(channelMessages))
 	for i, message := range channelMessages {
+		reactions := make([]ChannelMessageReactionResponse, len(message.Reactions))
+		for j, reaction := range message.Reactions {
+			reactions[j] = ChannelMessageReactionResponse{
+				Id:       reaction.Id.String(),
+				UserId:   reaction.UserId.String(),
+				Reaction: reaction.Reaction,
+			}
+		}
+
 		response[i] = ChannelMessageResponse{
 			Id:        message.Id.String(),
 			ChannelId: message.ChannelId.String(),
 			Content:   message.Content,
 			Author:    ChannelMessageAuthorResponse{},
 			CreatedAt: message.CreatedAt,
+			Reactions: reactions,
 		}
 
 		user, err := h.deps.GetUserByIdUseCase.Execute(c, message.AuthorId)
@@ -77,11 +87,12 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 }
 
 type ChannelMessageResponse struct {
-	Id        string                       `json:"id"`
-	ChannelId string                       `json:"channelId"`
-	Content   string                       `json:"content"`
-	Author    ChannelMessageAuthorResponse `json:"author"`
-	CreatedAt time.Time                    `json:"createdAt"`
+	Id        string                           `json:"id"`
+	ChannelId string                           `json:"channelId"`
+	Content   string                           `json:"content"`
+	Author    ChannelMessageAuthorResponse     `json:"author"`
+	CreatedAt time.Time                        `json:"createdAt"`
+	Reactions []ChannelMessageReactionResponse `json:"reactions"`
 }
 
 type ChannelMessageAuthorResponse struct {
@@ -89,4 +100,10 @@ type ChannelMessageAuthorResponse struct {
 	Pseudo            string `json:"pseudo"`
 	WorkspaceMemberId string `json:"workspaceMemberId"`
 	WorkspacePseudo   string `json:"workspacePseudo"`
+}
+
+type ChannelMessageReactionResponse struct {
+	Id       string `json:"id"`
+	UserId   string `json:"userId"`
+	Reaction string `json:"reaction"`
 }

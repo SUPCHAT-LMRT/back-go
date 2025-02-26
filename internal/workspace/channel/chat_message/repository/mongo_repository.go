@@ -27,11 +27,18 @@ type MongoChannelMessageRepository struct {
 }
 
 type MongoChannelMessage struct {
-	Id        bson.ObjectID `bson:"_id"`
-	ChannelId bson.ObjectID `bson:"channel_id"`
-	AuthorId  bson.ObjectID `bson:"user_id"`
-	Content   string        `bson:"content"`
-	CreatedAt time.Time     `bson:"created_at"`
+	Id        bson.ObjectID                  `bson:"_id"`
+	ChannelId bson.ObjectID                  `bson:"channel_id"`
+	AuthorId  bson.ObjectID                  `bson:"user_id"`
+	Content   string                         `bson:"content"`
+	CreatedAt time.Time                      `bson:"created_at"`
+	Reactions []*MongoChannelMessageReaction `bson:"reactions"`
+}
+
+type MongoChannelMessageReaction struct {
+	Id       bson.ObjectID `bson:"_id"`
+	UserId   bson.ObjectID `bson:"user_id"`
+	Reaction string        `bson:"reaction"`
 }
 
 func NewMongoChannelMessageRepository(deps MongoChannelMessageRepositoryDeps) ChannelMessageRepository {
@@ -85,4 +92,36 @@ func (m MongoChannelMessageRepository) ListByChannelId(ctx context.Context, chan
 	}
 
 	return messages, nil
+}
+
+func (m MongoChannelMessageRepository) AddReaction(ctx context.Context, reaction entity.ChannelMessageReaction) error {
+	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
+
+	messageObjectId, err := bson.ObjectIDFromHex(reaction.MessageId.String())
+	if err != nil {
+		return err
+	}
+
+	userObjectId, err := bson.ObjectIDFromHex(reaction.UserId.String())
+	if err != nil {
+		return err
+	}
+
+	reactionObjectId, err := bson.ObjectIDFromHex(reaction.Id.String())
+	if err != nil {
+		return err
+	}
+
+	mongoReaction := MongoChannelMessageReaction{
+		Id:       reactionObjectId,
+		UserId:   userObjectId,
+		Reaction: reaction.Reaction,
+	}
+
+	_, err = collection.UpdateOne(ctx, bson.M{"_id": messageObjectId}, bson.M{"$push": bson.M{"reactions": mongoReaction}})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

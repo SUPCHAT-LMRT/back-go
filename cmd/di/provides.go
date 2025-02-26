@@ -51,6 +51,7 @@ import (
 	chat_message_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/repository"
 	time_series_message_sent_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/usecase/get_minutely"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/add_reaction"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/save_message"
 	channel_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
@@ -134,6 +135,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(chat_message_repository.NewChannelMessageMapper),
 		// Workspace channels chat usecases
 		dig.NewProvider(list_messages.NewListMessageUseCase),
+		dig.NewProvider(add_reaction.NewAddReactionUseCase),
 		// Workspace channels chat handlers
 		dig.NewProvider(list_messages.NewListChannelMessagesHandler),
 		// Workspace channels chat messages usecases
@@ -228,6 +230,7 @@ func NewDi() *uberdig.Container {
 		// Ws
 		dig.NewProvider(websocket.NewWsServer),
 		dig.NewProvider(websocket.NewSaveMessageObserver, uberdig.Group("send_message_observers")),
+		dig.NewProvider(websocket.NewSaveChannelMessageReactionObserver, uberdig.Group("create_channel_message_reaction_observers")),
 		// Ws handlers
 		dig.NewProvider(websocket.NewWebsocketHandler),
 		// Chat

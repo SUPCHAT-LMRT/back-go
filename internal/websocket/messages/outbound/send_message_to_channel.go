@@ -10,6 +10,7 @@ import (
 
 type OutboundSendMessageToChannel struct {
 	messages.DefaultMessage
+	MessageId string                              `json:"messageId"`
 	Sender    *OutboundSendMessageToChannelSender `json:"sender"`
 	Content   string                              `json:"content"`
 	ChannelId channel_entity.ChannelId            `json:"channelId"`
