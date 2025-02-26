@@ -217,16 +217,16 @@ func (c *Client) handleUnselectWorkspaceMessage(message *inbound.InboundUnselect
 //}
 
 func (c *Client) joinRoom(roomId string, kind room.RoomKind, sender *Client) {
-	room := c.wsServer.findRoomById(roomId)
-	if room == nil {
+	foundRoom := c.wsServer.findRoomById(roomId)
+	if foundRoom == nil {
 		// Todo handle GroupRoomKind
-		room = c.wsServer.createRoom(roomId, kind)
+		foundRoom = c.wsServer.createRoom(roomId, kind)
 	}
 
-	if !c.isInRoom(room) {
-		c.rooms[room] = true
-		room.register <- c
-		c.notifyRoomJoined(room)
+	if !c.isInRoom(foundRoom) {
+		c.rooms[foundRoom] = true
+		foundRoom.register <- c
+		c.notifyRoomJoined(foundRoom)
 	}
 }
 

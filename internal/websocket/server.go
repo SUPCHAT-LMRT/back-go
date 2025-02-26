@@ -61,9 +61,9 @@ func (s *WsServer) broadcastToClients(message []byte) {
 
 func (s *WsServer) findRoomById(id string) *Room {
 	var foundRoom *Room
-	for room := range s.rooms {
-		if room.Id == id {
-			foundRoom = room
+	for iteratedRoom := range s.rooms {
+		if iteratedRoom.Id == id {
+			foundRoom = iteratedRoom
 			break
 		}
 	}
