@@ -51,10 +51,12 @@ import (
 	chat_message_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/repository"
 	time_series_message_sent_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/usecase/get_minutely"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/count_messages_by_workspace"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/save_message"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/toggle_reaction"
 	channel_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/count_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
@@ -124,6 +126,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(list_channels.NewListChannelsUseCase),
 		dig.NewProvider(create_channel.NewCreateChannelUseCase),
 		dig.NewProvider(get_channel.NewGetChannelUseCase),
+		dig.NewProvider(count_channels.NewCountChannelsUseCase),
 		// Workspaces channels observers
 		dig.NewProvider(create_channel.NewNotifyWebSocketObserver, uberdig.Group("create_channel_observers")),
 		// Workspace channels handlers
@@ -136,6 +139,7 @@ func NewDi() *uberdig.Container {
 		// Workspace channels chat usecases
 		dig.NewProvider(list_messages.NewListMessageUseCase),
 		dig.NewProvider(toggle_reaction.NewToggleReactionUseCase),
+		dig.NewProvider(count_messages_by_workspace.NewCountMessagesUseCase),
 		// Workspace channels chat handlers
 		dig.NewProvider(list_messages.NewListChannelMessagesHandler),
 		// Workspace channels chat messages usecases

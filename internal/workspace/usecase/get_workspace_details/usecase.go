@@ -2,6 +2,8 @@ package get_workspace_details
 
 import (
 	"context"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/count_messages_by_workspace"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/count_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	uberdig "go.uber.org/dig"
@@ -9,7 +11,9 @@ import (
 
 type GetWorkspaceDetailsUseCaseDeps struct {
 	uberdig.In
-	WorkspaceRepository repository.WorkspaceRepository
+	WorkspaceRepository             repository.WorkspaceRepository
+	CountChannelsUseCase            *count_channels.CountChannelsUseCase
+	CountMessagesByWorkspaceUseCase *count_messages_by_workspace.CountMessagesByWorkspaceUseCase
 }
 
 type GetWorkspaceDetailsUseCase struct {
@@ -31,11 +35,23 @@ func (u *GetWorkspaceDetailsUseCase) Execute(ctx context.Context, workspaceId en
 		return nil, err
 	}
 
+	channelsCount, err := u.deps.CountChannelsUseCase.Execute(ctx, workspaceId)
+	if err != nil {
+		return nil, err
+	}
+
+	messagesCount, err := u.deps.CountMessagesByWorkspaceUseCase.Execute(ctx, workspaceId)
+	if err != nil {
+		return nil, err
+	}
+
 	return &WorkspaceDetails{
-		Id:           workspace.Id,
-		Name:         workspace.Name,
-		Type:         workspace.Type,
-		MembersCount: membersCount,
+		Id:            workspace.Id,
+		Name:          workspace.Name,
+		Type:          workspace.Type,
+		MembersCount:  membersCount,
+		ChannelsCount: channelsCount,
+		MessagesCount: messagesCount,
 	}, nil
 }
 

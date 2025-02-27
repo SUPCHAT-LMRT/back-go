@@ -15,6 +15,7 @@ import (
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"log"
+	"strings"
 	"sync/atomic"
 	"time"
 )
@@ -135,6 +136,10 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 }
 
 func (c *Client) handleSendMessageToChannel(message *inbound.InboundSendMessageToChannel) {
+	if strings.TrimSpace(message.Content) == "" {
+		return
+	}
+
 	// The send-message action, this will send messages to a specific room now.
 	// Which room wil depend on the message Target
 	roomId := message.ChannelId.String()
