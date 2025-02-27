@@ -27,15 +27,15 @@ func NewListChannelMessagesHandler(deps ListChannelMessagesHandlerDeps) *ListCha
 }
 
 func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
-	workspaceId := c.Param("workspaceId")
+	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "workspaceId is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "workspace_id is required"})
 		return
 	}
 
-	channelId := c.Param("channelId")
+	channelId := c.Param("channel_id")
 	if channelId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "channelId is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "channel_id is required"})
 		return
 	}
 
@@ -86,20 +86,25 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 			Reactions: reactions,
 		}
 
-		user, err := h.deps.GetUserByIdUseCase.Execute(c, message.AuthorId)
-		if err != nil {
-			continue
-		}
-
 		member, err := h.deps.GetWorkspaceMemberUseCase.Execute(c, entity.WorkspaceId(workspaceId), message.AuthorId)
 		if err != nil {
 			continue
 		}
 
+		username := member.Pseudo
+		if username == "" {
+			user, err := h.deps.GetUserByIdUseCase.Execute(c, message.AuthorId)
+			if err != nil {
+				continue
+			}
+
+			username = user.FullName()
+		}
+
 		response[i].Author = ChannelMessageAuthorResponse{
-			UserId:            user.Id.String(),
+			UserId:            message.AuthorId.String(),
 			WorkspaceMemberId: member.Id.String(),
-			WorkspacePseudo:   member.Pseudo,
+			WorkspacePseudo:   username,
 		}
 	}
 

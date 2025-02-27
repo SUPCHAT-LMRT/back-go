@@ -7,7 +7,9 @@ import (
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/entity"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
+	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	mongo2 "go.mongodb.org/mongo-driver/v2/mongo"
 	uberdig "go.uber.org/dig"
 	"time"
 )
@@ -47,8 +49,12 @@ func NewMongoChannelMessageRepository(deps MongoChannelMessageRepositoryDeps) Ch
 }
 
 func (m MongoChannelMessageRepository) Create(ctx context.Context, message *entity.ChannelMessage) error {
-	message.Id = entity.ChannelMessageId(bson.NewObjectID().Hex())
-	message.CreatedAt = time.Now()
+	if message.Id == "" {
+		message.Id = entity.ChannelMessageId(bson.NewObjectID().Hex())
+	}
+	if message.CreatedAt.IsZero() {
+		message.CreatedAt = time.Now()
+	}
 
 	mongoMessage, err := m.deps.Mapper.MapFromEntity(message)
 	if err != nil {
@@ -162,4 +168,51 @@ func (m MongoChannelMessageRepository) ToggleReaction(ctx context.Context, messa
 	}
 
 	return !removed, nil
+}
+
+func (m MongoChannelMessageRepository) CountByWorkspace(ctx context.Context, id workspace_entity.WorkspaceId) (uint, error) {
+	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
+
+	workspaceObjectId, err := bson.ObjectIDFromHex(string(id))
+	if err != nil {
+		return 0, err
+	}
+
+	lookupStage := bson.D{
+		{"$lookup", bson.D{
+			{"from", "workspaces_channels"},
+			{"localField", "channel_id"},
+			{"foreignField", "_id"},
+			{"as", "channel_info"},
+		},
+		},
+	}
+
+	matchStage := bson.D{
+		{"$match", bson.M{
+			"channel_info.workspace_id": workspaceObjectId,
+		},
+		},
+	}
+
+	countStage := bson.D{
+		{"$count", "total_messages"},
+	}
+
+	cursor, err := collection.Aggregate(ctx, mongo2.Pipeline{lookupStage, matchStage, countStage})
+	if err != nil {
+		return 0, err
+	}
+
+	var elementsCount struct {
+		TotalMessages int `bson:"total_messages"`
+	}
+	if cursor.Next(ctx) {
+		err = cursor.Decode(&elementsCount)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return uint(elementsCount.TotalMessages), nil
 }

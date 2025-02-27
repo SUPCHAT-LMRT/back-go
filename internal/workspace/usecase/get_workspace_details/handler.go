@@ -15,9 +15,9 @@ func NewGetWorkspaceDetailsHandler(useCase *GetWorkspaceDetailsUseCase) *GetWork
 }
 
 func (h *GetWorkspaceDetailsHandler) Handle(c *gin.Context) {
-	workspaceId := c.Param("workspaceId")
+	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "workspaceId is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "workspace_id is required"})
 		return
 	}
 
@@ -28,6 +28,9 @@ func (h *GetWorkspaceDetailsHandler) Handle(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, WorkspaceDetailsResponse{
+		Id:            workspaceDetails.Id.String(),
+		Name:          workspaceDetails.Name,
+		Type:          string(workspaceDetails.Type),
 		MembersCount:  workspaceDetails.MembersCount,
 		ChannelsCount: workspaceDetails.ChannelsCount,
 		MessagesCount: workspaceDetails.MessagesCount,
@@ -35,7 +38,10 @@ func (h *GetWorkspaceDetailsHandler) Handle(c *gin.Context) {
 }
 
 type WorkspaceDetailsResponse struct {
-	MembersCount  uint `json:"membersCount"`
-	ChannelsCount uint `json:"channelsCount"`
-	MessagesCount uint `json:"messagesCount"`
+	Id            string `json:"id"`
+	Name          string `json:"name"`
+	Type          string `json:"type"`
+	MembersCount  uint   `json:"membersCount"`
+	ChannelsCount uint   `json:"channelsCount"`
+	MessagesCount uint   `json:"messagesCount"`
 }

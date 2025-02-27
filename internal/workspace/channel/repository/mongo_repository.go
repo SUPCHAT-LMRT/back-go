@@ -101,3 +101,17 @@ func (m MongoChannelRepository) List(ctx context.Context, workspaceId workspace_
 
 	return channels, nil
 }
+
+func (m MongoChannelRepository) CountByWorkspaceId(ctx context.Context, id workspace_entity.WorkspaceId) (uint, error) {
+	workspaceObjectId, err := bson.ObjectIDFromHex(string(id))
+	if err != nil {
+		return 0, err
+	}
+
+	count, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).CountDocuments(ctx, bson.M{"workspace_id": workspaceObjectId})
+	if err != nil {
+		return 0, err
+	}
+
+	return uint(count), nil
+}

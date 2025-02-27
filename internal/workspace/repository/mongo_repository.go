@@ -58,14 +58,14 @@ func (m MongoWorkspaceRepository) Create(ctx context.Context, workspace *entity.
 }
 
 func (m MongoWorkspaceRepository) GetById(ctx context.Context, id entity.WorkspaceId) (*entity.Workspace, error) {
-	var mongoWorkspace MongoWorkspace
-
-	objectID, err := bson.ObjectIDFromHex(id.String())
+	workspaceObjectId, err := bson.ObjectIDFromHex(id.String())
 	if err != nil {
 		return nil, err
 	}
 
-	err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"_id": objectID}).Decode(&mongoWorkspace)
+	var mongoWorkspace MongoWorkspace
+
+	err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"_id": workspaceObjectId}).Decode(&mongoWorkspace)
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
 			return nil, WorkspaceNotFoundErr

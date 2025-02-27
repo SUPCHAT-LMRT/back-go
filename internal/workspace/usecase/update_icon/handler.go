@@ -1,4 +1,4 @@
-package update_banner
+package update_icon
 
 import (
 	"github.com/gin-gonic/gin"
@@ -6,19 +6,19 @@ import (
 	"net/http"
 )
 
-type UpdateWorkspaceBannerHandler struct {
-	useCase *UpdateWorkspaceBannerUseCase
+type UpdateWorkspaceIconHandler struct {
+	useCase *UpdateWorkspaceIconUseCase
 }
 
-func NewUpdateWorkspaceBannerHandler(useCase *UpdateWorkspaceBannerUseCase) *UpdateWorkspaceBannerHandler {
-	return &UpdateWorkspaceBannerHandler{useCase: useCase}
+func NewUpdateWorkspaceIconHandler(useCase *UpdateWorkspaceIconUseCase) *UpdateWorkspaceIconHandler {
+	return &UpdateWorkspaceIconHandler{useCase: useCase}
 }
 
-func (l UpdateWorkspaceBannerHandler) Handle(c *gin.Context) {
-	workspaceId := c.Param("workspaceId")
+func (l UpdateWorkspaceIconHandler) Handle(c *gin.Context) {
+	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "workspaceId is required",
+			"error": "workspace_id is required",
 		})
 		return
 	}
@@ -49,7 +49,7 @@ func (l UpdateWorkspaceBannerHandler) Handle(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   err.Error(),
-			"message": "failed to update workspace banner",
+			"message": "failed to update workspace icon",
 		})
 		return
 	}

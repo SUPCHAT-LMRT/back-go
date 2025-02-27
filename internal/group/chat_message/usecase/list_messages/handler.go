@@ -26,9 +26,9 @@ func NewListGroupChatMessagesHandler(deps ListGroupMessagesHandlerDeps) *ListGro
 }
 
 func (h *ListGroupChatMessagesHandler) Handle(c *gin.Context) {
-	groupId := c.Param("groupId")
+	groupId := c.Param("group_id")
 	if groupId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "groupId is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "group_id is required"})
 		return
 	}
 
