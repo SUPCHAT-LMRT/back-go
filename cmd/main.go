@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
@@ -60,7 +61,9 @@ func main() {
 				SetGranularity("minutes"),
 			))
 		if err != nil {
-			logg.Fatal().Err(err).Msg("Unable to create collection")
+			if !strings.HasPrefix(err.Error(), "(NamespaceExists)") {
+				logg.Fatal().Err(err).Msg("Unable to create collection")
+			}
 		}
 
 		logg.Info().Str("collection", "workspace_message_sent_ts").Msg("Time-Series Collection created!")
