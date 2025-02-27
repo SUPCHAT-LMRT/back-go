@@ -37,7 +37,7 @@ func (o *SendMailRequestForgotPasswordObserver) NotifyRequestResetPasswordCreate
 		Body: hermes.Body{
 			Greeting:  "Bonjour",
 			Signature: "Cordialement",
-			Name:      user.FirstName + " " + user.LastName,
+			Name:      user.FullName(),
 			Intros: []string{
 				"Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte Supchat-LMRT.",
 			},

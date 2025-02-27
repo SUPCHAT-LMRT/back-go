@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
+	"github.com/supchat-lmrt/back-go/internal/websocket/messages/outbound"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workpace_members"
 	uberdig "go.uber.org/dig"
@@ -38,18 +39,17 @@ func (o *NotifyWebSocketObserver) ChannelCreated(channel *channel_entity.Channel
 		o.deps.WsServer.IterateClients(func(client *websocket.Client) (stop bool) {
 			// Then, notify all the clients that a new channel has been created.
 			if client.UserId == member.UserId && client.SelectedWorkspace.Load() == channel.WorkspaceId.String() {
-				client.SendMessage(
-					websocket.NewMessageBuilder().
-						WithAction(websocket.OutboundChannelCreatedAction).
-						WithPayload(ChannelPayload{
-							Id:          string(channel.Id),
-							Name:        channel.Name,
-							Topic:       channel.Topic,
-							WorkspaceId: channel.WorkspaceId.String(),
-						}).
-						WithCreatedAt(channel.CreatedAt).
-						Build(),
-				)
+				err = client.SendMessage(&outbound.OutboundChannelCreated{
+					Channel: outbound.OutboundChannelCreatedChannel{
+						Id:          channel.Id,
+						Name:        channel.Name,
+						Topic:       channel.Topic,
+						WorkspaceId: channel.WorkspaceId,
+					},
+				})
+				if err != nil {
+					o.deps.Logger.Error().Err(err).Msg("Error on sending message to client")
+				}
 			}
 
 			return

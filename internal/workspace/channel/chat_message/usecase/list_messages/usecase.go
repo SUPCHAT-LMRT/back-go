@@ -17,5 +17,4 @@ func NewListMessageUseCase(repository chat_message_repository.ChannelMessageRepo
 
 func (u ListChannelMessagesUseCase) Execute(ctx context.Context, channelId entity.ChannelId) ([]*chat_message_entity.ChannelMessage, error) {
 	return u.repository.ListByChannelId(ctx, channelId)
-
 }
