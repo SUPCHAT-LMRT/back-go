@@ -47,8 +47,12 @@ func NewMongoChannelMessageRepository(deps MongoChannelMessageRepositoryDeps) Ch
 }
 
 func (m MongoChannelMessageRepository) Create(ctx context.Context, message *entity.ChannelMessage) error {
-	message.Id = entity.ChannelMessageId(bson.NewObjectID().Hex())
-	message.CreatedAt = time.Now()
+	if message.Id == "" {
+		message.Id = entity.ChannelMessageId(bson.NewObjectID().Hex())
+	}
+	if message.CreatedAt.IsZero() {
+		message.CreatedAt = time.Now()
+	}
 
 	mongoMessage, err := m.deps.Mapper.MapFromEntity(message)
 	if err != nil {

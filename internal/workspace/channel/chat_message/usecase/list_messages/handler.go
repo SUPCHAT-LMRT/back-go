@@ -86,20 +86,25 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 			Reactions: reactions,
 		}
 
-		user, err := h.deps.GetUserByIdUseCase.Execute(c, message.AuthorId)
-		if err != nil {
-			continue
-		}
-
 		member, err := h.deps.GetWorkspaceMemberUseCase.Execute(c, entity.WorkspaceId(workspaceId), message.AuthorId)
 		if err != nil {
 			continue
 		}
 
+		username := member.Pseudo
+		if username == "" {
+			user, err := h.deps.GetUserByIdUseCase.Execute(c, message.AuthorId)
+			if err != nil {
+				continue
+			}
+
+			username = user.FullName()
+		}
+
 		response[i].Author = ChannelMessageAuthorResponse{
-			UserId:            user.Id.String(),
+			UserId:            message.AuthorId.String(),
 			WorkspaceMemberId: member.Id.String(),
-			WorkspacePseudo:   member.Pseudo,
+			WorkspacePseudo:   username,
 		}
 	}
 
