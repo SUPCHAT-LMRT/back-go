@@ -12,7 +12,7 @@ import (
 	request_forgot_password "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/request"
 	validate_forgot_password "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/validate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_my_account"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/generate"
+	user_invite_link_generate "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/generate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login_oauth"
@@ -32,6 +32,8 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
 	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace_details"
+	workspace_invite_link_generate "github.com/supchat-lmrt/back-go/internal/workspace/usecase/invite_link_workspace/usecase/generate"
+	get_data_token_invite2 "github.com/supchat-lmrt/back-go/internal/workspace/usecase/invite_link_workspace/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workpace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_banner"
@@ -58,14 +60,16 @@ type GinRouterDeps struct {
 	UserInWorkspaceMiddleware *workspace_middlewares.UserInWorkspaceMiddleware
 	// Handlers
 	// Workspace
-	ListWorkspaceHandler          *list_workspaces.ListWorkspaceHandler
-	CreateWorkspaceHandler        *create_workspace.CreateWorkspaceHandler
-	UpdateWorkspaceIconHandler    *update_icon.UpdateWorkspaceIconHandler
-	UpdateWorkspaceBannerHandler  *update_banner.UpdateWorkspaceBannerHandler
-	ListWorkspaceMembersHandler   *list_workpace_members.ListWorkspaceMembersHandler
-	DiscoverListWorkspaceHandler  *discovery_list_workspaces.DiscoverListWorkspaceHandler
-	GetWorkspaceDetailsHandler    *get_workspace_details.GetWorkspaceDetailsHandler
-	GetMinutelyMessageSentHandler *get_minutely.GetMinutelyMessageSentHandler
+	ListWorkspaceHandler              *list_workspaces.ListWorkspaceHandler
+	CreateWorkspaceHandler            *create_workspace.CreateWorkspaceHandler
+	UpdateWorkspaceIconHandler        *update_icon.UpdateWorkspaceIconHandler
+	UpdateWorkspaceBannerHandler      *update_banner.UpdateWorkspaceBannerHandler
+	ListWorkspaceMembersHandler       *list_workpace_members.ListWorkspaceMembersHandler
+	DiscoverListWorkspaceHandler      *discovery_list_workspaces.DiscoverListWorkspaceHandler
+	GetWorkspaceDetailsHandler        *get_workspace_details.GetWorkspaceDetailsHandler
+	GetMinutelyMessageSentHandler     *get_minutely.GetMinutelyMessageSentHandler
+	CreateInviteLinkWorkspaceHandler  *workspace_invite_link_generate.CreateInviteLinkHandler
+	GetInviteLinkWorkspaceDataHandler *get_data_token_invite2.GetInviteLinkWorkspaceDataHandler
 	// Workspaces channels
 	ListChannelsHandler        *list_channels.ListChannelsHandler
 	CreateChannelHandler       *create_channel.CreateChannelHandler
@@ -85,7 +89,7 @@ type GinRouterDeps struct {
 	RequestResetPasswordHandler  *request_reset_password.RequestResetPasswordHandler
 	ValidateResetPasswordHandler *validate_reset_password.ValidateResetPasswordHandler
 	// Invite link
-	CreateInviteLinkHandler  *generate.CreateInviteLinkHandler
+	CreateInviteLinkHandler  *user_invite_link_generate.CreateInviteLinkHandler
 	GetInviteLinkDataHandler *get_data_token_invite.GetInviteLinkDataHandler
 	// User OAuth connection
 	OAuthHandler *login_oauth.OAuthHandler
@@ -178,8 +182,13 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
 				channelGroup.GET("/:channelId/messages", d.deps.ListChannelMessagesHandler.Handle)
 			}
-		}
 
+			inviteLinkGroup := specificWorkspaceGroup.Group("/invite-link")
+			{
+				inviteLinkGroup.POST("", d.deps.CreateInviteLinkWorkspaceHandler.Handle)
+				inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkWorkspaceDataHandler.Handle)
+			}
+		}
 	}
 }
 

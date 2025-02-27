@@ -31,6 +31,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_my_account"
 	repository2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/repository"
+	delete2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/delete"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/generate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
@@ -62,7 +63,11 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
 	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workpace_member"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace_details"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/invite_link_workspace/repository"
+	generate2 "github.com/supchat-lmrt/back-go/internal/workspace/usecase/invite_link_workspace/usecase/generate"
+	get_data_token_invite2 "github.com/supchat-lmrt/back-go/internal/workspace/usecase/invite_link_workspace/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/is_user_in_workspace"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workpace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
@@ -95,6 +100,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(workspace_repository.NewMongoWorkspaceRepository),
 		dig.NewProvider(workspace_repository.NewMongoWorkspaceMapper),
 		dig.NewProvider(workspace_repository.NewMongoWorkspaceMemberMapper),
+		dig.NewProvider(repository.NewRedisInviteLinkRepository),
 		// Workspace usecases
 		dig.NewProvider(list_workspaces.NewListWorkspacesUseCase),
 		dig.NewProvider(discovery_list_workspaces.NewDiscoveryListWorkspacesUseCase),
@@ -107,6 +113,9 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_banner.NewUpdateWorkspaceBannerUseCase),
 		dig.NewProvider(update_banner.NewS3UpdateWorkspaceBannerStrategy),
 		dig.NewProvider(list_workpace_members.NewListWorkspaceMembersUseCase),
+		dig.NewProvider(generate2.NewInviteLinkUseCase),
+		dig.NewProvider(get_workspace.NewGetWorkspaceUseCase),
+		dig.NewProvider(get_data_token_invite2.NewGetInviteLinkDataUseCase),
 		// Workspace handlers
 		dig.NewProvider(list_workspaces.NewListWorkspaceHandler),
 		dig.NewProvider(discovery_list_workspaces.NewDiscoverListWorkspaceHandler),
@@ -115,6 +124,10 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_icon.NewUpdateWorkspaceIconHandler),
 		dig.NewProvider(update_banner.NewUpdateWorkspaceBannerHandler),
 		dig.NewProvider(list_workpace_members.NewListWorkspaceHandler),
+		dig.NewProvider(generate2.NewCreateInviteLinkHandler),
+		dig.NewProvider(get_data_token_invite2.NewGetInviteLinkWorkspaceDataHandler),
+		// Worksapce mappers
+		dig.NewProvider(repository.NewRedisInviteLinkMapper),
 		// Workspace channels
 		// Workspace channels repository
 		dig.NewProvider(channel_repository.NewMongoChannelRepository),
@@ -191,11 +204,12 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(reset_password_request_usecase.NewRequestResetPasswordHandler),
 		dig.NewProvider(reset_password_validate_usecase.NewValidateResetPasswordHandler),
 		// User invite link repository
-		dig.NewProvider(repository2.NewMongoInviteLinkRepository),
-		dig.NewProvider(repository2.NewMongoInviteLinkMapper),
+		dig.NewProvider(repository2.NewRedisInviteLinkRepository),
+		dig.NewProvider(repository2.NewRedisInviteLinkMapper),
 		// User invite link usecases
 		dig.NewProvider(generate.NewInviteLinkUseCase),
 		dig.NewProvider(get_data_token_invite.NewGetInviteLinkDataUseCase),
+		dig.NewProvider(delete2.NewDeleteInviteLinkUseCase),
 		// User invite link handlers
 		dig.NewProvider(generate.NewCreateInviteLinkHandler),
 		dig.NewProvider(get_data_token_invite.NewGetInviteLinkDataHandler),

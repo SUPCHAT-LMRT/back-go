@@ -36,10 +36,9 @@ func (u *OAuthUseCase) HandleOAuthLogin(ctx context.Context, gothUser goth.User)
 	if err != nil {
 		// Si l'utilisateur n'existe pas, le créer
 		user = &entity.User{
-			Email:      gothUser.Email,
-			FirstName:  gothUser.FirstName,
-			LastName:   gothUser.LastName,
-			IsVerified: true,
+			Email:     gothUser.Email,
+			FirstName: gothUser.FirstName,
+			LastName:  gothUser.LastName,
 		}
 	}
 

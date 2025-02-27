@@ -2,12 +2,12 @@ package repository
 
 import (
 	"context"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/entity"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/invite_link_workspace/entity"
 	"time"
 )
 
 var (
-	RedisInviteLinkExpiredTime = 7 * 24 * time.Hour
+	RedisInviteLinkExpiredTime = 24 * time.Hour
 )
 
 type InviteLinkRepository interface {

@@ -3,19 +3,16 @@ package register
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/entity"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
 	"io"
 	"net/http"
 )
 
 type RegisterHandler struct {
-	registerUserUseCase      *RegisterUserUseCase
-	getInviteLinkDataUseCase *get_data_token_invite.GetInviteLinkDataUseCase
+	registerUserUseCase *RegisterUserUseCase
 }
 
-func NewRegisterHandler(useCase *RegisterUserUseCase, getInviteLinkDataUseCase *get_data_token_invite.GetInviteLinkDataUseCase) *RegisterHandler {
-	return &RegisterHandler{registerUserUseCase: useCase, getInviteLinkDataUseCase: getInviteLinkDataUseCase}
+func NewRegisterHandler(useCase *RegisterUserUseCase) *RegisterHandler {
+	return &RegisterHandler{registerUserUseCase: useCase}
 }
 
 type RegisterRequest struct {
@@ -46,15 +43,7 @@ func (l RegisterHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	inviteLinkData, err := l.getInviteLinkDataUseCase.GetInviteLinkData(c, request.Token)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	userRequest, err := l.RegisterUserRequest(request, inviteLinkData)
+	userRequest, err := l.RegisterUserRequest(request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   err.Error(),
@@ -82,12 +71,10 @@ func (l RegisterHandler) Handle(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (l RegisterHandler) RegisterUserRequest(request RegisterRequest, inviteLinkData *entity.InviteLink) (*RegisterUserRequest, error) {
+func (l RegisterHandler) RegisterUserRequest(request RegisterRequest) (*RegisterUserRequest, error) {
 
 	return &RegisterUserRequest{
-		FirstName: inviteLinkData.FirstName,
-		LastName:  inviteLinkData.LastName,
-		Email:     inviteLinkData.Email,
-		Password:  request.Password,
+		Token:    request.Token,
+		Password: request.Password,
 	}, nil
 }

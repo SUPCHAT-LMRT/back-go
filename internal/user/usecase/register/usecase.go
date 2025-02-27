@@ -8,6 +8,9 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists"
+	entity2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/entity"
+	delete2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/delete"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
 	uberdig "go.uber.org/dig"
 )
 
@@ -17,10 +20,12 @@ var (
 
 type RegisterUserDeps struct {
 	uberdig.In
-	ExistsUserUseCase *exists.ExistsUserUseCase
-	CryptStrategy     crypt.CryptStrategy
-	Repository        repository.UserRepository
-	Observers         []RegisterUserObserver `group:"register_user_observers"`
+	ExistsUserUseCase        *exists.ExistsUserUseCase
+	CryptStrategy            crypt.CryptStrategy
+	Repository               repository.UserRepository
+	Observers                []RegisterUserObserver `group:"register_user_observers"`
+	DeleteInviteLinkUseCase  *delete2.DeleteInviteLinkUseCase
+	GetInviteLinkDataUseCase *get_data_token_invite.GetInviteLinkDataUseCase
 }
 
 type RegisterUserUseCase struct {
@@ -33,7 +38,12 @@ func NewRegisterUserUseCase(deps RegisterUserDeps) *RegisterUserUseCase {
 
 func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserRequest) error {
 
-	userExists, err := r.deps.ExistsUserUseCase.Execute(ctx, request.Email)
+	inviteLinkData, err := r.deps.GetInviteLinkDataUseCase.GetInviteLinkData(ctx, request.Token)
+	if err != nil {
+		return fmt.Errorf("error getting invite link data: %w", err)
+	}
+
+	userExists, err := r.deps.ExistsUserUseCase.Execute(ctx, inviteLinkData.Email)
 	if err != nil {
 		return fmt.Errorf("error checking if user exists: %w", err)
 	}
@@ -48,10 +58,15 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserR
 
 	request.Password = hash
 
-	user := r.EntityUser(request)
+	user := r.EntityUser(request, inviteLinkData)
 	err = r.deps.Repository.Create(ctx, user)
 	if err != nil {
 		return fmt.Errorf("error adding user: %w", err)
+	}
+
+	err = r.deps.DeleteInviteLinkUseCase.Execute(ctx, request.Token)
+	if err != nil {
+		return fmt.Errorf("error deleting invite link: %w", err)
 	}
 
 	for _, observer := range r.deps.Observers {
@@ -61,18 +76,16 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserR
 	return nil
 }
 
-func (r *RegisterUserUseCase) EntityUser(user RegisterUserRequest) *entity.User {
+func (r *RegisterUserUseCase) EntityUser(user RegisterUserRequest, link *entity2.InviteLink) *entity.User {
 	return &entity.User{
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
+		FirstName: link.FirstName,
+		LastName:  link.LastName,
+		Email:     link.Email,
 		Password:  user.Password,
 	}
 }
 
 type RegisterUserRequest struct {
-	FirstName string
-	LastName  string
-	Email     string
-	Password  string
+	Token    string
+	Password string
 }

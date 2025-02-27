@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"github.com/google/uuid"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/entity"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/repository"
+	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/invite_link_workspace/entity"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/invite_link_workspace/repository"
 	"os"
 	"strings"
 )
@@ -18,21 +19,22 @@ func NewInviteLinkUseCase(linkRepository repository.InviteLinkRepository) *Invit
 	return &InviteLinkUseCase{repository: linkRepository}
 }
 
-func (u *InviteLinkUseCase) CreateInviteLink(ctx context.Context, firstName, lastName, email string) (string, error) {
+func (u *InviteLinkUseCase) CreateInviteLink(ctx context.Context, workspaceId workspace_entity.WorkspaceId) (string, error) {
 	token := uuid.New().String()
-	inviteLink := &entity.InviteLink{
-		Token:     token,
-		FirstName: firstName,
-		LastName:  lastName,
-		Email:     email,
-	}
 
+	inviteLink := &entity.InviteLink{
+		Token:       token,
+		WorkspaceId: workspaceId,
+	}
 	err := u.repository.GenerateInviteLink(ctx, inviteLink)
 	if err != nil {
 		return "", err
 	}
 
-	inviteLinkFormat := os.Getenv("FRONT_ACCOUNT_REGISTER_URL")
+	inviteLinkFormat := os.Getenv("FRONT_WORKSPACE_INVITE_URL")
+	if inviteLinkFormat = strings.Replace(inviteLinkFormat, "{worksapceId}", string(workspaceId), 1); inviteLinkFormat == "" {
+		return "", errors.New("invite link format is empty")
+	}
 	if inviteLinkFormat = strings.Replace(inviteLinkFormat, "{token}", inviteLink.Token, 1); inviteLinkFormat == "" {
 		return "", errors.New("invite link format is empty")
 	}
