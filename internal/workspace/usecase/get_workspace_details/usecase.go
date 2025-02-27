@@ -3,13 +3,15 @@ package get_workspace_details
 import (
 	"context"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	repository2 "github.com/supchat-lmrt/back-go/internal/workspace/member/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	uberdig "go.uber.org/dig"
 )
 
 type GetWorkspaceDetailsUseCaseDeps struct {
 	uberdig.In
-	WorkspaceRepository repository.WorkspaceRepository
+	WorkspaceRepository       repository.WorkspaceRepository
+	WorskpaceMemberRepository repository2.WorkspaceMemberRepository
 }
 
 type GetWorkspaceDetailsUseCase struct {
@@ -21,7 +23,7 @@ func NewGetWorkspaceDetailsUseCase(deps GetWorkspaceDetailsUseCaseDeps) *GetWork
 }
 
 func (u *GetWorkspaceDetailsUseCase) Execute(ctx context.Context, workspaceId entity.WorkspaceId) (*WorkspaceDetails, error) {
-	membersCount, err := u.deps.WorkspaceRepository.CountMembers(ctx, workspaceId)
+	membersCount, err := u.deps.WorskpaceMemberRepository.CountMembers(ctx, workspaceId)
 	if err != nil {
 		return nil, err
 	}

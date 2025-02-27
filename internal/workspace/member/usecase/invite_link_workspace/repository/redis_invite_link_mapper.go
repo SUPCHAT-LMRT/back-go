@@ -3,17 +3,17 @@ package repository
 import (
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
-	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/invite_link_workspace/entity"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/entity"
 	"time"
 )
 
-type RedisInviteLinkMapper struct{}
+type RedisInviteLinkWorkspaceMapper struct{}
 
 func NewRedisInviteLinkMapper() mapper.Mapper[map[string]string, *entity.InviteLink] {
-	return &RedisInviteLinkMapper{}
+	return &RedisInviteLinkWorkspaceMapper{}
 }
 
-func (m RedisInviteLinkMapper) MapFromEntity(entity *entity.InviteLink) (map[string]string, error) {
+func (m RedisInviteLinkWorkspaceMapper) MapFromEntity(entity *entity.InviteLink) (map[string]string, error) {
 	return map[string]string{
 		"token":       entity.Token,
 		"workspaceId": entity.WorkspaceId.String(),
@@ -21,7 +21,7 @@ func (m RedisInviteLinkMapper) MapFromEntity(entity *entity.InviteLink) (map[str
 	}, nil
 }
 
-func (m RedisInviteLinkMapper) MapToEntity(databaseInviteLink map[string]string) (*entity.InviteLink, error) {
+func (m RedisInviteLinkWorkspaceMapper) MapToEntity(databaseInviteLink map[string]string) (*entity.InviteLink, error) {
 	expiresAt, err := time.Parse(time.RFC3339, databaseInviteLink["expires_at"])
 	if err != nil {
 		return nil, err

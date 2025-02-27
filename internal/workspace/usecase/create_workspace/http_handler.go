@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"net/http"
 )
 
@@ -42,7 +43,7 @@ func (l CreateWorkspaceHandler) Handle(c *gin.Context) {
 		Type:    l.mapWorkspaceType(body.Type),
 		OwnerId: user.Id,
 	}
-	err := l.useCase.Execute(c, &workspace, &entity.WorkspaceMember{
+	err := l.useCase.Execute(c, &workspace, &entity2.WorkspaceMember{
 		UserId: user.Id,
 	})
 	if err != nil {

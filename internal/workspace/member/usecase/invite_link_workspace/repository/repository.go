@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/invite_link_workspace/entity"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/entity"
 	"time"
 )
 

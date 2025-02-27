@@ -60,17 +60,21 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
 	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/repository"
+	add_member2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/add_member"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_workpace_member"
+	repository3 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/repository"
+	delete3 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/delete"
+	generate3 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/generate"
+	get_data_token_invite3 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/get_data_token_invite"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/join_workspace_invite"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/is_user_in_workspace"
+	list_workpace_members2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workpace_members"
 	workspace_repository "github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
 	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
-	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workpace_member"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace_details"
-	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/invite_link_workspace/repository"
-	generate2 "github.com/supchat-lmrt/back-go/internal/workspace/usecase/invite_link_workspace/usecase/generate"
-	get_data_token_invite2 "github.com/supchat-lmrt/back-go/internal/workspace/usecase/invite_link_workspace/usecase/get_data_token_invite"
-	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/is_user_in_workspace"
-	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workpace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_banner"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_icon"
@@ -100,8 +104,8 @@ func NewDi() *uberdig.Container {
 		// Workspaces repository
 		dig.NewProvider(workspace_repository.NewMongoWorkspaceRepository),
 		dig.NewProvider(workspace_repository.NewMongoWorkspaceMapper),
-		dig.NewProvider(workspace_repository.NewMongoWorkspaceMemberMapper),
-		dig.NewProvider(repository.NewRedisInviteLinkRepository),
+		dig.NewProvider(repository.NewMongoWorkspaceMemberMapper),
+		dig.NewProvider(repository3.NewRedisInviteLinkRepository),
 		// Workspace usecases
 		dig.NewProvider(list_workspaces.NewListWorkspacesUseCase),
 		dig.NewProvider(discovery_list_workspaces.NewDiscoveryListWorkspacesUseCase),
@@ -113,10 +117,10 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_icon.NewS3UpdateWorkspaceIconStrategy),
 		dig.NewProvider(update_banner.NewUpdateWorkspaceBannerUseCase),
 		dig.NewProvider(update_banner.NewS3UpdateWorkspaceBannerStrategy),
-		dig.NewProvider(list_workpace_members.NewListWorkspaceMembersUseCase),
-		dig.NewProvider(generate2.NewInviteLinkUseCase),
+		dig.NewProvider(list_workpace_members2.NewListWorkspaceMembersUseCase),
+		dig.NewProvider(generate3.NewInviteLinkUseCase),
 		dig.NewProvider(get_workspace.NewGetWorkspaceUseCase),
-		dig.NewProvider(get_data_token_invite2.NewGetInviteLinkDataUseCase),
+		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkDataUseCase),
 		// Workspace handlers
 		dig.NewProvider(list_workspaces.NewListWorkspaceHandler),
 		dig.NewProvider(discovery_list_workspaces.NewDiscoverListWorkspaceHandler),
@@ -124,11 +128,11 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(get_workspace_details.NewGetWorkspaceDetailsHandler),
 		dig.NewProvider(update_icon.NewUpdateWorkspaceIconHandler),
 		dig.NewProvider(update_banner.NewUpdateWorkspaceBannerHandler),
-		dig.NewProvider(list_workpace_members.NewListWorkspaceHandler),
-		dig.NewProvider(generate2.NewCreateInviteLinkHandler),
-		dig.NewProvider(get_data_token_invite2.NewGetInviteLinkWorkspaceDataHandler),
+		dig.NewProvider(list_workpace_members2.NewListWorkspaceHandler),
+		dig.NewProvider(generate3.NewCreateInviteLinkHandler),
+		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkWorkspaceDataHandler),
 		// Worksapce mappers
-		dig.NewProvider(repository.NewRedisInviteLinkMapper),
+		dig.NewProvider(repository3.NewRedisInviteLinkMapper),
 		// Workspace channels
 		// Workspace channels repository
 		dig.NewProvider(channel_repository.NewMongoChannelRepository),
@@ -163,6 +167,14 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(get_minutely.NewGetMinutelyMessageSentHandler),
 		// Workspace misc
 		dig.NewProvider(workspace_middlewares.NewUserInWorkspaceMiddleware),
+		// Workspace member usecases
+		dig.NewProvider(add_member2.NewAddMemberUseCase),
+		dig.NewProvider(delete3.NewDeleteInviteLinkWorkspaceUseCase),
+		// Workspace member handlers
+		dig.NewProvider(join_workspace_invite.NewJoinWorkspaceInviteUseCase),
+		dig.NewProvider(join_workspace_invite.NewJoinWorkspaceInviteHandler),
+		// Workspace member repository
+		dig.NewProvider(repository.NewMongoWorkspaceMemberRepository),
 		// User
 		dig.NewProvider(user_repository.NewMongoUserRepository),
 		dig.NewProvider(user_repository.NewMongoUserMapper),

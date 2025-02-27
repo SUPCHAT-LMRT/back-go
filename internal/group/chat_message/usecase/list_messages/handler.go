@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
-	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workpace_member"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_workpace_member"
 	uberdig "go.uber.org/dig"
 	"net/http"
 	"time"

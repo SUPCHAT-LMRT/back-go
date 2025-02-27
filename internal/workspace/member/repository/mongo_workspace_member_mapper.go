@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
-	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 

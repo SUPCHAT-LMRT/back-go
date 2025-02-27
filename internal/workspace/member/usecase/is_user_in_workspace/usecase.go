@@ -4,14 +4,14 @@ import (
 	"context"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
-	"github.com/supchat-lmrt/back-go/internal/workspace/repository"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/repository"
 )
 
 type IsUserInWorkspaceUseCase struct {
-	repository repository.WorkspaceRepository
+	repository repository.WorkspaceMemberRepository
 }
 
-func NewIsUserInWorkspaceUseCase(repository repository.WorkspaceRepository) *IsUserInWorkspaceUseCase {
+func NewIsUserInWorkspaceUseCase(repository repository.WorkspaceMemberRepository) *IsUserInWorkspaceUseCase {
 	return &IsUserInWorkspaceUseCase{repository: repository}
 }
 

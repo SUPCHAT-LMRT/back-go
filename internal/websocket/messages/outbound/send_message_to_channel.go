@@ -5,7 +5,7 @@ import (
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
-	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 )
 
 type OutboundSendMessageToChannel struct {

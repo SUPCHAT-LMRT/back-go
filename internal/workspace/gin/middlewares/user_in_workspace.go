@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
-	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/is_user_in_workspace"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/is_user_in_workspace"
 	"net/http"
 )
 

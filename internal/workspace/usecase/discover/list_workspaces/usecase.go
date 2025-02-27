@@ -3,11 +3,14 @@ package list_workspaces
 import (
 	"context"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
+	repository2 "github.com/supchat-lmrt/back-go/internal/workspace/member/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/repository"
 )
 
 type DiscoveryListWorkspacesUseCase struct {
-	workspaceRepository repository.WorkspaceRepository
+	workspaceRepository       repository.WorkspaceRepository
+	workspaceMemberRepository repository2.WorkspaceMemberRepository
 }
 
 func NewDiscoveryListWorkspacesUseCase(workspaceRepository repository.WorkspaceRepository) *DiscoveryListWorkspacesUseCase {
@@ -22,7 +25,7 @@ func (u *DiscoveryListWorkspacesUseCase) Execute(ctx context.Context) ([]*Discov
 
 	discoverWorkspaces := make([]*DiscoveryWorkspace, len(publicWorkspaces))
 	for i, workspace := range publicWorkspaces {
-		workspaceMembersCount, err := u.workspaceRepository.CountMembers(ctx, workspace.Id)
+		workspaceMembersCount, err := u.workspaceMemberRepository.CountMembers(ctx, workspace.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -30,7 +33,7 @@ func (u *DiscoveryListWorkspacesUseCase) Execute(ctx context.Context) ([]*Discov
 		discoverWorkspaces[i] = &DiscoveryWorkspace{
 			Id:           workspace.Id,
 			Name:         workspace.Name,
-			OwnerId:      entity.WorkspaceMemberId(workspace.OwnerId),
+			OwnerId:      entity2.WorkspaceMemberId(workspace.OwnerId),
 			MembersCount: workspaceMembersCount,
 		}
 	}
@@ -41,6 +44,6 @@ func (u *DiscoveryListWorkspacesUseCase) Execute(ctx context.Context) ([]*Discov
 type DiscoveryWorkspace struct {
 	Id           entity.WorkspaceId
 	Name         string
-	OwnerId      entity.WorkspaceMemberId
+	OwnerId      entity2.WorkspaceMemberId
 	MembersCount uint
 }

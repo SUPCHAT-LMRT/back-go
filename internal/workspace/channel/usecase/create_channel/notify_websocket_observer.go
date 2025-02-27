@@ -6,7 +6,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/websocket"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages/outbound"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
-	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workpace_members"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workpace_members"
 	uberdig "go.uber.org/dig"
 )
 

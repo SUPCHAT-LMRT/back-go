@@ -5,7 +5,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
-	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workpace_member"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_workpace_member"
 	uberdig "go.uber.org/dig"
 	"net/http"
 	"time"

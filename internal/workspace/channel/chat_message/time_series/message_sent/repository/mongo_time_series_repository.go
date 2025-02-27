@@ -7,6 +7,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/entity"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	mongo2 "go.mongodb.org/mongo-driver/v2/mongo"
 	"time"
@@ -113,7 +114,7 @@ func (r MongoMessageSentTimeSeriesWorkspaceRepository) GetMinutelyByWorkspace(ct
 			Metadata: entity.MessageSentMetadata{
 				WorkspaceId:    workspace_entity.WorkspaceId(metadata["workspace_id"].(bson.ObjectID).Hex()),
 				ChannelId:      channel_entity.ChannelId(metadata["channel_id"].(bson.ObjectID).Hex()),
-				AuthorMemberId: workspace_entity.WorkspaceMemberId(metadata["author_member_id"].(bson.ObjectID).Hex()),
+				AuthorMemberId: entity2.WorkspaceMemberId(metadata["author_member_id"].(bson.ObjectID).Hex()),
 			},
 			Count: uint(result["count"].(int32)),
 			SentAt: time.Date(

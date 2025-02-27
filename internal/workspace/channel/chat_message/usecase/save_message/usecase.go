@@ -7,7 +7,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/entity"
 	time_series_message_sent_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
-	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workpace_member"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_workpace_member"
 	uberdig "go.uber.org/dig"
 )
 
