@@ -27,15 +27,15 @@ func NewListChannelMessagesHandler(deps ListChannelMessagesHandlerDeps) *ListCha
 }
 
 func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
-	workspaceId := c.Param("workspaceId")
+	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "workspaceId is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "workspace_id is required"})
 		return
 	}
 
-	channelId := c.Param("channelId")
+	channelId := c.Param("channel_id")
 	if channelId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "channelId is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "channel_id is required"})
 		return
 	}
 

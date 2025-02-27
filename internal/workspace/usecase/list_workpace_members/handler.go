@@ -24,10 +24,10 @@ func NewListWorkspaceHandler(deps ListWorkspaceMembersHandlerDeps) *ListWorkspac
 }
 
 func (h *ListWorkspaceMembersHandler) Handle(c *gin.Context) {
-	workspaceId := c.Param("workspaceId")
+	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "workspaceId is required",
+			"error": "workspace_id is required",
 		})
 		return
 	}

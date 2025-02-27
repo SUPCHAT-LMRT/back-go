@@ -26,9 +26,9 @@ func (a *UserInWorkspaceMiddleware) Execute(c *gin.Context) {
 
 	loggedInUser := loggedInUserInter.(*user_entity.User)
 
-	workspaceId := c.Param("workspaceId")
+	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "workspaceId is required"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "workspace_id is required"})
 		return
 	}
 

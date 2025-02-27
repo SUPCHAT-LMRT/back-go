@@ -153,7 +153,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	groupGroup := apiGroup.Group("/groups")
 	{
 		groupGroup.POST("/members", authMiddleware, d.deps.AddMemberToGroupHandler.Handle)
-		groupGroup.GET("/:groupId/messages", authMiddleware, d.deps.ListGroupChatMessagesHandler.Handle)
+		groupGroup.GET("/:group_id/messages", authMiddleware, d.deps.ListGroupChatMessagesHandler.Handle)
 	}
 
 	workspacesGroup := apiGroup.Group("/workspaces")
@@ -163,7 +163,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		workspacesGroup.POST("", d.deps.CreateWorkspaceHandler.Handle)
 		workspacesGroup.GET("/discover", d.deps.DiscoverListWorkspaceHandler.Handle)
 
-		specificWorkspaceGroup := workspacesGroup.Group("/:workspaceId")
+		specificWorkspaceGroup := workspacesGroup.Group("/:workspace_id")
 		{
 			specificWorkspaceGroup.Use(userInWorkspaceMiddleware)
 			specificWorkspaceGroup.PUT("/icon", d.deps.UpdateWorkspaceIconHandler.Handle)
@@ -176,7 +176,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			{
 				channelGroup.GET("", d.deps.ListChannelsHandler.Handle)
 				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
-				channelGroup.GET("/:channelId/messages", d.deps.ListChannelMessagesHandler.Handle)
+				channelGroup.GET("/:channel_id/messages", d.deps.ListChannelMessagesHandler.Handle)
 			}
 		}
 
