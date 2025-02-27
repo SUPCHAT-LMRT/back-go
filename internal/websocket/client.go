@@ -422,11 +422,16 @@ func (c *Client) toOutboundSendChannelMessage(roomId string) (*outbound.Outbound
 		return nil, err
 	}
 
+	username := workspaceMember.Pseudo
+	if username == "" {
+		username = user.FullName()
+	}
+
 	return &outbound.OutboundSendMessageToChannelSender{
 		UserId:            user.Id,
 		Pseudo:            user.FullName(),
 		WorkspaceMemberId: workspaceMember.Id,
-		WorkspacePseudo:   workspaceMember.Pseudo,
+		WorkspacePseudo:   username,
 	}, nil
 }
 
