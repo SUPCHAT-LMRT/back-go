@@ -36,6 +36,7 @@ func (s *WsServer) Run() {
 		case client := <-s.Unregister:
 			s.unregisterClient(client)
 		case msg := <-pubsub.Channel():
+			s.Deps.Logger.Info().Msg("Received message from redis")
 			s.ForwardToClients([]byte(msg.Payload))
 		}
 	}
