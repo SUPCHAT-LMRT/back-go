@@ -56,8 +56,13 @@ func (room *Room) broadcastToClientsInRoom(message []byte) {
 		client.send <- message
 	}
 
-	// TODO impl forwardMessage.EmitterServerId
-	forwardedMessage, err := json.Marshal(ForwardMessage{EmitterServerId: "1", Payload: message})
+	backIdentifier, err := room.deps.GetBackIdentifierUseCase.Execute(context.Background())
+	if err != nil {
+		room.deps.Logger.Error().Err(err).Msg("Error on getting back identifier")
+		return
+	}
+
+	forwardedMessage, err := json.Marshal(ForwardMessage{EmitterServerId: backIdentifier, Payload: message})
 	if err != nil {
 		room.deps.Logger.Error().Err(err).Msg("Error on forwarding message to clients")
 		return

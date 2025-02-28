@@ -2,6 +2,7 @@ package di
 
 import (
 	"fmt"
+	"github.com/supchat-lmrt/back-go/internal/back_identifier/usecase"
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/usecase/list_recent_chats"
 	"github.com/supchat-lmrt/back-go/internal/dig"
 	"github.com/supchat-lmrt/back-go/internal/gin"
@@ -102,6 +103,9 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(s3.NewS3Client),
 		// Mailer
 		dig.NewProvider(mail.NewMailer(os.Getenv("SMTP_HOST"), os.Getenv("SMTP_TLS") == "true", utils.MustAtoi(os.Getenv("SMTP_PORT")), os.Getenv("SMTP_USERNAME"), os.Getenv("SMTP_PASSWORD"))),
+		// Identifier workspace
+		dig.NewProvider(usecase.NewGetBackIdentifierUseCase),
+		dig.NewProvider(usecase.NewHostnameBackIdentifierStrategy),
 		// Workspaces
 		// Workspaces repository
 		dig.NewProvider(workspace_repository.NewMongoWorkspaceRepository),
@@ -149,6 +153,7 @@ func NewDi() *uberdig.Container {
 		// Workspace channels handlers
 		dig.NewProvider(list_channels.NewListChannelsHandler),
 		dig.NewProvider(create_channel.NewCreateChannelHandler),
+		dig.NewProvider(get_channel.NewGetChannelHandler),
 		// Workspace channels chat
 		// Workspace channels chat repository
 		dig.NewProvider(chat_message_repository.NewMongoChannelMessageRepository),

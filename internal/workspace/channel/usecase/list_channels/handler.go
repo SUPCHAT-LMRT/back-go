@@ -14,6 +14,7 @@ func NewListChannelsHandler(useCase *ListChannelsUseCase) *ListChannelsHandler {
 	return &ListChannelsHandler{useCase: useCase}
 }
 
+// TODO: filter out the channels that the user is not a member of
 func (h *ListChannelsHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {

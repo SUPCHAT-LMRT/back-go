@@ -10,6 +10,7 @@ import (
 	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	mongo2 "go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
 )
 
@@ -39,25 +40,35 @@ func NewMongoWorkspaceMemberRepository(deps MongoWorkspaceMemberRepositoryDeps) 
 	return &MongoWorkspaceMemberRepository{deps: deps}
 }
 
-func (m MongoWorkspaceMemberRepository) ListMembers(ctx context.Context, workspaceId entity.WorkspaceId) ([]*entity2.WorkspaceMember, error) {
+func (m MongoWorkspaceMemberRepository) ListMembers(ctx context.Context, workspaceId entity.WorkspaceId, limit, page int) (totalMembers uint, members []*entity2.WorkspaceMember, err error) {
 	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId.String())
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
-	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{"workspace_id": workspaceObjectId})
+	// Define query options for pagination
+	opts := options.Find().SetLimit(int64(limit)).SetSkip(int64((page - 1) * limit))
+
+	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{"workspace_id": workspaceObjectId}, opts)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	defer cursor.Close(ctx)
+
+	var total int64
+	total, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).CountDocuments(ctx, bson.M{"workspace_id": workspaceObjectId})
+	if err != nil {
+		return 0, nil, err
+	}
+
+	totalMembers = uint(total)
 
 	var mongoWorkspaceMembers []*MongoWorkspaceMember
 	for cursor.Next(ctx) {
 		var mongoWorkspaceMember MongoWorkspaceMember
-		if err := cursor.Decode(&mongoWorkspaceMember); err != nil {
-			return nil, err
+		if err = cursor.Decode(&mongoWorkspaceMember); err != nil {
+			return 0, nil, err
 		}
-
 		mongoWorkspaceMembers = append(mongoWorkspaceMembers, &mongoWorkspaceMember)
 	}
 
@@ -65,13 +76,12 @@ func (m MongoWorkspaceMemberRepository) ListMembers(ctx context.Context, workspa
 	for i, mongoWorkspaceMember := range mongoWorkspaceMembers {
 		workspaceMember, err := m.deps.WorkspaceMemberMapper.MapToEntity(mongoWorkspaceMember)
 		if err != nil {
-			return nil, err
+			return 0, nil, err
 		}
-
 		workspaceMembers[i] = workspaceMember
 	}
 
-	return workspaceMembers, nil
+	return totalMembers, workspaceMembers, nil
 }
 
 func (m MongoWorkspaceMemberRepository) AddMember(ctx context.Context, workspaceId entity.WorkspaceId, member *entity2.WorkspaceMember) error {

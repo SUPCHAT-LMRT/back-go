@@ -15,6 +15,6 @@ func NewListWorkspaceMembersUseCase(repository repository2.WorkspaceMemberReposi
 	return &ListWorkspaceMembersUseCase{repository: repository}
 }
 
-func (u ListWorkspaceMembersUseCase) Execute(ctx context.Context, workspaceId entity.WorkspaceId) ([]*entity2.WorkspaceMember, error) {
-	return u.repository.ListMembers(ctx, workspaceId)
+func (u ListWorkspaceMembersUseCase) Execute(ctx context.Context, workspaceId entity.WorkspaceId, limit, page int) (totalMembers uint, members []*entity2.WorkspaceMember, err error) {
+	return u.repository.ListMembers(ctx, workspaceId, limit, page)
 }

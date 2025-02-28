@@ -27,6 +27,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/usecase/get_minutely"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
 	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
 	workspace_invite_link_generate "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/generate"
@@ -75,6 +76,7 @@ type GinRouterDeps struct {
 	ListChannelsHandler        *list_channels.ListChannelsHandler
 	CreateChannelHandler       *create_channel.CreateChannelHandler
 	ListChannelMessagesHandler *list_messages.ListChannelMessagesHandler
+	GetChannelHandler          *get_channel.GetChannelHandler
 	// User
 	GetMyAccountHandler                      *get_my_account.GetMyUserAccountHandler
 	LoginHandler                             *login.LoginHandler
@@ -146,6 +148,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 
 		inviteLinkGroup := accountGroup.Group("/invite-link")
 		{
+			// Todo permits only the admin to create an invite link
 			inviteLinkGroup.POST("", d.deps.CreateInviteLinkHandler.Handle)
 			inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkDataHandler.Handle)
 
@@ -182,6 +185,8 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			channelGroup := specificWorkspaceGroup.Group("/channels")
 			{
 				channelGroup.GET("", d.deps.ListChannelsHandler.Handle)
+				// TODO: add middleware to check if the user can access the channel
+				channelGroup.GET("/:channel_id", d.deps.GetChannelHandler.Handle)
 				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
 				channelGroup.GET("/:channel_id/messages", d.deps.ListChannelMessagesHandler.Handle)
 			}

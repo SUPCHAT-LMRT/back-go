@@ -4,6 +4,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	uberdig "go.uber.org/dig"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
@@ -32,7 +33,20 @@ func (h *ListWorkspaceMembersHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	members, err := h.deps.UseCase.Execute(c, entity.WorkspaceId(workspaceId))
+	// Parse pagination parameters
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10")) // Default limit: 10
+	if err != nil || limit <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid limit"})
+		return
+	}
+
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1")) // Default page: 1
+	if err != nil || page < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid page"})
+		return
+	}
+
+	totalMembers, members, err := h.deps.UseCase.Execute(c, entity.WorkspaceId(workspaceId), limit, page)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -59,7 +73,10 @@ func (h *ListWorkspaceMembersHandler) Handle(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, gin.H{
+		"members": result,
+		"total":   totalMembers,
+	})
 }
 
 type MemberResponse struct {

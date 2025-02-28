@@ -8,21 +8,28 @@ import (
 )
 
 type WsServer struct {
-	Deps       WebSocketDeps
-	clients    map[*Client]bool
-	Register   chan *Client
-	Unregister chan *Client
-	rooms      map[*Room]bool
+	Deps           WebSocketDeps
+	clients        map[*Client]bool
+	Register       chan *Client
+	Unregister     chan *Client
+	rooms          map[*Room]bool
+	backIdentifier string
 }
 
-func NewWsServer(deps WebSocketDeps) *WsServer {
-	return &WsServer{
-		Deps:       deps,
-		clients:    make(map[*Client]bool),
-		Register:   make(chan *Client),
-		Unregister: make(chan *Client),
-		rooms:      make(map[*Room]bool),
+func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
+	backIdentifier, err := deps.GetBackIdentifierUseCase.Execute(context.Background())
+	if err != nil {
+		return nil, err
 	}
+
+	return &WsServer{
+		Deps:           deps,
+		clients:        make(map[*Client]bool),
+		Register:       make(chan *Client),
+		Unregister:     make(chan *Client),
+		rooms:          make(map[*Room]bool),
+		backIdentifier: backIdentifier,
+	}, nil
 }
 
 func (s *WsServer) Run() {
@@ -36,7 +43,6 @@ func (s *WsServer) Run() {
 		case client := <-s.Unregister:
 			s.unregisterClient(client)
 		case msg := <-pubsub.Channel():
-			s.Deps.Logger.Info().Msg("Received message from redis")
 			s.ForwardToClients([]byte(msg.Payload))
 		}
 	}
@@ -51,10 +57,11 @@ func (s *WsServer) ForwardToClients(message []byte) {
 			continue
 		}
 
-		// TODO impl forwardMessage.EmitterServerId
-		if forwardMessage.EmitterServerId == "1" {
+		if forwardMessage.EmitterServerId == s.backIdentifier {
 			continue
 		}
+
+		s.Deps.Logger.Info().Str("message", string(message)).Msg("Forwarding message to client")
 
 		client.send <- message
 	}

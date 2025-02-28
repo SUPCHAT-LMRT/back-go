@@ -1,10 +1,8 @@
 package create_channel
 
 import (
-	"context"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
-	"github.com/supchat-lmrt/back-go/internal/websocket/messages/outbound"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workpace_members"
 	uberdig "go.uber.org/dig"
@@ -28,33 +26,34 @@ func NewNotifyWebSocketObserver(deps NotifyWebSocketObserverDeps) CreateChannelO
 func (o *NotifyWebSocketObserver) ChannelCreated(channel *channel_entity.Channel) {
 	// First, get all the clients that are in the workspace and connected to the websocket.
 
-	workspaceMembers, err := o.deps.ListWorkspaceMembersUseCase.Execute(context.Background(), channel.WorkspaceId)
-	if err != nil {
-		o.deps.Logger.Error().Err(err).Msg("Error on getting workspace members")
-		return
-	}
-
-	// Todo make iteration run once and once all the clients have been iterated, stop the iteration.
-	for _, member := range workspaceMembers {
-		o.deps.WsServer.IterateClients(func(client *websocket.Client) (stop bool) {
-			// Then, notify all the clients that a new channel has been created.
-			if client.UserId == member.UserId && client.SelectedWorkspace.Load() == channel.WorkspaceId.String() {
-				err = client.SendMessage(&outbound.OutboundChannelCreated{
-					Channel: outbound.OutboundChannelCreatedChannel{
-						Id:          channel.Id,
-						Name:        channel.Name,
-						Topic:       channel.Topic,
-						WorkspaceId: channel.WorkspaceId,
-					},
-				})
-				if err != nil {
-					o.deps.Logger.Error().Err(err).Msg("Error on sending message to client")
-				}
-			}
-
-			return
-		})
-	}
+	// TODO implement this
+	//workspaceMembers, err := o.deps.ListWorkspaceMembersUseCase.Execute(context.Background(), channel.WorkspaceId)
+	//if err != nil {
+	//	o.deps.Logger.Error().Err(err).Msg("Error on getting workspace members")
+	//	return
+	//}
+	//
+	//// Todo make iteration run once and once all the clients have been iterated, stop the iteration.
+	//for _, member := range workspaceMembers {
+	//	o.deps.WsServer.IterateClients(func(client *websocket.Client) (stop bool) {
+	//		// Then, notify all the clients that a new channel has been created.
+	//		if client.UserId == member.UserId && client.SelectedWorkspace.Load() == channel.WorkspaceId.String() {
+	//			err = client.SendMessage(&outbound.OutboundChannelCreated{
+	//				Channel: outbound.OutboundChannelCreatedChannel{
+	//					Id:          channel.Id,
+	//					Name:        channel.Name,
+	//					Topic:       channel.Topic,
+	//					WorkspaceId: channel.WorkspaceId,
+	//				},
+	//			})
+	//			if err != nil {
+	//				o.deps.Logger.Error().Err(err).Msg("Error on sending message to client")
+	//			}
+	//		}
+	//
+	//		return
+	//	})
+	//}
 
 }
 
