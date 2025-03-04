@@ -21,7 +21,7 @@ import (
 	user_chat_direct_repository "github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
 	list_recent_chats_direct "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_recent_direct_chats"
 	"github.com/supchat-lmrt/back-go/internal/user/gin/middlewares"
-	user_repository "github.com/supchat-lmrt/back-go/internal/user/repository"
+	mongo2 "github.com/supchat-lmrt/back-go/internal/user/repository/mongo"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists"
 	forgot_password_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/repository"
@@ -186,8 +186,8 @@ func NewDi() *uberdig.Container {
 		// Workspace member repository
 		dig.NewProvider(repository.NewMongoWorkspaceMemberRepository),
 		// User
-		dig.NewProvider(user_repository.NewMongoUserRepository),
-		dig.NewProvider(user_repository.NewMongoUserMapper),
+		dig.NewProvider(mongo2.NewMongoUserRepository),
+		dig.NewProvider(mongo2.NewMongoUserMapper),
 		// User usecases
 		dig.NewProvider(get_by_id.NewGetUserByIdUseCase),
 		dig.NewProvider(get_by_email.NewGetUserByEmailUseCase),

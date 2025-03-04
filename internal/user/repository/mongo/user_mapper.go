@@ -1,4 +1,4 @@
-package repository
+package mongo
 
 import (
 	"github.com/supchat-lmrt/back-go/internal/mapper"
