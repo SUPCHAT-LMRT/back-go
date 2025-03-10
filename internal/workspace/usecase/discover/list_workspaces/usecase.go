@@ -6,26 +6,32 @@ import (
 	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	repository2 "github.com/supchat-lmrt/back-go/internal/workspace/member/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/repository"
+	uberdig "go.uber.org/dig"
 )
 
-type DiscoveryListWorkspacesUseCase struct {
-	workspaceRepository       repository.WorkspaceRepository
-	workspaceMemberRepository repository2.WorkspaceMemberRepository
+type DiscoveryListWorkspacesUseCaseDeps struct {
+	uberdig.In
+	WorkspaceRepository       repository.WorkspaceRepository
+	WorkspaceMemberRepository repository2.WorkspaceMemberRepository
 }
 
-func NewDiscoveryListWorkspacesUseCase(workspaceRepository repository.WorkspaceRepository) *DiscoveryListWorkspacesUseCase {
-	return &DiscoveryListWorkspacesUseCase{workspaceRepository: workspaceRepository}
+type DiscoveryListWorkspacesUseCase struct {
+	deps DiscoveryListWorkspacesUseCaseDeps
+}
+
+func NewDiscoveryListWorkspacesUseCase(deps DiscoveryListWorkspacesUseCaseDeps) *DiscoveryListWorkspacesUseCase {
+	return &DiscoveryListWorkspacesUseCase{deps: deps}
 }
 
 func (u *DiscoveryListWorkspacesUseCase) Execute(ctx context.Context) ([]*DiscoveryWorkspace, error) {
-	publicWorkspaces, err := u.workspaceRepository.ListPublics(ctx)
+	publicWorkspaces, err := u.deps.WorkspaceRepository.ListPublics(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	discoverWorkspaces := make([]*DiscoveryWorkspace, len(publicWorkspaces))
 	for i, workspace := range publicWorkspaces {
-		workspaceMembersCount, err := u.workspaceMemberRepository.CountMembers(ctx, workspace.Id)
+		workspaceMembersCount, err := u.deps.WorkspaceMemberRepository.CountMembers(ctx, workspace.Id)
 		if err != nil {
 			return nil, err
 		}
