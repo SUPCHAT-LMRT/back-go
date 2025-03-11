@@ -13,7 +13,6 @@ const (
 type RecentChat struct {
 	Id        RecentChatId
 	Kind      RecentChatKind
-	AvatarUrl string
 	Name      string
 	UpdatedAt time.Time
 }

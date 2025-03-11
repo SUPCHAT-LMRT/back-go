@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/goccy/go-json"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
-	"github.com/supchat-lmrt/back-go/internal/websocket/messages/outbound"
 	"github.com/supchat-lmrt/back-go/internal/websocket/room"
 )
 
@@ -72,16 +71,6 @@ func (room *Room) broadcastToClientsInRoom(message []byte) {
 }
 
 func (room *Room) SendMessage(message messages.Message) error {
-	encoded, err := message.Encode()
-	if err != nil {
-		return err
-	}
-
-	room.broadcastToClientsInRoom(encoded)
-	return nil
-}
-
-func (room *Room) SendChannelMessage(message outbound.OutboundSendMessageToChannel) error {
 	encoded, err := message.Encode()
 	if err != nil {
 		return err

@@ -81,7 +81,6 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 			Id:        message.Id.String(),
 			ChannelId: message.ChannelId.String(),
 			Content:   message.Content,
-			Author:    ChannelMessageAuthorResponse{},
 			CreatedAt: message.CreatedAt,
 			Reactions: reactions,
 		}

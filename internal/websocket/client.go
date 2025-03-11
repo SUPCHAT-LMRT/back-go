@@ -6,6 +6,7 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages/inbound"
@@ -103,6 +104,14 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 
 		c.handleSendMessageToChannel(&sendMessage)
 		break
+	case messages.InboundSendDirectMessageAction:
+		sendMessage := inbound.InboundSendDirectMessage{DefaultMessage: message}
+		if err := json.Unmarshal(jsonMessage, &sendMessage); err != nil {
+			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
+			return
+		}
+		c.handleSendDirectMessage(&sendMessage)
+		break
 	case messages.InboundSelectWorkspaceAction:
 		selectWorkspaceMessage := inbound.InboundSelectWorkspace{DefaultMessage: message}
 		if err := json.Unmarshal(jsonMessage, &selectWorkspaceMessage); err != nil {
@@ -156,7 +165,7 @@ func (c *Client) handleSendMessageToChannel(message *inbound.InboundSendMessageT
 		return
 	}
 
-	channelSender, err := c.toOutboundSendChannelMessage(roomId)
+	channelSender, err := c.toOutboundSendChannelMessageSender(roomId)
 	if err != nil {
 		c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on creating sender")
 		return
@@ -165,7 +174,7 @@ func (c *Client) handleSendMessageToChannel(message *inbound.InboundSendMessageT
 	// Use the ChatServer method to find the room, and if found, broadcast!
 	if foundRoom = c.wsServer.findRoomById(roomId); foundRoom != nil {
 		messageId := bson.NewObjectID().Hex()
-		err = foundRoom.SendChannelMessage(outbound.OutboundSendMessageToChannel{
+		err = foundRoom.SendMessage(&outbound.OutboundSendMessageToChannel{
 			MessageId: messageId,
 			Content:   message.Content,
 			ChannelId: message.ChannelId,
@@ -173,14 +182,53 @@ func (c *Client) handleSendMessageToChannel(message *inbound.InboundSendMessageT
 		})
 		if err != nil {
 			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+			return
 		}
 
 		// Notify observers
-		for _, observer := range c.wsServer.Deps.SendMessageObservers {
+		for _, observer := range c.wsServer.Deps.SendChannelMessageObservers {
 			observer.OnSendMessage(message, entity.ChannelMessageId(messageId), c.UserId)
 		}
 	}
 
+}
+
+func (c *Client) handleSendDirectMessage(message *inbound.InboundSendDirectMessage) {
+	if strings.TrimSpace(message.Content) == "" {
+		return
+	}
+
+	roomId := c.buildDirectMessageRoomId(message.OtherUserId)
+	foundRoom := c.wsServer.findRoomById(roomId)
+	if foundRoom == nil {
+		return
+	}
+
+	messageSender, err := c.toOutboundDirectMessageSender()
+	if err != nil {
+		c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on creating sender")
+		return
+	}
+
+	// Use the ChatServer method to find the room, and if found, broadcast!
+	if foundRoom = c.wsServer.findRoomById(roomId); foundRoom != nil {
+		messageId := bson.NewObjectID().Hex()
+		err = foundRoom.SendMessage(&outbound.OutboundSendDirectMessage{
+			MessageId:   messageId,
+			Content:     message.Content,
+			Sender:      messageSender,
+			OtherUserId: message.OtherUserId,
+		})
+		if err != nil {
+			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+			return
+		}
+
+		// Notify observers
+		for _, observer := range c.wsServer.Deps.SendDirectMessageObservers {
+			observer.OnSendMessage(message, chat_direct_entity.ChatDirectId(messageId), c.UserId)
+		}
+	}
 }
 
 func (c *Client) handleJoinChannelRoomMessage(message *inbound.InboundJoinChannel) {
@@ -189,7 +237,7 @@ func (c *Client) handleJoinChannelRoomMessage(message *inbound.InboundJoinChanne
 }
 
 func (c *Client) handleJoinDirectRoomMessage(message *inbound.InboundJoinDirectRoom) {
-	roomId := fmt.Sprintln("direct-", c.UserId.String(), "_", message.OtherUserId.String())
+	roomId := c.buildDirectMessageRoomId(message.OtherUserId)
 	// Todo: Check if the room exists
 	c.joinRoom(roomId, room.DirectRoomKind)
 }
@@ -337,6 +385,16 @@ func (c *Client) notifyRoomJoined(room *Room) {
 	c.send <- encoded
 }
 
+func (c *Client) buildDirectMessageRoomId(otherUserId user_entity.UserId) string {
+	// create unique room name combined to the two IDs, the room name will be the same for both users
+	// so the ids are ordered
+	if c.UserId.IsAfter(otherUserId) {
+		return fmt.Sprintln("direct-", c.UserId.String(), "_", otherUserId.String())
+	} else {
+		return fmt.Sprintln("direct-", otherUserId.String(), "_", c.UserId.String())
+	}
+}
+
 func (c *Client) ReadPump() {
 	defer c.disconnect()
 
@@ -413,7 +471,7 @@ func (c *Client) disconnect() {
 	c.conn.Close()
 }
 
-func (c *Client) toOutboundSendChannelMessage(roomId string) (*outbound.OutboundSendMessageToChannelSender, error) {
+func (c *Client) toOutboundSendChannelMessageSender(roomId string) (*outbound.OutboundSendMessageToChannelSender, error) {
 	// The room id is the channel id
 	channel, err := c.wsServer.Deps.GetChannelUseCase.Execute(context.Background(), channel_entity.ChannelId(roomId))
 	if err != nil {
@@ -467,5 +525,18 @@ func (c *Client) toOutboundChannelMessageReactionMember(roomId string) (*outboun
 	return &outbound.OutboundMessageReactionMember{
 		UserId:   c.UserId.String(),
 		Username: username,
+	}, nil
+}
+
+func (c *Client) toOutboundDirectMessageSender() (*outbound.OutboundSendDirectMessageSender, error) {
+	user, err := c.wsServer.Deps.GetUserByIdUseCase.Execute(context.Background(), c.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &outbound.OutboundSendDirectMessageSender{
+		UserId:    user.Id,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
 	}, nil
 }

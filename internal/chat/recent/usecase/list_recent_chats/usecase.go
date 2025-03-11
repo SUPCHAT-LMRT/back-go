@@ -6,8 +6,8 @@ import (
 	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/list_recent_groups"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
-	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_recent_direct_chats"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	uberdig "go.uber.org/dig"
 	"sort"
 )
@@ -17,7 +17,7 @@ type ListRecentChatsUseCaseDeps struct {
 	ListRecentGroupsUseCase     *list_recent_groups.ListRecentGroupsUseCase
 	ListRecentChatDirectUseCase *list_recent_direct_chats.ListRecentChatDirectUseCase
 	GroupMapper                 mapper.Mapper[*group_entity.Group, *entity.RecentChat]
-	DirectMapper                mapper.Mapper[*chat_direct_entity.ChatDirect, *entity.RecentChat]
+	DirectMapper                mapper.Mapper[*ChatDirectMapping, *entity.RecentChat]
 }
 
 type ListRecentChatsUseCase struct {
@@ -28,7 +28,7 @@ func NewListRecentChatsUseCase(deps ListRecentChatsUseCaseDeps) *ListRecentChats
 	return &ListRecentChatsUseCase{deps: deps}
 }
 
-func (u *ListRecentChatsUseCase) Execute(ctx context.Context) ([]*entity.RecentChat, error) {
+func (u *ListRecentChatsUseCase) Execute(ctx context.Context, currentUserId user_entity.UserId) ([]*entity.RecentChat, error) {
 	// Call the ListRecentGroupsUseCase and ListRecentChatDirectUseCase and sort by updated_at
 
 	groups, err := u.deps.ListRecentGroupsUseCase.Execute(ctx)
@@ -54,7 +54,7 @@ func (u *ListRecentChatsUseCase) Execute(ctx context.Context) ([]*entity.RecentC
 	}
 
 	for _, direct := range directs {
-		fromEntity, err := u.deps.DirectMapper.MapToEntity(direct)
+		fromEntity, err := u.deps.DirectMapper.MapToEntity(&ChatDirectMapping{ChatDirect: direct, CurrentUserId: currentUserId})
 		if err != nil {
 			return nil, err
 		}

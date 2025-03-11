@@ -14,13 +14,14 @@ import (
 
 type WebSocketDeps struct {
 	uberdig.In
-	GetChannelUseCase          *get_channel.GetChannelUseCase
-	GetWorkspaceMemberUseCase  *get_workpace_member.GetWorkspaceMemberUseCase
-	ListChannelMessagesUseCase *list_messages.ListChannelMessagesUseCase
-	GetUserByIdUseCase         *get_by_id.GetUserByIdUseCase
-	SendMessageObservers       []SendMessageObserver `group:"send_message_observers"`
-	ToggleReactionUseCase      *toggle_reaction.ToggleReactionUseCase
-	Logger                     logger.Logger
-	RedisClient                *redis.Client
-	GetBackIdentifierUseCase   *usecase.GetBackIdentifierUseCase
+	GetChannelUseCase           *get_channel.GetChannelUseCase
+	GetWorkspaceMemberUseCase   *get_workpace_member.GetWorkspaceMemberUseCase
+	ListChannelMessagesUseCase  *list_messages.ListChannelMessagesUseCase
+	GetUserByIdUseCase          *get_by_id.GetUserByIdUseCase
+	SendChannelMessageObservers []SendChannelMessageObserver `group:"send_channel_message_observers"`
+	SendDirectMessageObservers  []SendDirectMessageObserver  `group:"send_direct_message_observers"`
+	ToggleReactionUseCase       *toggle_reaction.ToggleReactionUseCase
+	Logger                      logger.Logger
+	RedisClient                 *redis.Client
+	GetBackIdentifierUseCase    *usecase.GetBackIdentifierUseCase
 }

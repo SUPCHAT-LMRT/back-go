@@ -8,6 +8,7 @@ import (
 	validator2 "github.com/supchat-lmrt/back-go/internal/gin/validator"
 	list_group_chat_messages "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/add_member"
+	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/user/gin/middlewares"
 	request_forgot_password "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/request"
 	validate_forgot_password "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/validate"
@@ -78,6 +79,8 @@ type GinRouterDeps struct {
 	CreateChannelHandler       *create_channel.CreateChannelHandler
 	ListChannelMessagesHandler *list_messages.ListChannelMessagesHandler
 	GetChannelHandler          *get_channel.GetChannelHandler
+	// User chat
+	ListDirectMessagesHandler *list_direct_messages.ListDirectMessagesHandler
 	// User
 	GetMyAccountHandler                      *get_my_account.GetMyUserAccountHandler
 	LoginHandler                             *login.LoginHandler
@@ -159,9 +162,13 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		accountGroup.GET("/:user_id/profile", d.deps.GetPublicProfileHandler.Handle)
 	}
 
-	chatGroup := apiGroup.Group("/chats")
+	chatGroup := apiGroup.Group("chats", authMiddleware)
 	{
-		chatGroup.GET("/recents", authMiddleware, d.deps.ListRecentChatsHandler.Handle)
+		chatGroup.GET("recents", d.deps.ListRecentChatsHandler.Handle)
+		directChatGroup := chatGroup.Group("direct")
+		{
+			directChatGroup.GET(":other_user_id/messages", d.deps.ListDirectMessagesHandler.Handle)
+		}
 	}
 
 	groupGroup := apiGroup.Group("/groups")

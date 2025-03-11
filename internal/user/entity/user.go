@@ -27,6 +27,10 @@ func (id UserId) String() string {
 	return string(id)
 }
 
+func (id UserId) IsAfter(other UserId) bool {
+	return id > other
+}
+
 func (u User) FullName() string {
 	return u.FirstName + " " + u.LastName
 }

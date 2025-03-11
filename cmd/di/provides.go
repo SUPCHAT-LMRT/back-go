@@ -19,7 +19,9 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/redis"
 	"github.com/supchat-lmrt/back-go/internal/s3"
 	user_chat_direct_repository "github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
+	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
 	list_recent_chats_direct "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_recent_direct_chats"
+	save_direct_message "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/save_message"
 	"github.com/supchat-lmrt/back-go/internal/user/gin/middlewares"
 	mongo2 "github.com/supchat-lmrt/back-go/internal/user/repository/mongo"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
@@ -256,6 +258,10 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(user_chat_direct_repository.NewChatDirectMapper),
 		// User chat direct usecases
 		dig.NewProvider(list_recent_chats_direct.NewListRecentChatDirectUseCase),
+		dig.NewProvider(save_direct_message.NewSaveDirectMessageUseCase),
+		dig.NewProvider(list_direct_messages.NewListDirectMessagesUseCase),
+		// USer chat direct handlers
+		dig.NewProvider(list_direct_messages.NewListDirectMessagesHandler),
 		// User Oauth handler & usecase
 		dig.NewProvider(login_oauth.NewOAuthHandler),
 		dig.NewProvider(login_oauth.NewOAuthUseCase),
@@ -263,7 +269,8 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(sendmail.NewSendMailUseCase),
 		// Ws
 		dig.NewProvider(websocket.NewWsServer),
-		dig.NewProvider(websocket.NewSaveMessageObserver, uberdig.Group("send_message_observers")),
+		dig.NewProvider(websocket.NewSaveChannelMessageObserver, uberdig.Group("send_channel_message_observers")),
+		dig.NewProvider(websocket.NewSaveDirectMessageObserver, uberdig.Group("send_direct_message_observers")),
 		// Ws handlers
 		dig.NewProvider(websocket.NewWebsocketHandler),
 		// Chat

@@ -6,16 +6,17 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
 )
 
-type InboundJoinDirectRoom struct {
+type InboundSendDirectMessage struct {
 	messages.DefaultMessage
+	Content     string             `json:"content"`
 	OtherUserId user_entity.UserId `json:"otherUserId"`
 }
 
-func (m InboundJoinDirectRoom) GetActionName() messages.Action {
-	return messages.InboundJoinDirectRoomAction
+func (m InboundSendDirectMessage) GetActionName() messages.Action {
+	return messages.InboundSendDirectMessageAction
 }
 
-func (m InboundJoinDirectRoom) Encode() ([]byte, error) {
+func (m InboundSendDirectMessage) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }

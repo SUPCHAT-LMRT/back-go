@@ -13,8 +13,8 @@ type ChannelMessage struct {
 	ChannelId channel_entity.ChannelId
 	Content   string
 	AuthorId  entity.UserId
-	CreatedAt time.Time
 	Reactions []*ChannelMessageReaction
+	CreatedAt time.Time
 }
 
 func (id ChannelMessageId) String() string {

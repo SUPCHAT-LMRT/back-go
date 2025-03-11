@@ -66,7 +66,13 @@ func (m ChannelMessageMapper) MapFromEntity(entity *entity.ChannelMessage) (*Mon
 			reactionUsers[j] = userObjectId
 		}
 
+		reactionObjectId, err := bson.ObjectIDFromHex(string(reaction.Id))
+		if err != nil {
+			return nil, err
+		}
+
 		reactions[i] = &MongoChannelMessageReaction{
+			Id:       reactionObjectId,
 			Users:    reactionUsers,
 			Reaction: reaction.Reaction,
 		}

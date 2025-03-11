@@ -21,5 +21,5 @@ func NewListRecentChatDirectUseCase(deps ListRecentChatDirectUseCaseDeps) *ListR
 }
 
 func (u *ListRecentChatDirectUseCase) Execute(ctx context.Context) ([]*entity.ChatDirect, error) {
-	return u.deps.Repository.ListRecentGroups(ctx)
+	return u.deps.Repository.ListRecentChats(ctx)
 }
