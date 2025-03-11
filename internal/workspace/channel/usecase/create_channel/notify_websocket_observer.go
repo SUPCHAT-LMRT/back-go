@@ -37,7 +37,7 @@ func (o *NotifyWebSocketObserver) ChannelCreated(channel *channel_entity.Channel
 	//for _, member := range workspaceMembers {
 	//	o.deps.WsServer.IterateClients(func(client *websocket.Client) (stop bool) {
 	//		// Then, notify all the clients that a new channel has been created.
-	//		if client.UserId == member.UserId && client.SelectedWorkspace.Load() == channel.WorkspaceId.String() {
+	//		if client.UserId == member.UserId && client.CurrentRoomId.Load() == channel.WorkspaceId.String() {
 	//			err = client.SendMessage(&outbound.OutboundChannelCreated{
 	//				Channel: outbound.OutboundChannelCreatedChannel{
 	//					Id:          channel.Id,

@@ -35,27 +35,27 @@ const (
 )
 
 type Client struct {
-	Id                uuid.UUID
-	UserId            user_entity.UserId `json:"userId"`
-	SelectedWorkspace atomic.Value
-	conn              *websocket.Conn
-	wsServer          *WsServer
-	rooms             map[*Room]bool
-	send              chan []byte
+	Id            uuid.UUID
+	UserId        user_entity.UserId `json:"userId"`
+	CurrentRoomId atomic.Value
+	conn          *websocket.Conn
+	wsServer      *WsServer
+	rooms         map[*Room]bool
+	send          chan []byte
 }
 
 func NewClient(user *user_entity.User, conn *websocket.Conn, wsServer *WsServer) *Client {
 	c := &Client{
-		Id:                uuid.New(),
-		UserId:            user.Id,
-		SelectedWorkspace: atomic.Value{},
-		conn:              conn,
-		wsServer:          wsServer,
-		rooms:             make(map[*Room]bool),
-		send:              make(chan []byte, 256),
+		Id:            uuid.New(),
+		UserId:        user.Id,
+		CurrentRoomId: atomic.Value{},
+		conn:          conn,
+		wsServer:      wsServer,
+		rooms:         make(map[*Room]bool),
+		send:          make(chan []byte, 256),
 	}
 
-	c.SelectedWorkspace.Store("")
+	c.CurrentRoomId.Store("")
 
 	return c
 }
@@ -85,6 +85,14 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 			return
 		}
 		c.handleJoinChannelRoomMessage(&joinChannelMessage)
+		break
+	case messages.InboundJoinDirectRoomAction:
+		joinDirectRoomMessage := inbound.InboundJoinDirectRoom{DefaultMessage: message}
+		if err := json.Unmarshal(jsonMessage, &joinDirectRoomMessage); err != nil {
+			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
+			return
+		}
+		c.handleJoinDirectRoomMessage(&joinDirectRoomMessage)
 		break
 	case messages.InboundSendChannelMessageAction:
 		sendMessage := inbound.InboundSendMessageToChannel{DefaultMessage: message}
@@ -175,22 +183,22 @@ func (c *Client) handleSendMessageToChannel(message *inbound.InboundSendMessageT
 
 }
 
-//	func (c *Client) handleJoinDirectRoomMessage(message Message) {
-//		roomId := message.Message
-//		// Todo: Check if the room exists
-//		c.joinRoom(roomId, DirectRoomKind, message.Sender)
-//	}
-//
+func (c *Client) handleJoinChannelRoomMessage(message *inbound.InboundJoinChannel) {
+	// Todo: Check if the room exists
+	c.joinRoom(message.ChannelId.String(), room.ChannelRoomKind)
+}
+
+func (c *Client) handleJoinDirectRoomMessage(message *inbound.InboundJoinDirectRoom) {
+	roomId := fmt.Sprintln("direct-", c.UserId.String(), "_", message.OtherUserId.String())
+	// Todo: Check if the room exists
+	c.joinRoom(roomId, room.DirectRoomKind)
+}
+
 //	func (c *Client) handleJoinGroupRoomMessage(message Message) {
 //		roomId := message.Message
 //		// Todo: Check if the room exists
 //		c.joinRoom(roomId, GroupRoomKind, message.Sender)
 //	}
-
-func (c *Client) handleJoinChannelRoomMessage(message *inbound.InboundJoinChannel) {
-	// Todo: Check if the room exists
-	c.joinRoom(message.ChannelId.String(), room.ChannelRoomKind, c)
-}
 
 func (c *Client) handleLeaveRoomMessage(message *inbound.InboundLeaveRoom) {
 	roomId := message.RoomId
@@ -208,11 +216,11 @@ func (c *Client) handleLeaveRoomMessage(message *inbound.InboundLeaveRoom) {
 }
 
 func (c *Client) handleSelectWorkspaceMessage(message *inbound.InboundSelectWorkspace) {
-	c.SelectedWorkspace.Store(message.WorkspaceId.String())
+	c.CurrentRoomId.Store(message.WorkspaceId.String())
 }
 
 func (c *Client) handleUnselectWorkspaceMessage(message *inbound.InboundUnselectWorkspace) {
-	c.SelectedWorkspace.Store("")
+	c.CurrentRoomId.Store("")
 }
 
 //func (c *Client) handleJoinRoomPrivateMessage(message Message) {
@@ -279,7 +287,7 @@ func (c *Client) handleReactionToggleMessage(message *inbound.InboundMessageReac
 	}
 }
 
-func (c *Client) joinRoom(roomId string, kind room.RoomKind, sender *Client) {
+func (c *Client) joinRoom(roomId string, kind room.RoomKind) {
 	foundRoom := c.wsServer.findRoomById(roomId)
 	if foundRoom == nil {
 		// Todo handle GroupRoomKind
