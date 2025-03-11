@@ -17,6 +17,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login_oauth"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/logout"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/public_profile"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/register"
 	request_reset_password "github.com/supchat-lmrt/back-go/internal/user/usecase/reset_password/usecase/request"
 	validate_reset_password "github.com/supchat-lmrt/back-go/internal/user/usecase/reset_password/usecase/validate"
@@ -85,6 +86,7 @@ type GinRouterDeps struct {
 	LogoutHandler                            *logout.LogoutHandler
 	UpdateAccountPersonalInformationsHandler *update_user.UpdateAccountPersonalInformationsHandler
 	UpdateUserAvatarHandler                  *update_user_avatar.UpdateUserAvatarHandler
+	GetPublicProfileHandler                  *public_profile.GetPublicProfileHandler
 	// User forgot password
 	RequestForgotPasswordHandler  *request_forgot_password.RequestForgotPasswordHandler
 	ValidateForgotPasswordHandler *validate_forgot_password.ValidateForgotPasswordHandler
@@ -153,6 +155,8 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkDataHandler.Handle)
 
 		}
+
+		accountGroup.GET("/:user_id/profile", d.deps.GetPublicProfileHandler.Handle)
 	}
 
 	chatGroup := apiGroup.Group("/chats")

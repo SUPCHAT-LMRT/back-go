@@ -21,7 +21,7 @@ import (
 	user_chat_direct_repository "github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
 	list_recent_chats_direct "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_recent_direct_chats"
 	"github.com/supchat-lmrt/back-go/internal/user/gin/middlewares"
-	user_repository "github.com/supchat-lmrt/back-go/internal/user/repository"
+	mongo2 "github.com/supchat-lmrt/back-go/internal/user/repository/mongo"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists"
 	forgot_password_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/repository"
@@ -38,6 +38,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login_oauth"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/logout"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/public_profile"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/register"
 	reset_password_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/reset_password/repository"
 	reset_password_service "github.com/supchat-lmrt/back-go/internal/user/usecase/reset_password/service"
@@ -137,7 +138,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(list_workpace_members2.NewListWorkspaceHandler),
 		dig.NewProvider(generate3.NewCreateInviteLinkHandler),
 		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkWorkspaceDataHandler),
-		// Worksapce mappers
+		// Workspace mappers
 		dig.NewProvider(repository3.NewRedisInviteLinkMapper),
 		// Workspace channels
 		// Workspace channels repository
@@ -185,8 +186,8 @@ func NewDi() *uberdig.Container {
 		// Workspace member repository
 		dig.NewProvider(repository.NewMongoWorkspaceMemberRepository),
 		// User
-		dig.NewProvider(user_repository.NewMongoUserRepository),
-		dig.NewProvider(user_repository.NewMongoUserMapper),
+		dig.NewProvider(mongo2.NewMongoUserRepository),
+		dig.NewProvider(mongo2.NewMongoUserMapper),
 		// User usecases
 		dig.NewProvider(get_by_id.NewGetUserByIdUseCase),
 		dig.NewProvider(get_by_email.NewGetUserByEmailUseCase),
@@ -198,8 +199,10 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_user.NewUpdateUserUseCase),
 		dig.NewProvider(update_user_avatar.NewUpdateUserAvatarUseCase),
 		dig.NewProvider(update_user_avatar.NewS3UpdateUserAvatarStrategy),
+		dig.NewProvider(public_profile.NewGetPublicUserProfileUseCase),
 		// User handlers
 		dig.NewProvider(update_user_avatar.NewUpdateUserAvatarHandler),
+		dig.NewProvider(public_profile.NewGetPublicProfileHandler),
 		// User forgot password repository
 		dig.NewProvider(forgot_password_repository.NewRedisForgotPasswordRepository),
 		// User forgot password service

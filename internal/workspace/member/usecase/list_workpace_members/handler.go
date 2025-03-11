@@ -83,4 +83,5 @@ type MemberResponse struct {
 	Id     string `json:"id"`
 	UserId string `json:"userId"`
 	Pseudo string `json:"pseudo"`
+	Status string `json:"status"`
 }
