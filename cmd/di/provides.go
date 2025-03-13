@@ -15,13 +15,17 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/list_recent_groups"
 	logger "github.com/supchat-lmrt/back-go/internal/logger/zerolog"
 	"github.com/supchat-lmrt/back-go/internal/mail"
+	"github.com/supchat-lmrt/back-go/internal/meilisearch"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"github.com/supchat-lmrt/back-go/internal/redis"
 	"github.com/supchat-lmrt/back-go/internal/s3"
+	"github.com/supchat-lmrt/back-go/internal/search/message"
+	"github.com/supchat-lmrt/back-go/internal/search/usecase/search"
 	user_chat_direct_repository "github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
 	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
 	list_recent_chats_direct "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_recent_direct_chats"
 	save_direct_message "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/save_message"
+	toggle_chat_direct_reaction "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/toggle_reaction"
 	"github.com/supchat-lmrt/back-go/internal/user/gin/middlewares"
 	mongo2 "github.com/supchat-lmrt/back-go/internal/user/repository/mongo"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
@@ -104,6 +108,8 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(redis.NewClient),
 		// S3
 		dig.NewProvider(s3.NewS3Client),
+		// Meilisearch
+		dig.NewProvider(meilisearch.NewClient),
 		// Mailer
 		dig.NewProvider(mail.NewMailer(os.Getenv("SMTP_HOST"), os.Getenv("SMTP_TLS") == "true", utils.MustAtoi(os.Getenv("SMTP_PORT")), os.Getenv("SMTP_USERNAME"), os.Getenv("SMTP_PASSWORD"))),
 		// Identifier workspace
@@ -163,7 +169,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(chat_message_repository.NewChannelMessageMapper),
 		// Workspace channels chat usecases
 		dig.NewProvider(list_messages.NewListMessageUseCase),
-		dig.NewProvider(toggle_reaction.NewToggleReactionUseCase),
+		dig.NewProvider(toggle_reaction.NewToggleReactionChannelMessageUseCase),
 		dig.NewProvider(count_messages_by_workspace.NewCountMessagesUseCase),
 		// Workspace channels chat handlers
 		dig.NewProvider(list_messages.NewListChannelMessagesHandler),
@@ -260,6 +266,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(list_recent_chats_direct.NewListRecentChatDirectUseCase),
 		dig.NewProvider(save_direct_message.NewSaveDirectMessageUseCase),
 		dig.NewProvider(list_direct_messages.NewListDirectMessagesUseCase),
+		dig.NewProvider(toggle_chat_direct_reaction.NewToggleReactionDirectMessageUseCase),
 		// USer chat direct handlers
 		dig.NewProvider(list_direct_messages.NewListDirectMessagesHandler),
 		// User Oauth handler & usecase
@@ -303,6 +310,13 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(save_group_chat_message.NewSaveGroupChatMessageUseCase),
 		// Group chats handlers
 		dig.NewProvider(list_group_chat_messages.NewListGroupChatMessagesHandler),
+		// Search
+		// Search usecases
+		dig.NewProvider(search.NewSearchTermUseCase),
+		// Search handlers
+		dig.NewProvider(search.NewSearchTermHandler),
+		// Search messages
+		dig.NewProvider(message.NewMeilisearchSearchMessageSyncManager),
 	}
 
 	for _, provider := range providers {

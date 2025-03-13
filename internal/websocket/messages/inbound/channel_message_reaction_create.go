@@ -5,18 +5,18 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
 )
 
-type InboundMessageReactionToggle struct {
+type InboundChannelMessageReactionToggle struct {
 	messages.DefaultMessage
 	RoomId    string `json:"roomId"`
 	MessageId string `json:"messageId"`
 	Reaction  string `json:"reaction"`
 }
 
-func (i InboundMessageReactionToggle) GetActionName() messages.Action {
+func (i InboundChannelMessageReactionToggle) GetActionName() messages.Action {
 	return messages.InboundChannelMessageReactionToggle
 }
 
-func (i InboundMessageReactionToggle) Encode() ([]byte, error) {
+func (i InboundChannelMessageReactionToggle) Encode() ([]byte, error) {
 	i.DefaultMessage = messages.NewDefaultMessage(i.GetActionName())
 	return json.Marshal(i)
 }

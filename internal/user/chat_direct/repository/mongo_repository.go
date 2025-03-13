@@ -158,3 +158,72 @@ func (m MongoChatDirectRepository) ListByUser(ctx context.Context, user1Id, user
 
 	return chatDirects, nil
 }
+
+// ToggleReaction toggles the reaction of a user to a message. (If the user has already reacted, it will remove the reaction, otherwise it will add the reaction.)
+func (m MongoChatDirectRepository) ToggleReaction(ctx context.Context, messageId entity.ChatDirectId, userId user_entity.UserId, reaction string) (added bool, err error) {
+	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
+
+	messageObjectId, err := bson.ObjectIDFromHex(string(messageId))
+	if err != nil {
+		return false, err
+	}
+
+	userObjectId, err := bson.ObjectIDFromHex(userId.String())
+	if err != nil {
+		return false, err
+	}
+
+	var message MongoChatDirect
+	err = collection.FindOne(ctx, bson.M{"_id": messageObjectId}).Decode(&message)
+	if err != nil {
+		return false, err
+	}
+
+	updatedReactions := make([]*MongoChatDirectReaction, 0)
+	found := false
+	removed := false
+
+	for _, r := range message.Reactions {
+		if r.Reaction == reaction {
+			found = true
+			updatedUsers := make([]bson.ObjectID, 0, len(r.Users))
+			for _, uid := range r.Users {
+				if uid.Hex() == userId.String() {
+					removed = true
+					continue
+				}
+				updatedUsers = append(updatedUsers, uid)
+			}
+			if len(updatedUsers) > 0 {
+				r.Users = updatedUsers
+				updatedReactions = append(updatedReactions, r)
+			}
+		} else {
+			updatedReactions = append(updatedReactions, r)
+		}
+	}
+
+	if !found {
+		// Add new reaction if not found
+		updatedReactions = append(updatedReactions, &MongoChatDirectReaction{
+			Id:       bson.NewObjectID(),
+			Users:    []bson.ObjectID{userObjectId},
+			Reaction: reaction,
+		})
+	} else if !removed {
+		// Add user to existing reaction
+		for _, r := range updatedReactions {
+			if r.Reaction == reaction {
+				r.Users = append(r.Users, userObjectId)
+				break
+			}
+		}
+	}
+
+	_, err = collection.UpdateOne(ctx, bson.M{"_id": messageObjectId}, bson.M{"$set": bson.M{"reactions": updatedReactions}})
+	if err != nil {
+		return false, err
+	}
+
+	return !removed, nil
+}

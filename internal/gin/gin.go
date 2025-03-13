@@ -8,6 +8,7 @@ import (
 	validator2 "github.com/supchat-lmrt/back-go/internal/gin/validator"
 	list_group_chat_messages "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/add_member"
+	"github.com/supchat-lmrt/back-go/internal/search/usecase/search"
 	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/user/gin/middlewares"
 	request_forgot_password "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/request"
@@ -110,6 +111,8 @@ type GinRouterDeps struct {
 	AddMemberToGroupHandler *add_member.AddMemberToGroupHandler
 	// Group chat
 	ListGroupChatMessagesHandler *list_group_chat_messages.ListGroupChatMessagesHandler
+	// Search
+	SearchTermHandler *search.SearchTermHandler
 }
 
 func NewGinRouter(deps GinRouterDeps) GinRouter {
@@ -210,6 +213,8 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkWorkspaceDataHandler.Handle)
 		inviteLinkGroup.POST("/:token/join", authMiddleware, d.deps.JoinWorkspaceInviteHandler.Handle)
 	}
+
+	apiGroup.GET("/search", authMiddleware, d.deps.SearchTermHandler.Handle)
 }
 
 func (d *DefaultGinRouter) AddCorsHeaders() {

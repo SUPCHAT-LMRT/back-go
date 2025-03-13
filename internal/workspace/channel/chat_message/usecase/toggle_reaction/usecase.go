@@ -7,14 +7,14 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/repository"
 )
 
-type ToggleReactionUseCase struct {
+type ToggleReactionChannelMessageUseCase struct {
 	repository repository.ChannelMessageRepository
 }
 
-func NewToggleReactionUseCase(repository repository.ChannelMessageRepository) *ToggleReactionUseCase {
-	return &ToggleReactionUseCase{repository: repository}
+func NewToggleReactionChannelMessageUseCase(repository repository.ChannelMessageRepository) *ToggleReactionChannelMessageUseCase {
+	return &ToggleReactionChannelMessageUseCase{repository: repository}
 }
 
-func (u *ToggleReactionUseCase) Execute(ctx context.Context, messageId entity.ChannelMessageId, userId user_entity.UserId, reaction string) (added bool, err error) {
+func (u *ToggleReactionChannelMessageUseCase) Execute(ctx context.Context, messageId entity.ChannelMessageId, userId user_entity.UserId, reaction string) (added bool, err error) {
 	return u.repository.ToggleReaction(ctx, messageId, userId, reaction)
 }

@@ -15,6 +15,8 @@ const (
 	OutboundChannelCreatedAction          Action = "channel-created"
 	OutboundChannelMessageReactionAdded   Action = "channel-message-reaction-added"
 	OutboundChannelMessageReactionRemoved Action = "channel-message-reaction-removed"
+	OutboundDirectMessageReactionAdded    Action = "direct-message-reaction-added"
+	OutboundDirectMessageReactionRemoved  Action = "direct-message-reaction-removed"
 )
 
 // Inbound actions are actions that are sent from the client to the server.
@@ -28,6 +30,7 @@ const (
 	InboundUnselectWorkspaceAction      Action = "unselect-workspace"
 	InboundSelectWorkspaceAction        Action = "select-workspace"
 	InboundChannelMessageReactionToggle Action = "channel-message-reaction-toggle"
+	InboundDirectMessageReactionToggle  Action = "direct-message-reaction-toggle"
 )
 
 type Message interface {

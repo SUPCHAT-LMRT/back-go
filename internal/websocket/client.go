@@ -140,13 +140,22 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 		c.handleLeaveRoomMessage(&leaveRoomMessage)
 		break
 	case messages.InboundChannelMessageReactionToggle:
-		reactionMessage := inbound.InboundMessageReactionToggle{DefaultMessage: message}
+		reactionMessage := inbound.InboundChannelMessageReactionToggle{DefaultMessage: message}
 		if err := json.Unmarshal(jsonMessage, &reactionMessage); err != nil {
 			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
 			return
 		}
 
-		c.handleReactionToggleMessage(&reactionMessage)
+		c.handleChannelMessageReactionToggleMessage(&reactionMessage)
+		break
+	case messages.InboundDirectMessageReactionToggle:
+		reactionMessage := inbound.InboundDirectMessageReactionToggle{DefaultMessage: message}
+		if err := json.Unmarshal(jsonMessage, &reactionMessage); err != nil {
+			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
+			return
+		}
+		c.handleDirectMessageReactionToggleMessage(&reactionMessage)
+		break
 	default:
 		log.Printf("Unknown action %s", message.Action)
 	}
@@ -290,7 +299,7 @@ func (c *Client) handleUnselectWorkspaceMessage(message *inbound.InboundUnselect
 //	target.joinRoom(roomName, DirectRoomKind, c)
 //}
 
-func (c *Client) handleReactionToggleMessage(message *inbound.InboundMessageReactionToggle) {
+func (c *Client) handleChannelMessageReactionToggleMessage(message *inbound.InboundChannelMessageReactionToggle) {
 	// The send-message action, this will send messages to a specific room now.
 	// Which room wil depend on the message Target
 	roomId := message.RoomId
@@ -307,29 +316,78 @@ func (c *Client) handleReactionToggleMessage(message *inbound.InboundMessageReac
 			return
 		}
 
-		added, err := c.wsServer.Deps.ToggleReactionUseCase.Execute(context.Background(), entity.ChannelMessageId(message.MessageId), c.UserId, message.Reaction)
+		added, err := c.wsServer.Deps.ToggleReactionChannelMessageUseCase.Execute(context.Background(), entity.ChannelMessageId(message.MessageId), c.UserId, message.Reaction)
 		if err != nil {
 			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on creating reaction")
 			return
 		}
 
 		if added {
-			err = foundRoom.SendMessage(&outbound.OutboundMessageReactionAdded{
+			err = foundRoom.SendMessage(&outbound.OutboundChannelMessageReactionAdded{
 				MessageId: message.MessageId,
 				Reaction:  message.Reaction,
 				Member:    *member,
 			})
 			if err != nil {
 				c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+				return
 			}
 		} else {
-			err = foundRoom.SendMessage(&outbound.OutboundMessageReactionRemoved{
+			err = foundRoom.SendMessage(&outbound.OutboundChannelMessageReactionAdded{
 				MessageId: message.MessageId,
 				Reaction:  message.Reaction,
 				Member:    *member,
 			})
 			if err != nil {
 				c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+				return
+			}
+		}
+	}
+}
+
+func (c *Client) handleDirectMessageReactionToggleMessage(message *inbound.InboundDirectMessageReactionToggle) {
+	// The send-message action, this will send messages to a specific room now.
+	// Which room wil depend on the message Target
+	roomId := c.buildDirectMessageRoomId(message.OtherUserId)
+	foundRoom := c.wsServer.findRoomById(roomId)
+	if foundRoom == nil {
+		return
+	}
+
+	// Use the ChatServer method to find the room, and if found, broadcast!
+	if foundRoom = c.wsServer.findRoomById(roomId); foundRoom != nil {
+		member, err := c.toOutboundDirectMessageReactionMember()
+		if err != nil {
+			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on creating sender")
+			return
+		}
+
+		added, err := c.wsServer.Deps.ToggleReactionDirectMessageUseCase.Execute(context.Background(), chat_direct_entity.ChatDirectId(message.MessageId), c.UserId, message.Reaction)
+		if err != nil {
+			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on creating reaction")
+			return
+		}
+
+		if added {
+			err = foundRoom.SendMessage(&outbound.OutboundDirectMessageReactionAdded{
+				MessageId: message.MessageId,
+				Reaction:  message.Reaction,
+				Member:    *member,
+			})
+			if err != nil {
+				c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+				return
+			}
+		} else {
+			err = foundRoom.SendMessage(&outbound.OutboundDirectMessageReactionRemoved{
+				MessageId: message.MessageId,
+				Reaction:  message.Reaction,
+				Member:    *member,
+			})
+			if err != nil {
+				c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+				return
 			}
 		}
 	}
@@ -501,7 +559,7 @@ func (c *Client) toOutboundSendChannelMessageSender(roomId string) (*outbound.Ou
 	}, nil
 }
 
-func (c *Client) toOutboundChannelMessageReactionMember(roomId string) (*outbound.OutboundMessageReactionMember, error) {
+func (c *Client) toOutboundChannelMessageReactionMember(roomId string) (*outbound.OutboundChannelMessageReactionMember, error) {
 	channel, err := c.wsServer.Deps.GetChannelUseCase.Execute(context.Background(), channel_entity.ChannelId(roomId))
 	if err != nil {
 		return nil, err
@@ -522,9 +580,21 @@ func (c *Client) toOutboundChannelMessageReactionMember(roomId string) (*outboun
 		username = user.FullName()
 	}
 
-	return &outbound.OutboundMessageReactionMember{
+	return &outbound.OutboundChannelMessageReactionMember{
 		UserId:   c.UserId.String(),
 		Username: username,
+	}, nil
+}
+
+func (c *Client) toOutboundDirectMessageReactionMember() (*outbound.OutboundDirectMessageReactionMember, error) {
+	user, err := c.wsServer.Deps.GetUserByIdUseCase.Execute(context.Background(), c.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &outbound.OutboundDirectMessageReactionMember{
+		UserId:   c.UserId.String(),
+		Username: user.FullName(),
 	}, nil
 }
 

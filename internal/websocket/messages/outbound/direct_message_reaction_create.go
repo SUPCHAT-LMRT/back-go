@@ -1,0 +1,43 @@
+package outbound
+
+import (
+	"github.com/goccy/go-json"
+	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
+)
+
+type OutboundDirectMessageReactionAdded struct {
+	messages.DefaultMessage
+	MessageId string                              `json:"messageId"`
+	Member    OutboundDirectMessageReactionMember `json:"member"`
+	Reaction  string                              `json:"reaction"`
+}
+
+type OutboundDirectMessageReactionMember struct {
+	UserId   string `json:"userId"`
+	Username string `json:"username"`
+}
+
+func (o OutboundDirectMessageReactionAdded) GetActionName() messages.Action {
+	return messages.OutboundDirectMessageReactionAdded
+}
+
+func (o OutboundDirectMessageReactionAdded) Encode() ([]byte, error) {
+	o.DefaultMessage = messages.NewDefaultMessage(o.GetActionName())
+	return json.Marshal(o)
+}
+
+type OutboundDirectMessageReactionRemoved struct {
+	messages.DefaultMessage
+	MessageId string                              `json:"messageId"`
+	Member    OutboundDirectMessageReactionMember `json:"member"`
+	Reaction  string                              `json:"reaction"`
+}
+
+func (o OutboundDirectMessageReactionRemoved) GetActionName() messages.Action {
+	return messages.OutboundDirectMessageReactionRemoved
+}
+
+func (o OutboundDirectMessageReactionRemoved) Encode() ([]byte, error) {
+	o.DefaultMessage = messages.NewDefaultMessage(o.GetActionName())
+	return json.Marshal(o)
+}
