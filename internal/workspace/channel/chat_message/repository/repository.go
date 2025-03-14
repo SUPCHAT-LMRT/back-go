@@ -6,11 +6,12 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/entity"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	"time"
 )
 
 type ChannelMessageRepository interface {
 	Create(ctx context.Context, message *entity.ChannelMessage) error
-	ListByChannelId(ctx context.Context, channelId channel_entity.ChannelId) ([]*entity.ChannelMessage, error)
+	ListByChannelId(ctx context.Context, channelId channel_entity.ChannelId, limit int, before, after time.Time) ([]*entity.ChannelMessage, error)
 	ToggleReaction(ctx context.Context, messageId entity.ChannelMessageId, userId user_entity.UserId, reaction string) (added bool, err error)
 	CountByWorkspace(ctx context.Context, id workspace_entity.WorkspaceId) (uint, error)
 }

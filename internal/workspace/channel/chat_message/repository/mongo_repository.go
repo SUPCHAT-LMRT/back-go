@@ -10,6 +10,7 @@ import (
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	mongo2 "go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
 	"time"
 )
@@ -69,7 +70,7 @@ func (m MongoChannelMessageRepository) Create(ctx context.Context, message *enti
 	return nil
 }
 
-func (m MongoChannelMessageRepository) ListByChannelId(ctx context.Context, channelId channel_entity.ChannelId) ([]*entity.ChannelMessage, error) {
+func (m MongoChannelMessageRepository) ListByChannelId(ctx context.Context, channelId channel_entity.ChannelId, limit int, before, after time.Time) ([]*entity.ChannelMessage, error) {
 	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
 
 	channelObjectId, err := bson.ObjectIDFromHex(string(channelId))
@@ -77,7 +78,20 @@ func (m MongoChannelMessageRepository) ListByChannelId(ctx context.Context, chan
 		return nil, err
 	}
 
-	cursor, err := collection.Find(ctx, bson.M{"channel_id": channelObjectId})
+	opts := options.Find().
+		SetSort(bson.D{{"created_at", -1}}). // Trier par date décroissante
+		SetLimit(int64(limit))
+
+	filter := bson.M{"channel_id": channelObjectId}
+
+	if before != (time.Time{}) {
+		filter["created_at"] = bson.M{"$lt": before}
+	} else if after != (time.Time{}) {
+		filter["created_at"] = bson.M{"$gt": after}
+		opts.SetSort(bson.M{"created_at": 1}) // Tri croissant pour les messages plus récents
+	}
+
+	cursor, err := collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}

@@ -26,6 +26,12 @@ func NewListChannelMessagesHandler(deps ListChannelMessagesHandlerDeps) *ListCha
 	return &ListChannelMessagesHandler{deps: deps}
 }
 
+type MessageQuery struct {
+	Limit  int       `form:"limit,default=20,max=100"`
+	Before time.Time `form:"before"`
+	After  time.Time `form:"after"`
+}
+
 func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {
@@ -39,7 +45,13 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	channelMessages, err := h.deps.UseCase.Execute(c, channel_entity.ChannelId(channelId))
+	var query MessageQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	channelMessages, err := h.deps.UseCase.Execute(c, channel_entity.ChannelId(channelId), query.Limit, query.Before, query.After)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
