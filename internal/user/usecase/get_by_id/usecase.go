@@ -14,6 +14,7 @@ func NewGetUserByIdUseCase(userRepository repository.UserRepository) *GetUserByI
 	return &GetUserByIdUseCase{userRepository: userRepository}
 }
 
+// TODO impl cache handling
 func (u *GetUserByIdUseCase) Execute(ctx context.Context, userId entity.UserId) (*entity.User, error) {
 	return u.userRepository.GetById(ctx, userId)
 }

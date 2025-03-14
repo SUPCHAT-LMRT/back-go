@@ -16,6 +16,7 @@ func NewGetWorkspaceMemberUseCase(repository repository2.WorkspaceMemberReposito
 	return &GetWorkspaceMemberUseCase{repository: repository}
 }
 
+// TODO add cache handling
 func (u GetWorkspaceMemberUseCase) Execute(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (*entity2.WorkspaceMember, error) {
 	return u.repository.GetMemberByUserId(ctx, workspaceId, userId)
 }

@@ -59,7 +59,8 @@ func (u SaveChannelMessageUseCase) Execute(ctx context.Context, msg *chat_messag
 		Content: msg.Content,
 		Kind:    message.SearchMessageKindChannelMessage,
 		Data: message.SearchMessageChannelData{
-			ChannelId: msg.ChannelId.String(),
+			ChannelId:   msg.ChannelId,
+			WorkspaceId: channel.WorkspaceId,
 		},
 		AuthorId:  msg.AuthorId,
 		CreatedAt: msg.CreatedAt,

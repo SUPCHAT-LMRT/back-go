@@ -2,6 +2,8 @@ package message
 
 import (
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
+	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
+	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"time"
 )
 
@@ -25,7 +27,8 @@ type SearchMessage struct {
 }
 
 type SearchMessageChannelData struct {
-	ChannelId string
+	ChannelId   channel_entity.ChannelId
+	WorkspaceId workspace_entity.WorkspaceId
 }
 
 type SearchMessageDirectData struct {

@@ -2,13 +2,12 @@ package main
 
 import (
 	"context"
-	meilisearch2 "github.com/meilisearch/meilisearch-go"
 	"github.com/supchat-lmrt/back-go/cmd/di"
 	"github.com/supchat-lmrt/back-go/internal/gin"
 	"github.com/supchat-lmrt/back-go/internal/logger"
-	"github.com/supchat-lmrt/back-go/internal/meilisearch"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"github.com/supchat-lmrt/back-go/internal/s3"
+	"github.com/supchat-lmrt/back-go/internal/search/channel"
 	"github.com/supchat-lmrt/back-go/internal/search/message"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -18,7 +17,6 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 )
 
 func main() {
@@ -74,79 +72,28 @@ func main() {
 		logg.Info().Str("collection", "workspace_message_sent_ts").Msg("Time-Series Collection created!")
 	})
 
-	invokeFatal(logg, diContainer, func(client *meilisearch.MeilisearchClient) {
-		createdIndexTask, err := client.Client.CreateIndexWithContext(appContext, &meilisearch2.IndexConfig{
-			Uid:        "messages",
-			PrimaryKey: "Id",
-		})
+	// Create the Meilisearch indexes if they don't exist
+	invokeFatal(logg, diContainer, func(
+		searchChannelMessageSyncManager message.SearchMessageSyncManager,
+		searchChannelSyncManager channel.SearchChannelSyncManager,
+	) {
+		err := searchChannelMessageSyncManager.CreateIndexIfNotExists(appContext)
 		if err != nil {
 			logg.Fatal().Err(err).Msg("Unable to create index")
 		}
 
-		cancellableCtx, cancel := context.WithTimeout(appContext, 5*time.Second)
-		defer cancel()
-
-		task, err := client.Client.TaskReader().WaitForTaskWithContext(cancellableCtx, createdIndexTask.TaskUID, 0)
+		err = searchChannelSyncManager.CreateIndexIfNotExists(appContext)
 		if err != nil {
-			logg.Fatal().Err(err).Msg("Unable to wait for task")
-		}
-
-		if task.Status == meilisearch2.TaskStatusFailed {
-			if task.Error.Code != "index_already_exists" {
-				logg.Error().
-					Str("status", string(task.Status)).
-					Int("task_uid", int(task.TaskUID)).
-					Str("details", task.Error.Code).
-					Msg("Unable to create index")
-			}
-
-			return
-		}
-
-		if task.Status == meilisearch2.TaskStatusSucceeded {
-			logg.Info().Str("uid", task.IndexUID).Msg("Index created!")
-			updateSettingsTask, err := client.Client.Index(createdIndexTask.IndexUID).UpdateSettingsWithContext(appContext, &meilisearch2.Settings{
-				DisplayedAttributes: []string{"*"},
-				SearchableAttributes: []string{
-					"Content",
-				},
-				FilterableAttributes: []string{
-					"AuthorId",
-					"Data.ChannelId",
-					"Data.GroupId",
-					"Data.OtherUserId",
-					"CreatedAt",
-					"UpdatedAt",
-				},
-				SortableAttributes: []string{
-					"CreatedAt",
-					"UpdatedAt",
-				},
-			})
-			if err != nil {
-				logg.Fatal().Err(err).Msg("Unable to update settings")
-			}
-
-			cancellableCtx, cancel = context.WithTimeout(appContext, 5*time.Second)
-			defer cancel()
-			task, err = client.Client.TaskReader().WaitForTaskWithContext(cancellableCtx, updateSettingsTask.TaskUID, 0)
-			if err != nil {
-				logg.Fatal().Err(err).Msg("Unable to wait for task")
-			}
-
-			if task.Status == meilisearch2.TaskStatusSucceeded {
-				logg.Info().Msg("Settings updated!")
-			} else {
-				logg.Error().
-					Str("status", string(updateSettingsTask.Status)).
-					Int("task_uid", int(updateSettingsTask.TaskUID)).
-					Msg("Unable to update settings")
-			}
+			logg.Fatal().Err(err).Msg("Unable to create index")
 		}
 	})
 
-	invokeFatal(logg, diContainer, func(searchChannelMessageSyncManager message.SearchMessageSyncManager) {
+	invokeFatal(logg, diContainer, func(
+		searchChannelMessageSyncManager message.SearchMessageSyncManager,
+		searchChannelSyncManager channel.SearchChannelSyncManager,
+	) {
 		go searchChannelMessageSyncManager.SyncLoop(appContext)
+		go searchChannelSyncManager.SyncLoop(appContext)
 	})
 
 	go invokeFatal(logg, diContainer, runGinServer(logg))
