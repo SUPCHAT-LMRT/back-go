@@ -16,6 +16,18 @@ func NewListMessageUseCase(repository chat_message_repository.ChannelMessageRepo
 	return &ListChannelMessagesUseCase{repository: repository}
 }
 
-func (u ListChannelMessagesUseCase) Execute(ctx context.Context, channelId entity.ChannelId, limit int, before, after time.Time) ([]*chat_message_entity.ChannelMessage, error) {
-	return u.repository.ListByChannelId(ctx, channelId, limit, before, after)
+func (u ListChannelMessagesUseCase) Execute(ctx context.Context, channelId entity.ChannelId, params QueryParams) ([]*chat_message_entity.ChannelMessage, error) {
+	return u.repository.ListByChannelId(ctx, channelId, chat_message_repository.ListByChannelIdQueryParams{
+		Limit:           params.Limit,
+		Before:          params.Before,
+		After:           params.After,
+		AroundMessageId: params.AroundMessageId,
+	})
+}
+
+type QueryParams struct {
+	Limit           int
+	Before          time.Time
+	After           time.Time
+	AroundMessageId chat_message_entity.ChannelMessageId
 }

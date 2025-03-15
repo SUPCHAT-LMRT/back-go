@@ -32,7 +32,8 @@ type SearchMessageChannelData struct {
 }
 
 type SearchMessageDirectData struct {
-	OtherUserId user_entity.UserId
+	User1 user_entity.UserId
+	User2 user_entity.UserId
 }
 
 type SearchMessageGroupData struct {

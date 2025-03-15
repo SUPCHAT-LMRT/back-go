@@ -67,6 +67,7 @@ func (m MeilisearchSearchMessageSyncManager) CreateIndexIfNotExists(ctx context.
 			},
 			FilterableAttributes: []string{
 				"AuthorId",
+				"Kind",
 				"Data.ChannelId",
 				"Data.WorkspaceId",
 				"Data.GroupId",

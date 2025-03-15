@@ -3,6 +3,7 @@ package list_messages
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
+	channel_message_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/entity"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_workpace_member"
@@ -27,9 +28,10 @@ func NewListChannelMessagesHandler(deps ListChannelMessagesHandlerDeps) *ListCha
 }
 
 type MessageQuery struct {
-	Limit  int       `form:"limit,default=20,max=100"`
-	Before time.Time `form:"before"`
-	After  time.Time `form:"after"`
+	Limit           int       `form:"limit,default=20,max=100"`
+	Before          time.Time `form:"before"`
+	After           time.Time `form:"after"`
+	AroundMessageId string    `form:"aroundMessageId"`
 }
 
 func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
@@ -51,7 +53,12 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	channelMessages, err := h.deps.UseCase.Execute(c, channel_entity.ChannelId(channelId), query.Limit, query.Before, query.After)
+	channelMessages, err := h.deps.UseCase.Execute(c, channel_entity.ChannelId(channelId), QueryParams{
+		Limit:           query.Limit,
+		Before:          query.Before,
+		After:           query.After,
+		AroundMessageId: channel_message_entity.ChannelMessageId(query.AroundMessageId),
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return

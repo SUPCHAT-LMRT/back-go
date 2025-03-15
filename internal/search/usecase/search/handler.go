@@ -2,6 +2,7 @@ package search
 
 import (
 	"github.com/gin-gonic/gin"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"net/http"
 )
 
@@ -17,7 +18,9 @@ func (h SearchTermHandler) Handle(c *gin.Context) {
 	query := c.Query("q")
 	kind := c.Query("kind")
 
-	results, err := h.useCase.Execute(c, query, kind)
+	authenticatedUser := c.MustGet("user").(*user_entity.User)
+
+	results, err := h.useCase.Execute(c, query, kind, authenticatedUser)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

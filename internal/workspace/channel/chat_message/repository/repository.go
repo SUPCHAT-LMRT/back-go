@@ -11,7 +11,14 @@ import (
 
 type ChannelMessageRepository interface {
 	Create(ctx context.Context, message *entity.ChannelMessage) error
-	ListByChannelId(ctx context.Context, channelId channel_entity.ChannelId, limit int, before, after time.Time) ([]*entity.ChannelMessage, error)
+	ListByChannelId(ctx context.Context, channelId channel_entity.ChannelId, params ListByChannelIdQueryParams) ([]*entity.ChannelMessage, error)
 	ToggleReaction(ctx context.Context, messageId entity.ChannelMessageId, userId user_entity.UserId, reaction string) (added bool, err error)
 	CountByWorkspace(ctx context.Context, id workspace_entity.WorkspaceId) (uint, error)
+}
+
+type ListByChannelIdQueryParams struct {
+	Limit           int
+	Before          time.Time
+	After           time.Time
+	AroundMessageId entity.ChannelMessageId
 }

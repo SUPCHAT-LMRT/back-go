@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	user_search "github.com/supchat-lmrt/back-go/internal/search/user"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
@@ -28,6 +29,7 @@ type RegisterUserDeps struct {
 	Observers                []RegisterUserObserver `group:"register_user_observers"`
 	DeleteInviteLinkUseCase  *delete2.DeleteInviteLinkUseCase
 	GetInviteLinkDataUseCase *get_data_token_invite.GetInviteLinkDataUseCase
+	SearchUserSyncManager    user_search.SearchUserSyncManager
 }
 
 type RegisterUserUseCase struct {
@@ -63,6 +65,7 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserR
 	user := r.EntityUser(request, inviteLinkData)
 	user.Id = entity.UserId(bson.NewObjectID().Hex())
 	user.CreatedAt = time.Now()
+	user.UpdatedAt = user.CreatedAt
 
 	err = r.deps.Repository.Create(ctx, user)
 	if err != nil {
@@ -72,6 +75,18 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserR
 	err = r.deps.DeleteInviteLinkUseCase.Execute(ctx, request.Token)
 	if err != nil {
 		return fmt.Errorf("error deleting invite link: %w", err)
+	}
+
+	err = r.deps.SearchUserSyncManager.AddUser(ctx, &user_search.SearchUser{
+		Id:        user.Id.String(),
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	})
+	if err != nil {
+		return fmt.Errorf("error syncing user: %w", err)
 	}
 
 	for _, observer := range r.deps.Observers {

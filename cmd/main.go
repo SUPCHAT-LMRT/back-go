@@ -9,6 +9,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/s3"
 	"github.com/supchat-lmrt/back-go/internal/search/channel"
 	"github.com/supchat-lmrt/back-go/internal/search/message"
+	"github.com/supchat-lmrt/back-go/internal/search/user"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
@@ -76,6 +77,7 @@ func main() {
 	invokeFatal(logg, diContainer, func(
 		searchChannelMessageSyncManager message.SearchMessageSyncManager,
 		searchChannelSyncManager channel.SearchChannelSyncManager,
+		searchUserSyncManager user.SearchUserSyncManager,
 	) {
 		err := searchChannelMessageSyncManager.CreateIndexIfNotExists(appContext)
 		if err != nil {
@@ -86,14 +88,21 @@ func main() {
 		if err != nil {
 			logg.Fatal().Err(err).Msg("Unable to create index")
 		}
+
+		err = searchUserSyncManager.CreateIndexIfNotExists(appContext)
+		if err != nil {
+			logg.Fatal().Err(err).Msg("Unable to create index")
+		}
 	})
 
 	invokeFatal(logg, diContainer, func(
 		searchChannelMessageSyncManager message.SearchMessageSyncManager,
 		searchChannelSyncManager channel.SearchChannelSyncManager,
+		searchUserSyncManager user.SearchUserSyncManager,
 	) {
 		go searchChannelMessageSyncManager.SyncLoop(appContext)
 		go searchChannelSyncManager.SyncLoop(appContext)
+		go searchUserSyncManager.SyncLoop(appContext)
 	})
 
 	go invokeFatal(logg, diContainer, runGinServer(logg))

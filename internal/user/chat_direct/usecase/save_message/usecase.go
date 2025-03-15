@@ -2,6 +2,7 @@ package save_message
 
 import (
 	"context"
+	"github.com/supchat-lmrt/back-go/internal/search/message"
 	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
 	uberdig "go.uber.org/dig"
@@ -9,7 +10,8 @@ import (
 
 type SaveDirectMessageUseCaseDeps struct {
 	uberdig.In
-	Repository repository.ChatDirectRepository
+	Repository               repository.ChatDirectRepository
+	SearchMessageSyncManager message.SearchMessageSyncManager
 }
 
 type SaveDirectMessageUseCase struct {
@@ -20,10 +22,31 @@ func NewSaveDirectMessageUseCase(deps SaveDirectMessageUseCaseDeps) *SaveDirectM
 	return &SaveDirectMessageUseCase{deps: deps}
 }
 
-func (u SaveDirectMessageUseCase) Execute(ctx context.Context, message *chat_direct_entity.ChatDirect) error {
+func (u SaveDirectMessageUseCase) Execute(ctx context.Context, msg *chat_direct_entity.ChatDirect) error {
 	// Ensure that the two users are correctly ordered (the one with the smallest ID is the first)
-	if message.User2Id.IsAfter(message.User1Id) {
-		message.User1Id, message.User2Id = message.User2Id, message.User1Id
+	if msg.User2Id.IsAfter(msg.User1Id) {
+		msg.User1Id, msg.User2Id = msg.User2Id, msg.User1Id
 	}
-	return u.deps.Repository.Create(ctx, message)
+	err := u.deps.Repository.Create(ctx, msg)
+	if err != nil {
+		return err
+	}
+
+	err = u.deps.SearchMessageSyncManager.AddMessage(ctx, &message.SearchMessage{
+		Id:      msg.Id.String(),
+		Content: msg.Content,
+		Kind:    message.SearchMessageKindDirectMessage,
+		Data: message.SearchMessageDirectData{
+			User1: msg.User1Id,
+			User2: msg.User2Id,
+		},
+		AuthorId:  msg.SenderId,
+		CreatedAt: msg.CreatedAt,
+		UpdatedAt: msg.UpdatedAt,
+	})
+	if err != nil {
+		return err
+	}
+
+	return err
 }

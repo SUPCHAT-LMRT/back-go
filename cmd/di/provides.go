@@ -22,6 +22,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/search/channel"
 	"github.com/supchat-lmrt/back-go/internal/search/message"
 	"github.com/supchat-lmrt/back-go/internal/search/usecase/search"
+	"github.com/supchat-lmrt/back-go/internal/search/user"
 	user_chat_direct_repository "github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
 	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
 	list_recent_chats_direct "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_recent_direct_chats"
@@ -319,6 +320,7 @@ func NewDi() *uberdig.Container {
 		// Search sync managers
 		dig.NewProvider(message.NewMeilisearchSearchMessageSyncManager),
 		dig.NewProvider(channel.NewMeilisearchSearchChannelSyncManager),
+		dig.NewProvider(user.NewMeilisearchSearchUserSyncManager),
 	}
 
 	for _, provider := range providers {

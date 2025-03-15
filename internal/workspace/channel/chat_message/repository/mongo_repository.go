@@ -70,7 +70,7 @@ func (m MongoChannelMessageRepository) Create(ctx context.Context, message *enti
 	return nil
 }
 
-func (m MongoChannelMessageRepository) ListByChannelId(ctx context.Context, channelId channel_entity.ChannelId, limit int, before, after time.Time) ([]*entity.ChannelMessage, error) {
+func (m MongoChannelMessageRepository) ListByChannelId(ctx context.Context, channelId channel_entity.ChannelId, params ListByChannelIdQueryParams) ([]*entity.ChannelMessage, error) {
 	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
 
 	channelObjectId, err := bson.ObjectIDFromHex(string(channelId))
@@ -78,37 +78,120 @@ func (m MongoChannelMessageRepository) ListByChannelId(ctx context.Context, chan
 		return nil, err
 	}
 
+	var messages []*entity.ChannelMessage
+	var aroundMessage MongoChannelMessage
+
+	// Si AroundMessageId est défini, on récupère le message cible
+	if params.AroundMessageId != "" {
+		aroundObjectId, err := bson.ObjectIDFromHex(string(params.AroundMessageId))
+		if err != nil {
+			return nil, err
+		}
+
+		err = collection.FindOne(ctx, bson.M{"_id": aroundObjectId, "channel_id": channelObjectId}).Decode(&aroundMessage)
+		if err != nil {
+			return nil, err
+		}
+
+		// Récupération des messages avant le message cible
+		beforeFilter := bson.M{
+			"channel_id": channelObjectId,
+			"created_at": bson.M{"$lt": aroundMessage.CreatedAt},
+		}
+		beforeOpts := options.Find().
+			SetSort(bson.D{{"created_at", -1}}). // Ordre décroissant pour prendre les plus récents en premier
+			SetLimit(int64(params.Limit / 2))    // On récupère la moitié avant
+
+		beforeCursor, err := collection.Find(ctx, beforeFilter, beforeOpts)
+		if err != nil {
+			return nil, err
+		}
+		defer beforeCursor.Close(ctx)
+
+		var beforeMessages []*entity.ChannelMessage
+		for beforeCursor.Next(ctx) {
+			var mongoMessage MongoChannelMessage
+			if err := beforeCursor.Decode(&mongoMessage); err != nil {
+				return nil, err
+			}
+			message, err := m.deps.Mapper.MapToEntity(&mongoMessage)
+			if err != nil {
+				return nil, err
+			}
+			beforeMessages = append(beforeMessages, message)
+		}
+
+		// Récupération des messages après le message cible
+		afterFilter := bson.M{
+			"channel_id": channelObjectId,
+			"created_at": bson.M{"$gt": aroundMessage.CreatedAt},
+		}
+		afterOpts := options.Find().
+			SetSort(bson.D{{"created_at", 1}}). // Ordre croissant pour prendre les plus anciens en premier
+			SetLimit(int64(params.Limit / 2))   // On récupère la moitié après
+
+		afterCursor, err := collection.Find(ctx, afterFilter, afterOpts)
+		if err != nil {
+			return nil, err
+		}
+		defer afterCursor.Close(ctx)
+
+		var afterMessages []*entity.ChannelMessage
+		for afterCursor.Next(ctx) {
+			var mongoMessage MongoChannelMessage
+			if err := afterCursor.Decode(&mongoMessage); err != nil {
+				return nil, err
+			}
+			message, err := m.deps.Mapper.MapToEntity(&mongoMessage)
+			if err != nil {
+				return nil, err
+			}
+			afterMessages = append(afterMessages, message)
+		}
+
+		// On assemble le tout dans l'ordre chronologique
+		for i := len(beforeMessages) - 1; i >= 0; i-- { // On remet l'ordre chronologique
+			messages = append(messages, beforeMessages[i])
+		}
+		channelMessage, err := m.deps.Mapper.MapToEntity(&aroundMessage)
+		if err != nil {
+			return nil, err
+		}
+		messages = append(messages, channelMessage) // Ajout du message cible
+		messages = append(messages, afterMessages...)
+
+		return messages, nil
+	}
+
+	// Sinon, on applique les filtres classiques
 	opts := options.Find().
 		SetSort(bson.D{{"created_at", -1}}). // Trier par date décroissante
-		SetLimit(int64(limit))
+		SetLimit(int64(params.Limit))
 
 	filter := bson.M{"channel_id": channelObjectId}
 
-	if before != (time.Time{}) {
-		filter["created_at"] = bson.M{"$lt": before}
-	} else if after != (time.Time{}) {
-		filter["created_at"] = bson.M{"$gt": after}
-		opts.SetSort(bson.M{"created_at": 1}) // Tri croissant pour les messages plus récents
+	if params.Before != (time.Time{}) {
+		filter["created_at"] = bson.M{"$lt": params.Before}
+	} else if params.After != (time.Time{}) {
+		filter["created_at"] = bson.M{"$gt": params.After}
+		opts.SetSort(bson.D{{"created_at", 1}}) // Tri croissant pour les messages plus récents
 	}
 
 	cursor, err := collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
+	defer cursor.Close(ctx)
 
-	var messages []*entity.ChannelMessage
 	for cursor.Next(ctx) {
 		var mongoMessage MongoChannelMessage
-		err = cursor.Decode(&mongoMessage)
-		if err != nil {
+		if err := cursor.Decode(&mongoMessage); err != nil {
 			return nil, err
 		}
-
 		message, err := m.deps.Mapper.MapToEntity(&mongoMessage)
 		if err != nil {
 			return nil, err
 		}
-
 		messages = append(messages, message)
 	}
 

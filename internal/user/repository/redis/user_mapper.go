@@ -25,11 +25,17 @@ func (m RedisUserMapper) MapFromEntity(entity *entity.User) (map[string]string, 
 		"LastName":  entity.LastName,
 		"Email":     entity.Email,
 		"CreatedAt": entity.CreatedAt.Format(time.RFC3339),
+		"UpdatedAt": entity.UpdatedAt.Format(time.RFC3339),
 	}, nil
 }
 
 func (m RedisUserMapper) MapToEntity(databaseUser map[string]string) (*entity.User, error) {
-	parsedTime, err := time.Parse(time.RFC3339, databaseUser["CreatedAt"])
+	parsedCreatedAtTime, err := time.Parse(time.RFC3339, databaseUser["CreatedAt"])
+	if err != nil {
+		return nil, err
+	}
+
+	parsedUpdatedAtTime, err := time.Parse(time.RFC3339, databaseUser["UpdatedAt"])
 	if err != nil {
 		return nil, err
 	}
@@ -39,6 +45,7 @@ func (m RedisUserMapper) MapToEntity(databaseUser map[string]string) (*entity.Us
 		FirstName: databaseUser["FirstName"],
 		LastName:  databaseUser["LastName"],
 		Email:     databaseUser["Email"],
-		CreatedAt: parsedTime,
+		CreatedAt: parsedCreatedAtTime,
+		UpdatedAt: parsedUpdatedAtTime,
 	}, nil
 }

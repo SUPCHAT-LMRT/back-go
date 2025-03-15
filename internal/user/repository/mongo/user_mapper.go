@@ -25,6 +25,7 @@ func (m MongoUserMapper) MapFromEntity(entity *entity.User) (*MongoUser, error) 
 		Email:     entity.Email,
 		Password:  entity.Password,
 		CreatedAt: entity.CreatedAt,
+		UpdatedAt: entity.UpdatedAt,
 	}, nil
 }
 
@@ -36,5 +37,6 @@ func (m MongoUserMapper) MapToEntity(databaseUser *MongoUser) (*entity.User, err
 		Email:     databaseUser.Email,
 		Password:  databaseUser.Password,
 		CreatedAt: databaseUser.CreatedAt,
+		UpdatedAt: databaseUser.UpdatedAt,
 	}, nil
 }
