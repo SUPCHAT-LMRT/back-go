@@ -26,5 +26,9 @@ func (h SearchTermHandler) Handle(c *gin.Context) {
 		return
 	}
 
+	if results == nil {
+		results = make([]*SearchResult, 0)
+	}
+
 	c.JSON(http.StatusOK, results)
 }
