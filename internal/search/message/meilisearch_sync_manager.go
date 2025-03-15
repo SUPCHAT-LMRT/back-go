@@ -120,6 +120,28 @@ func (m MeilisearchSearchMessageSyncManager) AddMessage(ctx context.Context, mes
 	return nil
 }
 
+func (m MeilisearchSearchMessageSyncManager) Sync(ctx context.Context) {
+	var docs []*SearchMessage
+	for _, key := range m.cache.Keys() {
+		if doc, ok := m.cache.Get(key); ok {
+			docs = append(docs, doc)
+		}
+	}
+	if len(docs) > 0 {
+		m.logger.Info().
+			Int("count", len(docs)).
+			Msg("Syncing messages to Meilisearch")
+		_, err := m.client.Client.Index("messages").AddDocuments(docs)
+		if err != nil {
+			m.logger.Error().
+				Err(err).
+				Msg("Failed to sync messages to Meilisearch")
+			return
+		}
+		m.cache.Purge()
+	}
+}
+
 func (m MeilisearchSearchMessageSyncManager) SyncLoop(ctx context.Context) {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
@@ -129,25 +151,7 @@ func (m MeilisearchSearchMessageSyncManager) SyncLoop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			var docs []*SearchMessage
-			for _, key := range m.cache.Keys() {
-				if doc, ok := m.cache.Get(key); ok {
-					docs = append(docs, doc)
-				}
-			}
-			if len(docs) > 0 {
-				m.logger.Info().
-					Int("count", len(docs)).
-					Msg("Syncing messages to Meilisearch")
-				_, err := m.client.Client.Index("messages").AddDocuments(docs)
-				if err != nil {
-					m.logger.Error().
-						Err(err).
-						Msg("Failed to sync messages to Meilisearch")
-					continue
-				}
-				m.cache.Purge()
-			}
+			m.Sync(ctx)
 		}
 	}
 }

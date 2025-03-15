@@ -142,6 +142,87 @@ func (m MeilisearchSearchUserSyncManager) RemoveUser(ctx context.Context, user *
 	return nil
 }
 
+func (m MeilisearchSearchUserSyncManager) Sync(ctx context.Context) {
+	// Handle additions/updates
+	var docs []*SearchUser
+	for _, key := range m.createCache.Keys() {
+		if doc, ok := m.createCache.Get(key); ok {
+			docs = append(docs, doc)
+		}
+	}
+
+	// Handle deletions
+	var deleteIds []string
+	for _, key := range m.deleteCache.Keys() {
+		deleteIds = append(deleteIds, key.String())
+	}
+
+	// Sync additions/updates
+	if len(docs) > 0 {
+		m.logger.Info().
+			Int("count", len(docs)).
+			Msg("Syncing users to Meilisearch")
+		task, err := m.client.Client.Index("users").AddDocuments(docs)
+		if err != nil {
+			m.logger.Error().
+				Err(err).
+				Msg("Failed to sync users to Meilisearch")
+			return
+		}
+
+		// Wait for the task to complete
+		taskInfo, err := m.client.Client.WaitForTask(task.TaskUID, 0)
+		if err != nil {
+			m.logger.Error().
+				Err(err).
+				Msg("Failed to complete user sync task")
+			return
+		}
+		if taskInfo.Status != meilisearch2.TaskStatusSucceeded {
+			m.logger.Error().
+				Str("status", string(taskInfo.Status)).
+				Int("task_uid", int(taskInfo.TaskUID)).
+				Msg("User sync task failed")
+			return
+		} else {
+			m.createCache.Purge() // Clear only after successful sync
+		}
+	}
+
+	// Sync deletions
+	if len(deleteIds) > 0 {
+		m.logger.Info().
+			Int("count", len(deleteIds)).
+			Msg("Syncing user deletions to Meilisearch")
+		task, err := m.client.Client.Index("users").DeleteDocuments(deleteIds)
+		if err != nil {
+			m.logger.Error().
+				Err(err).
+				Msg("Failed to sync user deletions to Meilisearch")
+			return
+		}
+
+		// Wait for the deletion task to complete
+		taskInfo, err := m.client.Client.WaitForTask(task.TaskUID, 0)
+		if err != nil {
+			m.logger.Error().
+				Err(err).
+				Msg("Failed to complete user deletion task")
+			return
+		}
+
+		if taskInfo.Status != meilisearch2.TaskStatusSucceeded {
+			m.logger.Error().
+				Str("status", string(taskInfo.Status)).
+				Int("task_uid", int(taskInfo.TaskUID)).
+				Msg("User deletion task failed")
+			return
+		} else {
+			m.deleteCache.Purge() // Clear only after successful sync
+		}
+	}
+}
+
 func (m MeilisearchSearchUserSyncManager) SyncLoop(ctx context.Context) {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
@@ -151,84 +232,7 @@ func (m MeilisearchSearchUserSyncManager) SyncLoop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			// Handle additions/updates
-			var docs []*SearchUser
-			for _, key := range m.createCache.Keys() {
-				if doc, ok := m.createCache.Get(key); ok {
-					docs = append(docs, doc)
-				}
-			}
-
-			// Handle deletions
-			var deleteIds []string
-			for _, key := range m.deleteCache.Keys() {
-				deleteIds = append(deleteIds, key.String())
-			}
-
-			// Sync additions/updates
-			if len(docs) > 0 {
-				m.logger.Info().
-					Int("count", len(docs)).
-					Msg("Syncing users to Meilisearch")
-				task, err := m.client.Client.Index("users").AddDocuments(docs)
-				if err != nil {
-					m.logger.Error().
-						Err(err).
-						Msg("Failed to sync users to Meilisearch")
-					continue
-				}
-
-				// Wait for the task to complete
-				taskInfo, err := m.client.Client.WaitForTask(task.TaskUID, 0)
-				if err != nil {
-					m.logger.Error().
-						Err(err).
-						Msg("Failed to complete user sync task")
-					continue
-				}
-				if taskInfo.Status != meilisearch2.TaskStatusSucceeded {
-					m.logger.Error().
-						Str("status", string(taskInfo.Status)).
-						Int("task_uid", int(taskInfo.TaskUID)).
-						Msg("User sync task failed")
-					continue
-				} else {
-					m.createCache.Purge() // Clear only after successful sync
-				}
-			}
-
-			// Sync deletions
-			if len(deleteIds) > 0 {
-				m.logger.Info().
-					Int("count", len(deleteIds)).
-					Msg("Syncing user deletions to Meilisearch")
-				task, err := m.client.Client.Index("users").DeleteDocuments(deleteIds)
-				if err != nil {
-					m.logger.Error().
-						Err(err).
-						Msg("Failed to sync user deletions to Meilisearch")
-					continue
-				}
-
-				// Wait for the deletion task to complete
-				taskInfo, err := m.client.Client.WaitForTask(task.TaskUID, 0)
-				if err != nil {
-					m.logger.Error().
-						Err(err).
-						Msg("Failed to complete user deletion task")
-					continue
-				}
-
-				if taskInfo.Status != meilisearch2.TaskStatusSucceeded {
-					m.logger.Error().
-						Str("status", string(taskInfo.Status)).
-						Int("task_uid", int(taskInfo.TaskUID)).
-						Msg("User deletion task failed")
-					continue
-				} else {
-					m.deleteCache.Purge() // Clear only after successful sync
-				}
-			}
+			m.Sync(ctx)
 		}
 	}
 }

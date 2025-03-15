@@ -30,6 +30,7 @@ type MongoChannel struct {
 	Id          bson.ObjectID `bson:"_id"`
 	Name        string        `bson:"name"`
 	Topic       string        `bson:"topic"`
+	Kind        string        `bson:"kind"`
 	WorkspaceId bson.ObjectID `bson:"workspace_id"`
 	CreatedAt   time.Time     `bson:"created_at"`
 	UpdatedAt   time.Time     `bson:"updated_at"`

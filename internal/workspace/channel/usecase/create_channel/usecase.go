@@ -33,7 +33,7 @@ func (u *CreateChannelUseCase) Execute(ctx context.Context, chann *entity.Channe
 		Id:          chann.Id,
 		Name:        chann.Name,
 		Topic:       chann.Topic,
-		Kind:        channel.SearchChannelKindTextMessage,
+		Kind:        mapChannelKindToSearchResultChannelKind(chann.Kind),
 		WorkspaceId: chann.WorkspaceId,
 		CreatedAt:   chann.CreatedAt,
 		UpdatedAt:   chann.UpdatedAt,
@@ -47,4 +47,15 @@ func (u *CreateChannelUseCase) Execute(ctx context.Context, chann *entity.Channe
 	}
 
 	return err
+}
+
+func mapChannelKindToSearchResultChannelKind(kind entity.ChannelKind) channel.SearchChannelKind {
+	switch kind {
+	case entity.ChannelKindText:
+		return channel.SearchChannelKindText
+	case entity.ChannelKindVoice:
+		return channel.SearchChannelKindVoice
+	default:
+		return channel.SearchChannelKindUnknown
+	}
 }

@@ -9,8 +9,9 @@ import (
 type SearchChannelKind string
 
 const (
-	SearchChannelKindVoiceMessage SearchChannelKind = "voice"
-	SearchChannelKindTextMessage  SearchChannelKind = "text"
+	SearchChannelKindUnknown SearchChannelKind = ""
+	SearchChannelKindVoice   SearchChannelKind = "voice"
+	SearchChannelKindText    SearchChannelKind = "text"
 )
 
 type SearchChannel struct {

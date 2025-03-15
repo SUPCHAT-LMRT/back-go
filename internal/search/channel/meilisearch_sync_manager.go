@@ -140,6 +140,87 @@ func (m MeilisearchSearchChannelSyncManager) RemoveChannel(ctx context.Context, 
 	return nil
 }
 
+func (m MeilisearchSearchChannelSyncManager) Sync(ctx context.Context) {
+	// Handle additions/updates
+	var docs []*SearchChannel
+	for _, key := range m.createCache.Keys() {
+		if doc, ok := m.createCache.Get(key); ok {
+			docs = append(docs, doc)
+		}
+	}
+
+	// Handle deletions
+	var deleteIds []string
+	for _, key := range m.deleteCache.Keys() {
+		deleteIds = append(deleteIds, key.String())
+	}
+
+	// Sync additions/updates
+	if len(docs) > 0 {
+		m.logger.Info().
+			Int("count", len(docs)).
+			Msg("Syncing channels to Meilisearch")
+		task, err := m.client.Client.Index("channels").AddDocuments(docs)
+		if err != nil {
+			m.logger.Error().
+				Err(err).
+				Msg("Failed to sync channels to Meilisearch")
+			return
+		}
+
+		// Wait for the task to complete
+		taskInfo, err := m.client.Client.WaitForTask(task.TaskUID, 0)
+		if err != nil {
+			m.logger.Error().
+				Err(err).
+				Msg("Failed to complete channel sync task")
+			return
+		}
+		if taskInfo.Status != meilisearch2.TaskStatusSucceeded {
+			m.logger.Error().
+				Str("status", string(taskInfo.Status)).
+				Int("task_uid", int(taskInfo.TaskUID)).
+				Msg("Channel sync task failed")
+			return
+		} else {
+			m.createCache.Purge() // Clear only after successful sync
+		}
+	}
+
+	// Sync deletions
+	if len(deleteIds) > 0 {
+		m.logger.Info().
+			Int("count", len(deleteIds)).
+			Msg("Syncing channel deletions to Meilisearch")
+		task, err := m.client.Client.Index("channels").DeleteDocuments(deleteIds)
+		if err != nil {
+			m.logger.Error().
+				Err(err).
+				Msg("Failed to sync channel deletions to Meilisearch")
+			return
+		}
+
+		// Wait for the deletion task to complete
+		taskInfo, err := m.client.Client.WaitForTask(task.TaskUID, 0)
+		if err != nil {
+			m.logger.Error().
+				Err(err).
+				Msg("Failed to complete channel deletion task")
+			return
+		}
+
+		if taskInfo.Status != meilisearch2.TaskStatusSucceeded {
+			m.logger.Error().
+				Str("status", string(taskInfo.Status)).
+				Int("task_uid", int(taskInfo.TaskUID)).
+				Msg("Channel deletion task failed")
+			return
+		} else {
+			m.deleteCache.Purge() // Clear only after successful sync
+		}
+	}
+}
+
 func (m MeilisearchSearchChannelSyncManager) SyncLoop(ctx context.Context) {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
@@ -149,84 +230,7 @@ func (m MeilisearchSearchChannelSyncManager) SyncLoop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			// Handle additions/updates
-			var docs []*SearchChannel
-			for _, key := range m.createCache.Keys() {
-				if doc, ok := m.createCache.Get(key); ok {
-					docs = append(docs, doc)
-				}
-			}
-
-			// Handle deletions
-			var deleteIds []string
-			for _, key := range m.deleteCache.Keys() {
-				deleteIds = append(deleteIds, key.String())
-			}
-
-			// Sync additions/updates
-			if len(docs) > 0 {
-				m.logger.Info().
-					Int("count", len(docs)).
-					Msg("Syncing channels to Meilisearch")
-				task, err := m.client.Client.Index("channels").AddDocuments(docs)
-				if err != nil {
-					m.logger.Error().
-						Err(err).
-						Msg("Failed to sync channels to Meilisearch")
-					continue
-				}
-
-				// Wait for the task to complete
-				taskInfo, err := m.client.Client.WaitForTask(task.TaskUID, 0)
-				if err != nil {
-					m.logger.Error().
-						Err(err).
-						Msg("Failed to complete channel sync task")
-					continue
-				}
-				if taskInfo.Status != meilisearch2.TaskStatusSucceeded {
-					m.logger.Error().
-						Str("status", string(taskInfo.Status)).
-						Int("task_uid", int(taskInfo.TaskUID)).
-						Msg("Channel sync task failed")
-					continue
-				} else {
-					m.createCache.Purge() // Clear only after successful sync
-				}
-			}
-
-			// Sync deletions
-			if len(deleteIds) > 0 {
-				m.logger.Info().
-					Int("count", len(deleteIds)).
-					Msg("Syncing channel deletions to Meilisearch")
-				task, err := m.client.Client.Index("channels").DeleteDocuments(deleteIds)
-				if err != nil {
-					m.logger.Error().
-						Err(err).
-						Msg("Failed to sync channel deletions to Meilisearch")
-					continue
-				}
-
-				// Wait for the deletion task to complete
-				taskInfo, err := m.client.Client.WaitForTask(task.TaskUID, 0)
-				if err != nil {
-					m.logger.Error().
-						Err(err).
-						Msg("Failed to complete channel deletion task")
-					continue
-				}
-
-				if taskInfo.Status != meilisearch2.TaskStatusSucceeded {
-					m.logger.Error().
-						Str("status", string(taskInfo.Status)).
-						Int("task_uid", int(taskInfo.TaskUID)).
-						Msg("Channel deletion task failed")
-					continue
-				} else {
-					m.deleteCache.Purge() // Clear only after successful sync
-				}
-			}
+			m.Sync(ctx)
 		}
 	}
 }

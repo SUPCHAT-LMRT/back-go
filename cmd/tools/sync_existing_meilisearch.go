@@ -15,6 +15,7 @@ import (
 	user_repository "github.com/supchat-lmrt/back-go/internal/user/repository"
 	user_repository_mongo "github.com/supchat-lmrt/back-go/internal/user/repository/mongo"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/repository"
+	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	channel_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	uberdig "go.uber.org/dig"
@@ -64,7 +65,7 @@ func main() {
 		searchChannelMessageSyncManager message.SearchMessageSyncManager,
 		searchChannelSyncManager channel.SearchChannelSyncManager,
 	) {
-		for _, workspaceId := range []workspace_entity.WorkspaceId{"workspaceid1", "workspaceid1"} {
+		for _, workspaceId := range []workspace_entity.WorkspaceId{"67a9f911a58c8c9073991a7d"} {
 			channels, err := channelRepository.List(appContext, workspaceId)
 			if err != nil {
 				logg.Fatal().Err(err).Msg("Unable to list channels")
@@ -80,7 +81,7 @@ func main() {
 					Id:          chann.Id,
 					Name:        chann.Name,
 					Topic:       chann.Topic,
-					Kind:        channel.SearchChannelKindTextMessage,
+					Kind:        mapChannelKindToSearchResultChannelKind(chann.Kind),
 					WorkspaceId: workspaceId,
 					CreatedAt:   chann.CreatedAt,
 					UpdatedAt:   chann.UpdatedAt,
@@ -141,6 +142,28 @@ func main() {
 
 		fmt.Println("Inserted users", len(users))
 	})
+
+	// Run synchronization
+	invokeFatal(logg, diContainer, func(
+		searchChannelMessageSyncManager message.SearchMessageSyncManager,
+		searchChannelSyncManager channel.SearchChannelSyncManager,
+		searchUserSyncManager user.SearchUserSyncManager,
+	) {
+		searchChannelSyncManager.Sync(appContext)
+		searchChannelMessageSyncManager.Sync(appContext)
+		searchUserSyncManager.Sync(appContext)
+	})
+}
+
+func mapChannelKindToSearchResultChannelKind(kind channel_entity.ChannelKind) channel.SearchChannelKind {
+	switch kind {
+	case channel_entity.ChannelKindText:
+		return channel.SearchChannelKindText
+	case channel_entity.ChannelKindVoice:
+		return channel.SearchChannelKindVoice
+	default:
+		return channel.SearchChannelKindUnknown
+	}
 }
 
 func invokeFatal(logg logger.Logger, di *uberdig.Container, f any) {

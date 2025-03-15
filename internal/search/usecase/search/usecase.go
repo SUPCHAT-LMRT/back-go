@@ -11,6 +11,7 @@ import (
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	"github.com/supchat-lmrt/back-go/internal/utils"
+	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_workpace_member"
 	uberdig "go.uber.org/dig"
 )
@@ -84,7 +85,7 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 						Data: &SearchResultMessage{
 							Id:         result.Id,
 							Content:    result.Content,
-							AuthorId:   string(result.AuthorId),
+							AuthorId:   result.AuthorId,
 							AuthorName: workspaceMember.Pseudo,
 							Href:       fmt.Sprintf("/workspaces/%s/channels/%s?aroundMessageId=%s", workspaceMember.WorkspaceId, data.ChannelId, result.Id),
 						},
@@ -117,7 +118,7 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 						Data: &SearchResultMessage{
 							Id:         result.Id,
 							Content:    result.Content,
-							AuthorId:   string(result.AuthorId),
+							AuthorId:   result.AuthorId,
 							AuthorName: user.FullName(),
 							Href:       fmt.Sprintf("/chat/direct/%s?aroundMessageId=%s", otherUserId, result.Id),
 						},
@@ -135,9 +136,10 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 				results = append(results, &SearchResult{
 					Kind: SearchResultKindChannel,
 					Data: &SearchResultChannel{
-						Id:    result.Id.String(),
+						Id:    result.Id,
 						Name:  result.Name,
 						Topic: result.Topic,
+						Kind:  u.mapSearchResultChannelKindToChannelKind(result.Kind),
 						Href:  fmt.Sprintf("/workspaces/%s/channels/%s", result.WorkspaceId, result.Id),
 					},
 				})
@@ -158,7 +160,7 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 				results = append(results, &SearchResult{
 					Kind: SearchResultKindUser,
 					Data: &SearchResultUser{
-						Id:                   result.Id.String(),
+						Id:                   result.Id,
 						HighlightedFirstName: highlightedResult.FirstName,
 						HighlightedLastName:  highlightedResult.LastName,
 						HighlightedEmail:     highlightedResult.Email,
@@ -204,6 +206,17 @@ func (u SearchTermUseCase) userQuery(term string) *meilisearch2.SearchRequest {
 	}
 }
 
+func (u SearchTermUseCase) mapSearchResultChannelKindToChannelKind(kind channel.SearchChannelKind) channel_entity.ChannelKind {
+	switch kind {
+	case channel.SearchChannelKindText:
+		return channel_entity.ChannelKindText
+	case channel.SearchChannelKindVoice:
+		return channel_entity.ChannelKindVoice
+	default:
+		return channel_entity.ChannelKindUnknown
+	}
+}
+
 type SearchResult struct {
 	Kind SearchResultKind `json:"kind"`
 	Data any              `json:"data"`
@@ -218,27 +231,28 @@ const (
 )
 
 type SearchResultChannel struct {
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	Topic string `json:"topic"`
-	Href  string `json:"href"`
+	Id    channel_entity.ChannelId   `json:"id"`
+	Name  string                     `json:"name"`
+	Topic string                     `json:"topic"`
+	Kind  channel_entity.ChannelKind `json:"kind"`
+	Href  string                     `json:"href"`
 }
 
 type SearchResultMessage struct {
-	Id         string `json:"id"`
-	Content    string `json:"content"`
-	AuthorId   string `json:"authorId"`
-	AuthorName string `json:"authorName"`
-	Href       string `json:"href"`
+	Id         string             `json:"id"`
+	Content    string             `json:"content"`
+	AuthorId   user_entity.UserId `json:"authorId"`
+	AuthorName string             `json:"authorName"`
+	Href       string             `json:"href"`
 }
 
 type SearchResultUser struct {
-	Id                   string `json:"id"`
-	HighlightedFirstName string `json:"highlightedFirstName"`
-	HighlightedLastName  string `json:"highlightedLastName"`
-	HighlightedEmail     string `json:"highlightedEmail"`
-	FirstName            string `json:"firstName"`
-	LastName             string `json:"lastName"`
-	Email                string `json:"email"`
-	Href                 string `json:"href"`
+	Id                   user_entity.UserId `json:"id"`
+	HighlightedFirstName string             `json:"highlightedFirstName"`
+	HighlightedLastName  string             `json:"highlightedLastName"`
+	HighlightedEmail     string             `json:"highlightedEmail"`
+	FirstName            string             `json:"firstName"`
+	LastName             string             `json:"lastName"`
+	Email                string             `json:"email"`
+	Href                 string             `json:"href"`
 }
