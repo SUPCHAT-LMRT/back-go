@@ -6,6 +6,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
+	"time"
 )
 
 type OutboundSendMessageToChannel struct {
@@ -14,6 +15,7 @@ type OutboundSendMessageToChannel struct {
 	Sender    *OutboundSendMessageToChannelSender `json:"sender"`
 	Content   string                              `json:"content"`
 	ChannelId channel_entity.ChannelId            `json:"channelId"`
+	CreatedAt time.Time                           `json:"createdAt"`
 }
 
 type OutboundSendMessageToChannelSender struct {

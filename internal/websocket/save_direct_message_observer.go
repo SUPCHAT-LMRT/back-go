@@ -8,7 +8,6 @@ import (
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages/inbound"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 type SaveDirectMessageObserverDeps struct {
@@ -30,15 +29,14 @@ func (s SaveDirectMessageObserver) OnSendMessage(message *inbound.InboundSendDir
 }
 
 func (s SaveDirectMessageObserver) handleDirectMessage(message *inbound.InboundSendDirectMessage, messageId chat_direct_entity.ChatDirectId, userId user_entity.UserId) {
-	now := time.Now()
 	err := s.deps.SaveDirectMessageUseCase.Execute(context.Background(), &chat_direct_entity.ChatDirect{
 		Id:        messageId,
 		SenderId:  userId,
 		User1Id:   userId,
 		User2Id:   message.OtherUserId,
 		Content:   message.Content,
-		CreatedAt: now,
-		UpdatedAt: now,
+		CreatedAt: message.TransportMessageCreatedAt,
+		UpdatedAt: message.TransportMessageCreatedAt,
 	})
 	if err != nil {
 		s.deps.Logger.Error().Err(err).Msg("Error on save message")

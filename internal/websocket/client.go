@@ -74,7 +74,7 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 
 	c.wsServer.Deps.Logger.Info().
 		Str("action", string(message.Action)).
-		Str("id", message.Id).
+		Str("id", message.TransportMessageId).
 		Str("emittedBy", c.UserId.String()).
 		Msg("New message")
 
@@ -188,6 +188,7 @@ func (c *Client) handleSendMessageToChannel(message *inbound.InboundSendMessageT
 			Content:   message.Content,
 			ChannelId: message.ChannelId,
 			Sender:    channelSender,
+			CreatedAt: message.TransportMessageCreatedAt,
 		})
 		if err != nil {
 			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
@@ -227,6 +228,7 @@ func (c *Client) handleSendDirectMessage(message *inbound.InboundSendDirectMessa
 			Content:     message.Content,
 			Sender:      messageSender,
 			OtherUserId: message.OtherUserId,
+			CreatedAt:   message.TransportMessageCreatedAt,
 		})
 		if err != nil {
 			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
@@ -447,9 +449,9 @@ func (c *Client) buildDirectMessageRoomId(otherUserId user_entity.UserId) string
 	// create unique room name combined to the two IDs, the room name will be the same for both users
 	// so the ids are ordered
 	if c.UserId.IsAfter(otherUserId) {
-		return fmt.Sprintln("direct-", c.UserId.String(), "_", otherUserId.String())
+		return fmt.Sprintf("direct-%s_%s", c.UserId.String(), otherUserId.String())
 	} else {
-		return fmt.Sprintln("direct-", otherUserId.String(), "_", c.UserId.String())
+		return fmt.Sprintf("direct-%s_%s", otherUserId.String(), c.UserId.String())
 	}
 }
 

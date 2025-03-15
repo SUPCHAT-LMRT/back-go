@@ -34,13 +34,13 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 	var queries []*meilisearch2.SearchRequest
 	// If no kind is specified, search in all indexes
 	if kind == "message" {
-		queries = []*meilisearch2.SearchRequest{u.messageQuery(term)}
+		queries = []*meilisearch2.SearchRequest{u.messageQuery(term, userInitiator.Id)}
 	} else if kind == "channel" {
 		queries = []*meilisearch2.SearchRequest{u.channelQuery(term)}
 	} else if kind == "user" {
 		queries = []*meilisearch2.SearchRequest{u.userQuery(term)}
 	} else {
-		queries = []*meilisearch2.SearchRequest{u.messageQuery(term), u.channelQuery(term), u.userQuery(term)}
+		queries = []*meilisearch2.SearchRequest{u.messageQuery(term, userInitiator.Id), u.channelQuery(term), u.userQuery(term)}
 	}
 
 	searchResponse, err := u.deps.Client.Client.MultiSearchWithContext(ctx, &meilisearch2.MultiSearchRequest{
@@ -176,14 +176,18 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 	return results, nil
 }
 
-func (u SearchTermUseCase) messageQuery(term string) *meilisearch2.SearchRequest {
+// TODO Check if the user has access to this channel (or workspace) in case of channel messages
+// TODO Check if the user is in the group in case of group messages
+func (u SearchTermUseCase) messageQuery(term string, userInitiator user_entity.UserId) *meilisearch2.SearchRequest {
 	return &meilisearch2.SearchRequest{
 		IndexUID:              "messages",
 		AttributesToHighlight: []string{"Content"},
 		Query:                 term,
+		Filter:                fmt.Sprintf("(Kind = 'direct' AND (Data.User1 = '%s' OR Data.User2 = '%s')) OR Kind != 'direct'", userInitiator, userInitiator),
 	}
 }
 
+// TODO Check if the user has access to this channel (or workspace)
 func (u SearchTermUseCase) channelQuery(term string) *meilisearch2.SearchRequest {
 	return &meilisearch2.SearchRequest{
 		IndexUID:              "channels",

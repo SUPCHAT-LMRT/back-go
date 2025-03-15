@@ -4,6 +4,7 @@ import (
 	"github.com/goccy/go-json"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
+	"time"
 )
 
 type OutboundSendDirectMessage struct {
@@ -12,6 +13,7 @@ type OutboundSendDirectMessage struct {
 	Sender      *OutboundSendDirectMessageSender `json:"sender"`
 	Content     string                           `json:"content"`
 	OtherUserId user_entity.UserId               `json:"otherUserId"`
+	CreatedAt   time.Time                        `json:"createdAt"`
 }
 
 type OutboundSendDirectMessageSender struct {

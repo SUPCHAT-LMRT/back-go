@@ -2,6 +2,7 @@ package list_messages
 
 import (
 	"github.com/gin-gonic/gin"
+	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_workpace_member"
@@ -21,6 +22,13 @@ type ListDirectMessagesHandler struct {
 	deps ListDirectMessagesHandlerDeps
 }
 
+type MessageQuery struct {
+	Limit           int       `form:"limit,default=20,max=100"`
+	Before          time.Time `form:"before"`
+	After           time.Time `form:"after"`
+	AroundMessageId string    `form:"aroundMessageId"`
+}
+
 func NewListDirectMessagesHandler(deps ListDirectMessagesHandlerDeps) *ListDirectMessagesHandler {
 	return &ListDirectMessagesHandler{deps: deps}
 }
@@ -34,7 +42,18 @@ func (h *ListDirectMessagesHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	directMessages, err := h.deps.UseCase.Execute(c, authenticatedUser.Id, user_entity.UserId(otherUserId))
+	var query MessageQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	directMessages, err := h.deps.UseCase.Execute(c, authenticatedUser.Id, user_entity.UserId(otherUserId), QueryParams{
+		Limit:           query.Limit,
+		Before:          query.Before,
+		After:           query.After,
+		AroundMessageId: chat_direct_entity.ChatDirectId(query.AroundMessageId),
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return

@@ -70,6 +70,7 @@ func (m MeilisearchSearchChannelSyncManager) CreateIndexIfNotExists(ctx context.
 		updateSettingsTask, err := m.client.Client.Index(createdIndexTask.IndexUID).UpdateSettingsWithContext(ctx, &meilisearch2.Settings{
 			DisplayedAttributes: []string{"*"},
 			SearchableAttributes: []string{
+				"Id",
 				"Name",
 				"Topic",
 			},
@@ -84,6 +85,14 @@ func (m MeilisearchSearchChannelSyncManager) CreateIndexIfNotExists(ctx context.
 			SortableAttributes: []string{
 				"CreatedAt",
 				"UpdatedAt",
+			},
+			RankingRules: []string{
+				"attribute",
+				"words",
+				"typo",
+				"proximity",
+				"sort",
+				"exactness",
 			},
 		})
 		if err != nil {

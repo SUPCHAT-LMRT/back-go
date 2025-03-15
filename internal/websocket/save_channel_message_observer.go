@@ -8,7 +8,6 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/entity"
 	save_channel_chat_message "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/save_message"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 type SaveChannelMessageObserverDeps struct {
@@ -30,14 +29,13 @@ func (s SaveChannelMessageObserver) OnSendMessage(message *inbound.InboundSendMe
 }
 
 func (s SaveChannelMessageObserver) handleChannelMessage(message *inbound.InboundSendMessageToChannel, messageId entity.ChannelMessageId, userId user_entity.UserId) {
-	now := time.Now()
 	err := s.deps.SaveChannelMessageUseCase.Execute(context.Background(), &entity.ChannelMessage{
 		Id:        messageId,
 		ChannelId: message.ChannelId,
 		Content:   message.Content,
 		AuthorId:  userId,
-		CreatedAt: now,
-		UpdatedAt: now,
+		CreatedAt: message.TransportMessageCreatedAt,
+		UpdatedAt: message.TransportMessageCreatedAt,
 	})
 	if err != nil {
 		s.deps.Logger.Error().Err(err).Msg("Error on save message")

@@ -42,21 +42,21 @@ type Message interface {
 }
 
 type DefaultMessage struct {
-	Id        string    `json:"id"`
-	Action    Action    `json:"action"`
-	CreatedAt time.Time `json:"createdAt"`
+	TransportMessageId        string    `json:"transportMessageId"`
+	Action                    Action    `json:"action"`
+	TransportMessageCreatedAt time.Time `json:"transportMessageCreatedAt"`
 }
 
 func (m *DefaultMessage) SetId(id string) {
-	m.Id = id
+	m.TransportMessageId = id
 }
 
 func (m *DefaultMessage) SetCreatedAt(createdAt time.Time) {
-	m.CreatedAt = createdAt
+	m.TransportMessageCreatedAt = createdAt
 }
 
 func (m *DefaultMessage) mustExtendDefaultMessage() {}
 
 func NewDefaultMessage(action Action) DefaultMessage {
-	return DefaultMessage{Id: uuid.NewString(), Action: action, CreatedAt: time.Now()}
+	return DefaultMessage{TransportMessageId: uuid.NewString(), Action: action, TransportMessageCreatedAt: time.Now()}
 }

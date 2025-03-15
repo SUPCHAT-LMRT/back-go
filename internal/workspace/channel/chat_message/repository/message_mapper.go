@@ -36,6 +36,7 @@ func (m ChannelMessageMapper) MapToEntity(mongo *MongoChannelMessage) (*entity.C
 		AuthorId:  user_entity.UserId(mongo.AuthorId.Hex()),
 		Content:   mongo.Content,
 		CreatedAt: mongo.CreatedAt,
+		UpdatedAt: mongo.UpdatedAt,
 		Reactions: reactions,
 	}, nil
 }

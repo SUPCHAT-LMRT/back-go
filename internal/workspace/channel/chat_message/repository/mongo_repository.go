@@ -36,6 +36,7 @@ type MongoChannelMessage struct {
 	AuthorId  bson.ObjectID                  `bson:"user_id"`
 	Content   string                         `bson:"content"`
 	CreatedAt time.Time                      `bson:"created_at"`
+	UpdatedAt time.Time                      `bson:"updated_at"`
 	Reactions []*MongoChannelMessageReaction `bson:"reactions"`
 }
 
@@ -53,8 +54,12 @@ func (m MongoChannelMessageRepository) Create(ctx context.Context, message *enti
 	if message.Id == "" {
 		message.Id = entity.ChannelMessageId(bson.NewObjectID().Hex())
 	}
+	now := time.Now()
 	if message.CreatedAt.IsZero() {
-		message.CreatedAt = time.Now()
+		message.CreatedAt = now
+	}
+	if message.UpdatedAt.IsZero() {
+		message.UpdatedAt = now
 	}
 
 	mongoMessage, err := m.deps.Mapper.MapFromEntity(message)
@@ -174,7 +179,6 @@ func (m MongoChannelMessageRepository) ListByChannelId(ctx context.Context, chan
 		filter["created_at"] = bson.M{"$lt": params.Before}
 	} else if params.After != (time.Time{}) {
 		filter["created_at"] = bson.M{"$gt": params.After}
-		opts.SetSort(bson.D{{"created_at", 1}}) // Tri croissant pour les messages plus récents
 	}
 
 	cursor, err := collection.Find(ctx, filter, opts)
