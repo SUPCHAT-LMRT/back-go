@@ -6,23 +6,24 @@ import (
 	meilisearch2 "github.com/meilisearch/meilisearch-go"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/meilisearch"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"time"
 )
 
 type MeilisearchSearchUserSyncManager struct {
-	createCache *lru.Cache[string, *SearchUser]
-	deleteCache *lru.Cache[string, struct{}]
+	createCache *lru.Cache[user_entity.UserId, *SearchUser]
+	deleteCache *lru.Cache[user_entity.UserId, struct{}]
 	client      *meilisearch.MeilisearchClient
 	logger      logger.Logger
 }
 
 func NewMeilisearchSearchUserSyncManager(client *meilisearch.MeilisearchClient, logger logger.Logger) (SearchUserSyncManager, error) {
-	createCache, err := lru.New[string, *SearchUser](1000)
+	createCache, err := lru.New[user_entity.UserId, *SearchUser](1000)
 	if err != nil {
 		return nil, err
 	}
 
-	deleteCache, err := lru.New[string, struct{}](1000)
+	deleteCache, err := lru.New[user_entity.UserId, struct{}](1000)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +136,7 @@ func (m MeilisearchSearchUserSyncManager) RemoveUser(ctx context.Context, user *
 	m.deleteCache.Add(user.Id, struct{}{})
 
 	m.logger.Info().
-		Str("user_id", user.Id).
+		Str("user_id", user.Id.String()).
 		Msg("User marked for deletion")
 
 	return nil
@@ -161,19 +162,19 @@ func (m MeilisearchSearchUserSyncManager) SyncLoop(ctx context.Context) {
 			// Handle deletions
 			var deleteIds []string
 			for _, key := range m.deleteCache.Keys() {
-				deleteIds = append(deleteIds, key)
+				deleteIds = append(deleteIds, key.String())
 			}
 
 			// Sync additions/updates
 			if len(docs) > 0 {
 				m.logger.Info().
 					Int("count", len(docs)).
-					Msg("Syncing channels to Meilisearch")
-				task, err := m.client.Client.Index("channels").AddDocuments(docs)
+					Msg("Syncing users to Meilisearch")
+				task, err := m.client.Client.Index("users").AddDocuments(docs)
 				if err != nil {
 					m.logger.Error().
 						Err(err).
-						Msg("Failed to sync channels to Meilisearch")
+						Msg("Failed to sync users to Meilisearch")
 					continue
 				}
 
@@ -182,14 +183,14 @@ func (m MeilisearchSearchUserSyncManager) SyncLoop(ctx context.Context) {
 				if err != nil {
 					m.logger.Error().
 						Err(err).
-						Msg("Failed to complete channel sync task")
+						Msg("Failed to complete user sync task")
 					continue
 				}
 				if taskInfo.Status != meilisearch2.TaskStatusSucceeded {
 					m.logger.Error().
 						Str("status", string(taskInfo.Status)).
 						Int("task_uid", int(taskInfo.TaskUID)).
-						Msg("Channel sync task failed")
+						Msg("User sync task failed")
 					continue
 				} else {
 					m.createCache.Purge() // Clear only after successful sync
@@ -200,12 +201,12 @@ func (m MeilisearchSearchUserSyncManager) SyncLoop(ctx context.Context) {
 			if len(deleteIds) > 0 {
 				m.logger.Info().
 					Int("count", len(deleteIds)).
-					Msg("Syncing channel deletions to Meilisearch")
-				task, err := m.client.Client.Index("channels").DeleteDocuments(deleteIds)
+					Msg("Syncing user deletions to Meilisearch")
+				task, err := m.client.Client.Index("users").DeleteDocuments(deleteIds)
 				if err != nil {
 					m.logger.Error().
 						Err(err).
-						Msg("Failed to sync channel deletions to Meilisearch")
+						Msg("Failed to sync user deletions to Meilisearch")
 					continue
 				}
 
@@ -214,7 +215,7 @@ func (m MeilisearchSearchUserSyncManager) SyncLoop(ctx context.Context) {
 				if err != nil {
 					m.logger.Error().
 						Err(err).
-						Msg("Failed to complete channel deletion task")
+						Msg("Failed to complete user deletion task")
 					continue
 				}
 
@@ -222,7 +223,7 @@ func (m MeilisearchSearchUserSyncManager) SyncLoop(ctx context.Context) {
 					m.logger.Error().
 						Str("status", string(taskInfo.Status)).
 						Int("task_uid", int(taskInfo.TaskUID)).
-						Msg("Channel deletion task failed")
+						Msg("User deletion task failed")
 					continue
 				} else {
 					m.deleteCache.Purge() // Clear only after successful sync

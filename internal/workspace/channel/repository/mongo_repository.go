@@ -8,6 +8,7 @@ import (
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	uberdig "go.uber.org/dig"
+	"time"
 )
 
 var (
@@ -30,6 +31,8 @@ type MongoChannel struct {
 	Name        string        `bson:"name"`
 	Topic       string        `bson:"topic"`
 	WorkspaceId bson.ObjectID `bson:"workspace_id"`
+	CreatedAt   time.Time     `bson:"created_at"`
+	UpdatedAt   time.Time     `bson:"updated_at"`
 }
 
 func NewMongoChannelRepository(deps MongoChannelRepositoryDeps) ChannelRepository {

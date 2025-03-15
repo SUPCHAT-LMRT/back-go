@@ -24,7 +24,7 @@ func (u *UpdateUserUseCase) Execute(ctx context.Context, user *user_entity.User)
 	}
 
 	err = u.searchUserSyncManager.AddUser(ctx, &user_search.SearchUser{
-		Id:        user.Id.String(),
+		Id:        user.Id,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,

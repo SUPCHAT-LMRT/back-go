@@ -1,11 +1,12 @@
 package user
 
 import (
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"time"
 )
 
 type SearchUser struct {
-	Id        string
+	Id        user_entity.UserId
 	FirstName string
 	LastName  string
 	Email     string

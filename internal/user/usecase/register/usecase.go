@@ -78,7 +78,7 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserR
 	}
 
 	err = r.deps.SearchUserSyncManager.AddUser(ctx, &user_search.SearchUser{
-		Id:        user.Id.String(),
+		Id:        user.Id,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,

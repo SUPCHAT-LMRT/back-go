@@ -30,13 +30,13 @@ func (u *CreateChannelUseCase) Execute(ctx context.Context, chann *entity.Channe
 	}
 
 	err = u.deps.SearchChannelSyncManager.AddChannel(ctx, &channel.SearchChannel{
-		Id:          chann.Id.String(),
+		Id:          chann.Id,
 		Name:        chann.Name,
 		Topic:       chann.Topic,
 		Kind:        channel.SearchChannelKindTextMessage,
 		WorkspaceId: chann.WorkspaceId,
 		CreatedAt:   chann.CreatedAt,
-		UpdatedAt:   chann.CreatedAt,
+		UpdatedAt:   chann.UpdatedAt,
 	})
 	if err != nil {
 		return err

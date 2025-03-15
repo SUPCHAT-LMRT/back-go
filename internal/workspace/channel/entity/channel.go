@@ -13,6 +13,7 @@ type Channel struct {
 	Topic       string
 	WorkspaceId workspace_entity.WorkspaceId
 	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 func (id ChannelId) String() string {

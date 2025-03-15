@@ -135,7 +135,7 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 				results = append(results, &SearchResult{
 					Kind: SearchResultKindChannel,
 					Data: &SearchResultChannel{
-						Id:    result.Id,
+						Id:    result.Id.String(),
 						Name:  result.Name,
 						Topic: result.Topic,
 						Href:  fmt.Sprintf("/workspaces/%s/channels/%s", result.WorkspaceId, result.Id),
@@ -158,7 +158,7 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 				results = append(results, &SearchResult{
 					Kind: SearchResultKindUser,
 					Data: &SearchResultUser{
-						Id:                   result.Id,
+						Id:                   result.Id.String(),
 						HighlightedFirstName: highlightedResult.FirstName,
 						HighlightedLastName:  highlightedResult.LastName,
 						HighlightedEmail:     highlightedResult.Email,

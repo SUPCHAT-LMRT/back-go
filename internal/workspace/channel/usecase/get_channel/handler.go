@@ -31,6 +31,7 @@ func (h *GetChannelHandler) Handle(c *gin.Context) {
 		Topic:       channel.Topic,
 		WorkspaceId: channel.WorkspaceId.String(),
 		CreatedAt:   channel.CreatedAt.String(),
+		UpdatedAt:   channel.UpdatedAt.String(),
 	})
 }
 
@@ -40,4 +41,5 @@ type ChannelResponse struct {
 	Topic       string `json:"topic"`
 	WorkspaceId string `json:"workspaceId"`
 	CreatedAt   string `json:"createdAt"`
+	UpdatedAt   string `json:"updatedAt"`
 }

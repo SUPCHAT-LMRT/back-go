@@ -1,6 +1,7 @@
 package channel
 
 import (
+	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"time"
 )
@@ -13,7 +14,7 @@ const (
 )
 
 type SearchChannel struct {
-	Id          string
+	Id          channel_entity.ChannelId
 	Name        string
 	Topic       string
 	Kind        SearchChannelKind

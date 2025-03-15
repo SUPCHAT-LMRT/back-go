@@ -6,23 +6,24 @@ import (
 	meilisearch2 "github.com/meilisearch/meilisearch-go"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/meilisearch"
+	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"time"
 )
 
 type MeilisearchSearchChannelSyncManager struct {
-	createCache *lru.Cache[string, *SearchChannel]
-	deleteCache *lru.Cache[string, struct{}]
+	createCache *lru.Cache[channel_entity.ChannelId, *SearchChannel]
+	deleteCache *lru.Cache[channel_entity.ChannelId, struct{}]
 	client      *meilisearch.MeilisearchClient
 	logger      logger.Logger
 }
 
 func NewMeilisearchSearchChannelSyncManager(client *meilisearch.MeilisearchClient, logger logger.Logger) (SearchChannelSyncManager, error) {
-	createCache, err := lru.New[string, *SearchChannel](1000)
+	createCache, err := lru.New[channel_entity.ChannelId, *SearchChannel](1000)
 	if err != nil {
 		return nil, err
 	}
 
-	deleteCache, err := lru.New[string, struct{}](1000)
+	deleteCache, err := lru.New[channel_entity.ChannelId, struct{}](1000)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +134,7 @@ func (m MeilisearchSearchChannelSyncManager) RemoveChannel(ctx context.Context, 
 	m.deleteCache.Add(channel.Id, struct{}{})
 
 	m.logger.Info().
-		Str("channel_id", channel.Id).
+		Str("channel_id", channel.Id.String()).
 		Msg("Channel marked for deletion")
 
 	return nil
@@ -159,7 +160,7 @@ func (m MeilisearchSearchChannelSyncManager) SyncLoop(ctx context.Context) {
 			// Handle deletions
 			var deleteIds []string
 			for _, key := range m.deleteCache.Keys() {
-				deleteIds = append(deleteIds, key)
+				deleteIds = append(deleteIds, key.String())
 			}
 
 			// Sync additions/updates

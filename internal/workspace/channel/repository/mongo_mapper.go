@@ -29,6 +29,8 @@ func (m MongoChannelMapper) MapFromEntity(entity *entity.Channel) (*MongoChannel
 		Name:        entity.Name,
 		Topic:       entity.Topic,
 		WorkspaceId: workspaceObjectId,
+		CreatedAt:   entity.CreatedAt,
+		UpdatedAt:   entity.UpdatedAt,
 	}, nil
 }
 
@@ -38,5 +40,7 @@ func (m MongoChannelMapper) MapToEntity(mongo *MongoChannel) (*entity.Channel, e
 		Name:        mongo.Name,
 		Topic:       mongo.Topic,
 		WorkspaceId: workspace_entity.WorkspaceId(mongo.WorkspaceId.Hex()),
+		CreatedAt:   mongo.CreatedAt,
+		UpdatedAt:   mongo.UpdatedAt,
 	}, nil
 }
