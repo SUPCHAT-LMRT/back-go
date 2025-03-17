@@ -2,26 +2,53 @@ package websocket
 
 import (
 	"context"
+	"fmt"
 	"github.com/goccy/go-json"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
-	"github.com/supchat-lmrt/back-go/internal/websocket/room"
 )
 
 type Room struct {
 	deps       WebSocketDeps
-	Id         string        `json:"id"`
-	Kind       room.RoomKind `json:"kind"`
+	Id         string   `json:"id"`
+	Data       RoomData `json:"data"`
 	clients    map[*Client]bool
 	register   chan *Client
 	unregister chan *Client
 }
 
+type RoomData interface {
+	mustImplementRoomData()
+}
+
+type ChannelRoomData struct {
+}
+
+func (ChannelRoomData) mustImplementRoomData() {}
+
+type DirectRoomData struct {
+	UserId      user_entity.UserId `json:"userId"`
+	OtherUserId user_entity.UserId `json:"otherUserId"`
+}
+
+func (DirectRoomData) mustImplementRoomData() {}
+
+func (d DirectRoomData) String() string {
+	// create unique room name combined to the two IDs, the room name will be the same for both users
+	// so the ids are ordered
+	if d.UserId.IsAfter(d.OtherUserId) {
+		return fmt.Sprintf("direct-%s_%s", d.UserId.String(), d.OtherUserId.String())
+	} else {
+		return fmt.Sprintf("direct-%s_%s", d.OtherUserId.String(), d.UserId.String())
+	}
+}
+
 // NewRoom creates a new Room
-func NewRoom(deps WebSocketDeps, id string, kind room.RoomKind) *Room {
+func NewRoom(deps WebSocketDeps, id string, data RoomData) *Room {
 	return &Room{
 		deps:       deps,
 		Id:         id,
-		Kind:       kind,
+		Data:       data,
 		clients:    make(map[*Client]bool),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),

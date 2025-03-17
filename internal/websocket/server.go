@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
-	"github.com/supchat-lmrt/back-go/internal/websocket/room"
 )
 
 type WsServer struct {
@@ -102,8 +101,8 @@ func (s *WsServer) findClientById(clientId uuid.UUID) *Client {
 
 }
 
-func (s *WsServer) createRoom(name string, kind room.RoomKind) *Room {
-	createdRoom := NewRoom(s.Deps, name, kind)
+func (s *WsServer) createRoom(name string, roomData RoomData) *Room {
+	createdRoom := NewRoom(s.Deps, name, roomData)
 	go createdRoom.RunRoom()
 	s.rooms[createdRoom] = true
 

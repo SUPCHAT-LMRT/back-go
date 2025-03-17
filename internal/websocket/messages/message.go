@@ -11,7 +11,8 @@ type Action string
 const (
 	OutboundSendChannelMessageAction      Action = "send-channel-message"
 	OutboundSendDirectMessageAction       Action = "send-direct-message"
-	OutboundRoomJoinedAction              Action = "room-joined"
+	OutboundChannelRoomJoinedAction       Action = "channel-room-joined"
+	OutboundDirectRoomJoinedAction        Action = "direct-room-joined"
 	OutboundChannelCreatedAction          Action = "channel-created"
 	OutboundChannelMessageReactionAdded   Action = "channel-message-reaction-added"
 	OutboundChannelMessageReactionRemoved Action = "channel-message-reaction-removed"

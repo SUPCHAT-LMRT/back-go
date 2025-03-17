@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
@@ -67,8 +66,6 @@ func (m MongoChatDirectRepository) Create(ctx context.Context, chatDirect *entit
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(chatDirect.CreatedAt, mongoChatDirect.CreatedAt)
 
 	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).InsertOne(ctx, mongoChatDirect)
 	if err != nil {

@@ -11,11 +11,12 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages/inbound"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages/outbound"
-	"github.com/supchat-lmrt/back-go/internal/websocket/room"
+	"github.com/supchat-lmrt/back-go/internal/websocket/utils"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/entity"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"log"
+	"reflect"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -208,7 +209,7 @@ func (c *Client) handleSendDirectMessage(message *inbound.InboundSendDirectMessa
 		return
 	}
 
-	roomId := c.buildDirectMessageRoomId(message.OtherUserId)
+	roomId := utils.BuildDirectMessageRoomId(c.UserId, message.OtherUserId)
 	foundRoom := c.wsServer.findRoomById(roomId)
 	if foundRoom == nil {
 		return
@@ -244,13 +245,13 @@ func (c *Client) handleSendDirectMessage(message *inbound.InboundSendDirectMessa
 
 func (c *Client) handleJoinChannelRoomMessage(message *inbound.InboundJoinChannel) {
 	// Todo: Check if the room exists
-	c.joinRoom(message.ChannelId.String(), room.ChannelRoomKind)
+	c.joinRoom(message.ChannelId.String(), &ChannelRoomData{})
 }
 
 func (c *Client) handleJoinDirectRoomMessage(message *inbound.InboundJoinDirectRoom) {
-	roomId := c.buildDirectMessageRoomId(message.OtherUserId)
+	roomId := utils.BuildDirectMessageRoomId(c.UserId, message.OtherUserId)
 	// Todo: Check if the room exists
-	c.joinRoom(roomId, room.DirectRoomKind)
+	c.joinRoom(roomId, &DirectRoomData{UserId: c.UserId, OtherUserId: message.OtherUserId})
 }
 
 //	func (c *Client) handleJoinGroupRoomMessage(message Message) {
@@ -351,7 +352,7 @@ func (c *Client) handleChannelMessageReactionToggleMessage(message *inbound.Inbo
 func (c *Client) handleDirectMessageReactionToggleMessage(message *inbound.InboundDirectMessageReactionToggle) {
 	// The send-message action, this will send messages to a specific room now.
 	// Which room wil depend on the message Target
-	roomId := c.buildDirectMessageRoomId(message.OtherUserId)
+	roomId := utils.BuildDirectMessageRoomId(c.UserId, message.OtherUserId)
 	foundRoom := c.wsServer.findRoomById(roomId)
 	if foundRoom == nil {
 		return
@@ -395,11 +396,11 @@ func (c *Client) handleDirectMessageReactionToggleMessage(message *inbound.Inbou
 	}
 }
 
-func (c *Client) joinRoom(roomId string, kind room.RoomKind) {
+func (c *Client) joinRoom(roomId string, roomData RoomData) {
 	foundRoom := c.wsServer.findRoomById(roomId)
 	if foundRoom == nil {
 		// Todo handle GroupRoomKind
-		foundRoom = c.wsServer.createRoom(roomId, kind)
+		foundRoom = c.wsServer.createRoom(roomId, roomData)
 	}
 
 	if !c.isInRoom(foundRoom) {
@@ -428,12 +429,24 @@ func (c *Client) SendMessage(message messages.Message) error {
 	return nil
 }
 
-func (c *Client) notifyRoomJoined(room *Room) {
-	message := outbound.OutboundRoomJoined{
-		Room: outbound.OutboundRoomJoinedRoom{
-			Id:   room.Id,
-			Kind: room.Kind,
-		},
+func (c *Client) notifyRoomJoined(r *Room) {
+	var message messages.Message
+	switch roomData := r.Data.(type) {
+	case *ChannelRoomData:
+		message = &outbound.OutboundChannelRoomJoined{
+			RoomId: r.Id,
+		}
+	case *DirectRoomData:
+		message = &outbound.OutboundDirectRoomJoined{
+			RoomId:      r.Id,
+			OtherUserId: roomData.OtherUserId,
+		}
+		// TODO handle groups
+	}
+
+	if message == nil {
+		c.wsServer.Deps.Logger.Warn().Any("data", r.Data).Str("data_type", reflect.TypeOf(r.Data).String()).Msg("Unknown room data")
+		return
 	}
 
 	encoded, err := message.Encode()
@@ -445,13 +458,12 @@ func (c *Client) notifyRoomJoined(room *Room) {
 	c.send <- encoded
 }
 
-func (c *Client) buildDirectMessageRoomId(otherUserId user_entity.UserId) string {
-	// create unique room name combined to the two IDs, the room name will be the same for both users
-	// so the ids are ordered
-	if c.UserId.IsAfter(otherUserId) {
-		return fmt.Sprintf("direct-%s_%s", c.UserId.String(), otherUserId.String())
+func (c *Client) extractOtherUserIdFromDirectRoomId(roomId string) user_entity.UserId {
+	ids := strings.Split(roomId, "_")
+	if ids[0] == c.UserId.String() {
+		return user_entity.UserId(ids[1])
 	} else {
-		return fmt.Sprintf("direct-%s_%s", otherUserId.String(), c.UserId.String())
+		return user_entity.UserId(ids[0])
 	}
 }
 
