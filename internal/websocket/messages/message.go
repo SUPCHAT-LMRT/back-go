@@ -9,15 +9,16 @@ type Action string
 
 // Outbound actions are actions that are sent from the server to the client.
 const (
-	OutboundSendChannelMessageAction      Action = "send-channel-message"
-	OutboundSendDirectMessageAction       Action = "send-direct-message"
-	OutboundChannelRoomJoinedAction       Action = "channel-room-joined"
-	OutboundDirectRoomJoinedAction        Action = "direct-room-joined"
-	OutboundChannelCreatedAction          Action = "channel-created"
-	OutboundChannelMessageReactionAdded   Action = "channel-message-reaction-added"
-	OutboundChannelMessageReactionRemoved Action = "channel-message-reaction-removed"
-	OutboundDirectMessageReactionAdded    Action = "direct-message-reaction-added"
-	OutboundDirectMessageReactionRemoved  Action = "direct-message-reaction-removed"
+	OutboundSendChannelMessageAction            Action = "send-channel-message"
+	OutboundSendDirectMessageAction             Action = "send-direct-message"
+	OutboundChannelRoomJoinedAction             Action = "channel-room-joined"
+	OutboundDirectRoomJoinedAction              Action = "direct-room-joined"
+	OutboundChannelCreatedAction                Action = "channel-created"
+	OutboundChannelMessageReactionAddedAction   Action = "channel-message-reaction-added"
+	OutboundChannelMessageReactionRemovedAction Action = "channel-message-reaction-removed"
+	OutboundDirectMessageReactionAddedAction    Action = "direct-message-reaction-added"
+	OutboundDirectMessageReactionRemovedAction  Action = "direct-message-reaction-removed"
+	OutboundRecentDirectChatAddedAction         Action = "recent-direct-chat-added"
 )
 
 // Inbound actions are actions that are sent from the client to the server.

@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"github.com/supchat-lmrt/back-go/internal/back_identifier/usecase"
+	"github.com/supchat-lmrt/back-go/internal/event"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/redis"
 	toggle_direct_message_reaction "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/toggle_reaction"
@@ -26,4 +27,5 @@ type WebSocketDeps struct {
 	Logger                              logger.Logger
 	RedisClient                         *redis.Client
 	GetBackIdentifierUseCase            *usecase.GetBackIdentifierUseCase
+	EventBus                            *event.EventBus
 }

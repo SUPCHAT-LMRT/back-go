@@ -5,6 +5,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/back_identifier/usecase"
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/usecase/list_recent_chats"
 	"github.com/supchat-lmrt/back-go/internal/dig"
+	"github.com/supchat-lmrt/back-go/internal/event"
 	"github.com/supchat-lmrt/back-go/internal/gin"
 	group_chat_message_repository "github.com/supchat-lmrt/back-go/internal/group/chat_message/repository"
 	list_group_chat_messages "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/list_messages"
@@ -278,10 +279,13 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(login_oauth.NewOAuthUseCase),
 		// Mail usecases
 		dig.NewProvider(sendmail.NewSendMailUseCase),
+		// Event bus
+		dig.NewProvider(event.NewEventBus),
 		// Ws
 		dig.NewProvider(websocket.NewWsServer),
 		dig.NewProvider(websocket.NewSaveChannelMessageObserver, uberdig.Group("send_channel_message_observers")),
 		dig.NewProvider(websocket.NewSaveDirectMessageObserver, uberdig.Group("send_direct_message_observers")),
+		dig.NewProvider(save_direct_message.NewSyncRecentChatObserver, uberdig.Group("save_direct_chat_message_observers")),
 		// Ws handlers
 		dig.NewProvider(websocket.NewWebsocketHandler),
 		// Chat

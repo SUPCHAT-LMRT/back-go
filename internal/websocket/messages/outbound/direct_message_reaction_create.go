@@ -18,7 +18,7 @@ type OutboundDirectMessageReactionMember struct {
 }
 
 func (o OutboundDirectMessageReactionAdded) GetActionName() messages.Action {
-	return messages.OutboundDirectMessageReactionAdded
+	return messages.OutboundDirectMessageReactionAddedAction
 }
 
 func (o OutboundDirectMessageReactionAdded) Encode() ([]byte, error) {
@@ -34,7 +34,7 @@ type OutboundDirectMessageReactionRemoved struct {
 }
 
 func (o OutboundDirectMessageReactionRemoved) GetActionName() messages.Action {
-	return messages.OutboundDirectMessageReactionRemoved
+	return messages.OutboundDirectMessageReactionRemovedAction
 }
 
 func (o OutboundDirectMessageReactionRemoved) Encode() ([]byte, error) {
