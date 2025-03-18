@@ -14,10 +14,11 @@ func NewListChannelsHandler(useCase *ListChannelsUseCase) *ListChannelsHandler {
 	return &ListChannelsHandler{useCase: useCase}
 }
 
+// TODO: filter out the channels that the user is not a member of
 func (h *ListChannelsHandler) Handle(c *gin.Context) {
-	workspaceId := c.Param("workspaceId")
+	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "workspaceId is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "workspace_id is required"})
 		return
 	}
 

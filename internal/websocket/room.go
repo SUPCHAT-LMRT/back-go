@@ -3,38 +3,55 @@ package websocket
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
-	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
-)
-
-type RoomKind string
-
-const (
-	ChannelRoomKind RoomKind = "channel"
-	GroupRoomKind   RoomKind = "group"
-	DirectRoomKind  RoomKind = "direct"
+	"github.com/goccy/go-json"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
+	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
 )
 
 type Room struct {
 	deps       WebSocketDeps
 	Id         string   `json:"id"`
-	Kind       RoomKind `json:"kind"`
+	Data       RoomData `json:"data"`
 	clients    map[*Client]bool
 	register   chan *Client
 	unregister chan *Client
-	broadcast  chan *Message
+}
+
+type RoomData interface {
+	mustImplementRoomData()
+}
+
+type ChannelRoomData struct {
+}
+
+func (ChannelRoomData) mustImplementRoomData() {}
+
+type DirectRoomData struct {
+	UserId      user_entity.UserId `json:"userId"`
+	OtherUserId user_entity.UserId `json:"otherUserId"`
+}
+
+func (DirectRoomData) mustImplementRoomData() {}
+
+func (d DirectRoomData) String() string {
+	// create unique room name combined to the two IDs, the room name will be the same for both users
+	// so the ids are ordered
+	if d.UserId.IsAfter(d.OtherUserId) {
+		return fmt.Sprintf("direct-%s_%s", d.UserId.String(), d.OtherUserId.String())
+	} else {
+		return fmt.Sprintf("direct-%s_%s", d.OtherUserId.String(), d.UserId.String())
+	}
 }
 
 // NewRoom creates a new Room
-func NewRoom(deps WebSocketDeps, id string, kind RoomKind) *Room {
+func NewRoom(deps WebSocketDeps, id string, data RoomData) *Room {
 	return &Room{
 		deps:       deps,
 		Id:         id,
-		Kind:       kind,
+		Data:       data,
 		clients:    make(map[*Client]bool),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		broadcast:  make(chan *Message),
 	}
 }
 
@@ -44,93 +61,19 @@ func (room *Room) RunRoom() {
 		select {
 		case client := <-room.register:
 			room.registerClientInRoom(client)
-
 		case client := <-room.unregister:
 			room.unregisterClientInRoom(client)
-
-		case message := <-room.broadcast:
-			// If the user is not in the room he broadcasted to, don't send the message.
-			if message.Sender.isInRoom(room) {
-				room.broadcastToClientsInRoom(message.encode())
-			}
 		}
 	}
 }
 
 func (room *Room) registerClientInRoom(client *Client) {
-	// by sending the message first the new user won't see his own message.
-	if room.Kind != DirectRoomKind {
-		room.notifyClientJoined(client)
-	}
 	room.clients[client] = true
-
-	room.restoreMessages(client)
-}
-
-func (room *Room) restoreMessages(client *Client) {
-	switch room.Kind {
-	case ChannelRoomKind:
-		room.restoreChannelMessages(client)
-	case GroupRoomKind:
-		room.restoreGroupMessages(client)
-	case DirectRoomKind:
-		room.restoreDirectMessages(client)
-	}
-}
-
-func (room *Room) restoreChannelMessages(client *Client) {
-	channelMessages, err := room.deps.ListChannelMessagesUseCase.Execute(context.Background(), channel_entity.ChannelId(room.Id))
-	if err != nil {
-		return
-	}
-
-	for _, message := range channelMessages {
-		user, err := room.deps.GetUserByIdUseCase.Execute(context.Background(), message.AuthorId)
-		if err != nil {
-			continue
-		}
-
-		channel, err := room.deps.GetChannelUseCase.Execute(context.Background(), channel_entity.ChannelId(room.Id))
-		if err != nil {
-			continue
-		}
-
-		member, err := room.deps.GetWorkspaceMemberUseCase.Execute(context.Background(), channel.WorkspaceId, message.AuthorId)
-		if err != nil {
-			continue
-		}
-
-		client.SendMessage(Message{
-			Id:      uuid.New(),
-			Action:  SendMessageAction,
-			Message: message.Content,
-			Target:  room,
-			MessageSender: &WorkspaceMessageSender{
-				UserId:            message.AuthorId,
-				Pseudo:            user.Pseudo,
-				WorkspaceMemberId: member.Id,
-				WorkspacePseudo:   member.Pseudo,
-			},
-		})
-	}
-}
-
-func (room *Room) restoreGroupMessages(client *Client) {
-	fmt.Println("restoreGroupMessages")
-}
-
-func (room *Room) restoreDirectMessages(client *Client) {
-	fmt.Println("restoreDirectMessages")
 }
 
 func (room *Room) unregisterClientInRoom(client *Client) {
 	if _, ok := room.clients[client]; ok {
 		delete(room.clients, client)
-	}
-	
-	// by sending the message after the user won't see his own message.
-	if room.Kind != DirectRoomKind {
-		room.notifyClientLeft(client)
 	}
 }
 
@@ -138,30 +81,28 @@ func (room *Room) broadcastToClientsInRoom(message []byte) {
 	for client := range room.clients {
 		client.send <- message
 	}
+
+	backIdentifier, err := room.deps.GetBackIdentifierUseCase.Execute(context.Background())
+	if err != nil {
+		room.deps.Logger.Error().Err(err).Msg("Error on getting back identifier")
+		return
+	}
+
+	forwardedMessage, err := json.Marshal(ForwardMessage{EmitterServerId: backIdentifier, Payload: message})
+	if err != nil {
+		room.deps.Logger.Error().Err(err).Msg("Error on forwarding message to clients")
+		return
+	}
+
+	room.deps.RedisClient.Client.Publish(context.Background(), "ws-messages", forwardedMessage)
 }
 
-const welcomeMessage = "%s joined the room"
+func (room *Room) SendMessage(message messages.Message) error {
+	encoded, err := message.Encode()
+	if err != nil {
+		return err
+	}
 
-func (room *Room) notifyClientJoined(client *Client) {
-	room.SendMessage(Message{
-		Id:      uuid.New(),
-		Action:  SendMessageAction,
-		Target:  room,
-		Message: fmt.Sprintf(welcomeMessage, client.Id),
-	})
-}
-
-const goodbyeMessage = "%s left the room"
-
-func (room *Room) notifyClientLeft(client *Client) {
-	room.SendMessage(Message{
-		Id:      uuid.New(),
-		Action:  SendMessageAction,
-		Target:  room,
-		Message: fmt.Sprintf(goodbyeMessage, client.Id),
-	})
-}
-
-func (room *Room) SendMessage(message Message) {
-	room.broadcastToClientsInRoom(message.encode())
+	room.broadcastToClientsInRoom(encoded)
+	return nil
 }

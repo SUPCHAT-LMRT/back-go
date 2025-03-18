@@ -18,7 +18,6 @@ func (h *UpdateAccountPersonalInformationsHandler) Handle(c *gin.Context) {
 	var body struct {
 		FirstName string `json:"firstName" binding:"required"`
 		LastName  string `json:"lastName" binding:"required"`
-		Pseudo    string `json:"pseudo" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -40,7 +39,6 @@ func (h *UpdateAccountPersonalInformationsHandler) Handle(c *gin.Context) {
 
 	user.FirstName = body.FirstName
 	user.LastName = body.LastName
-	user.Pseudo = body.Pseudo
 
 	err := h.useCase.Execute(c, user)
 	if err != nil {

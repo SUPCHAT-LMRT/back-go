@@ -15,7 +15,6 @@ type UserRepository interface {
 	List(ctx context.Context) (users []*entity.User, err error)
 	Update(ctx context.Context, user *entity.User) error
 	Delete(ctx context.Context, userId entity.UserId) error
-	SetAsVerified(ctx context.Context, userId entity.UserId) error
 }
 
 type getUserOptions struct {

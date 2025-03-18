@@ -22,9 +22,9 @@ func (h *CreateChannelHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	workspaceId := c.Param("workspaceId")
+	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "workspaceId is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "workspace_id is required"})
 		return
 	}
 

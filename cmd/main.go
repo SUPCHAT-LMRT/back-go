@@ -5,17 +5,24 @@ import (
 	"github.com/supchat-lmrt/back-go/cmd/di"
 	"github.com/supchat-lmrt/back-go/internal/gin"
 	"github.com/supchat-lmrt/back-go/internal/logger"
+	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"github.com/supchat-lmrt/back-go/internal/s3"
+	"github.com/supchat-lmrt/back-go/internal/search/channel"
+	"github.com/supchat-lmrt/back-go/internal/search/message"
+	"github.com/supchat-lmrt/back-go/internal/search/user"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
 func main() {
 	diContainer := di.NewDi()
+	appContext := context.Background()
 
 	var logg logger.Logger
 	if err := diContainer.Invoke(func(logger logger.Logger) {
@@ -31,15 +38,13 @@ func main() {
 
 	logg.Info().Msg("Starting app...")
 
-	go invokeFatal(logg, diContainer, runGinServer(logg))
-	go invokeFatal(logg, diContainer, runWebsocketServer(logg))
 	invokeFatal(logg, diContainer, func(client *s3.S3Client) {
 		logg.Info().Msg("Creating buckets...")
-		bucketsToCreate := []string{"workspaces-icons", "users-avatars", "messages-files"}
+		bucketsToCreate := []string{"workspaces-icons", "workspaces-banners", "users-avatars", "messages-files"}
 
 		bucketsCreated := make([]string, 0, len(bucketsToCreate))
 		for _, bucket := range bucketsToCreate {
-			created, err := client.CreateBucketIfNotExist(context.Background(), bucket)
+			created, err := client.CreateBucketIfNotExist(appContext, bucket)
 			if err != nil {
 				logg.Fatal().Err(err).Str("bucket", bucket).Msg("Unable to create bucket")
 			}
@@ -51,6 +56,57 @@ func main() {
 
 		logg.Info().Any("bucketsCreated", bucketsCreated).Msg("Buckets created!")
 	})
+	invokeFatal(logg, diContainer, func(client *mongo.Client) {
+		// Create the time series collection "workspace_message_sent_ts" if it doesn't exist
+		err := client.Client.Database("supchat").CreateCollection(appContext, "workspace_message_sent_ts", options.CreateCollection().
+			SetTimeSeriesOptions(options.TimeSeries().
+				SetTimeField("sent_at").
+				SetMetaField("metadata").
+				SetGranularity("minutes"),
+			))
+		if err != nil {
+			if !strings.HasPrefix(err.Error(), "(NamespaceExists)") {
+				logg.Fatal().Err(err).Msg("Unable to create collection")
+			}
+		}
+
+		logg.Info().Str("collection", "workspace_message_sent_ts").Msg("Time-Series Collection created!")
+	})
+
+	// Create the Meilisearch indexes if they don't exist
+	invokeFatal(logg, diContainer, func(
+		searchChannelMessageSyncManager message.SearchMessageSyncManager,
+		searchChannelSyncManager channel.SearchChannelSyncManager,
+		searchUserSyncManager user.SearchUserSyncManager,
+	) {
+		err := searchChannelMessageSyncManager.CreateIndexIfNotExists(appContext)
+		if err != nil {
+			logg.Fatal().Err(err).Msg("Unable to create index")
+		}
+
+		err = searchChannelSyncManager.CreateIndexIfNotExists(appContext)
+		if err != nil {
+			logg.Fatal().Err(err).Msg("Unable to create index")
+		}
+
+		err = searchUserSyncManager.CreateIndexIfNotExists(appContext)
+		if err != nil {
+			logg.Fatal().Err(err).Msg("Unable to create index")
+		}
+	})
+
+	invokeFatal(logg, diContainer, func(
+		searchChannelMessageSyncManager message.SearchMessageSyncManager,
+		searchChannelSyncManager channel.SearchChannelSyncManager,
+		searchUserSyncManager user.SearchUserSyncManager,
+	) {
+		go searchChannelMessageSyncManager.SyncLoop(appContext)
+		go searchChannelSyncManager.SyncLoop(appContext)
+		go searchUserSyncManager.SyncLoop(appContext)
+	})
+
+	go invokeFatal(logg, diContainer, runGinServer(logg))
+	go invokeFatal(logg, diContainer, runWebsocketServer())
 
 	logg.Info().Msg("App started!")
 
@@ -76,7 +132,7 @@ func runGinServer(logg logger.Logger) func(ginRouter gin.GinRouter) {
 	}
 }
 
-func runWebsocketServer(logg logger.Logger) func(wsServer *websocket.WsServer) {
+func runWebsocketServer() func(wsServer *websocket.WsServer) {
 	return func(wsServer *websocket.WsServer) {
 		wsServer.Run()
 	}

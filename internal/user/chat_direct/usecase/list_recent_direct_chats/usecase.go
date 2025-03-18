@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	uberdig "go.uber.org/dig"
 )
 
@@ -20,6 +21,6 @@ func NewListRecentChatDirectUseCase(deps ListRecentChatDirectUseCaseDeps) *ListR
 	return &ListRecentChatDirectUseCase{deps: deps}
 }
 
-func (u *ListRecentChatDirectUseCase) Execute(ctx context.Context) ([]*entity.ChatDirect, error) {
-	return u.deps.Repository.ListRecentGroups(ctx)
+func (u *ListRecentChatDirectUseCase) Execute(ctx context.Context, userId user_entity.UserId) ([]*entity.ChatDirect, error) {
+	return u.deps.Repository.ListRecentChats(ctx, userId)
 }

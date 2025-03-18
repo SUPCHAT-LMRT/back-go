@@ -13,5 +13,11 @@ type ChannelMessage struct {
 	ChannelId channel_entity.ChannelId
 	Content   string
 	AuthorId  entity.UserId
+	Reactions []*ChannelMessageReaction
 	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (id ChannelMessageId) String() string {
+	return string(id)
 }

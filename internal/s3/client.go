@@ -44,6 +44,30 @@ func (s *S3Client) CreateBucketIfNotExist(ctx context.Context, bucketName string
 	_, err = s.Client.CreateBucket(ctx, &s3.CreateBucketInput{
 		Bucket: &bucketName,
 	})
+
+	// Make the bucket objects publicly accessible
+	_, err = s.Client.PutBucketPolicy(ctx, &s3.PutBucketPolicyInput{
+		Bucket: &bucketName,
+		Policy: aws.String(fmt.Sprintf(`{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": [
+                    "*"
+                ]
+            },
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::%s/*"
+            ]
+        }
+    ]
+}`, bucketName)),
+	})
 	if err != nil {
 		var bne *types.BucketAlreadyOwnedByYou
 		if errors.As(err, &bne) {

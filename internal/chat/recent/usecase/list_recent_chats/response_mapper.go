@@ -13,18 +13,16 @@ func NewResponseMapper() mapper.Mapper[*entity.RecentChat, *RecentChatResponse] 
 
 func (r ResponseMapper) MapFromEntity(response *RecentChatResponse) (*entity.RecentChat, error) {
 	return &entity.RecentChat{
-		Id:        response.Id,
-		Kind:      response.Kind,
-		AvatarUrl: response.AvatarUrl,
-		Name:      response.Name,
+		Id:   response.Id,
+		Kind: response.Kind,
+		Name: response.Name,
 	}, nil
 }
 
 func (r ResponseMapper) MapToEntity(entity *entity.RecentChat) (*RecentChatResponse, error) {
 	return &RecentChatResponse{
-		Id:        entity.Id,
-		Kind:      entity.Kind,
-		AvatarUrl: entity.AvatarUrl,
-		Name:      entity.Name,
+		Id:   entity.Id,
+		Kind: entity.Kind,
+		Name: entity.Name,
 	}, nil
 }

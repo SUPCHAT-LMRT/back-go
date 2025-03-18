@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/entity"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	uberdig "go.uber.org/dig"
 	"net/http"
 )
@@ -23,7 +24,9 @@ func NewListRecentChatsHandler(deps ListRecentChatsHandlerDeps) *ListRecentChats
 }
 
 func (h *ListRecentChatsHandler) Handle(c *gin.Context) {
-	recentChats, err := h.deps.UseCase.Execute(c)
+	authenticatedUser := c.MustGet("user").(*user_entity.User)
+
+	recentChats, err := h.deps.UseCase.Execute(c, authenticatedUser.Id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "message": "failed to list recent chats"})
 		return
@@ -42,8 +45,7 @@ func (h *ListRecentChatsHandler) Handle(c *gin.Context) {
 }
 
 type RecentChatResponse struct {
-	Id        entity.RecentChatId   `json:"id"`
-	Kind      entity.RecentChatKind `json:"kind"`
-	AvatarUrl string                `json:"avatarUrl"`
-	Name      string                `json:"name"`
+	Id   entity.RecentChatId   `json:"id"`
+	Kind entity.RecentChatKind `json:"kind"`
+	Name string                `json:"name"`
 }

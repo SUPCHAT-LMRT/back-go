@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
-	"time"
 )
 
 type RegisterHandler struct {
@@ -17,13 +16,9 @@ func NewRegisterHandler(useCase *RegisterUserUseCase) *RegisterHandler {
 }
 
 type RegisterRequest struct {
-	Email                string `json:"email" binding:"required"`
-	FirstName            string `json:"firstName" binding:"required"`
-	LastName             string `json:"lastName" binding:"required"`
-	Pseudo               string `json:"pseudo" binding:"required"`
+	Token                string `json:"token" binding:"required"`
 	Password             string `json:"password" binding:"required,min=3"`
 	PasswordConfirmation string `json:"passwordConfirmation" binding:"required,eqfield=Password"`
-	BirthDate            string `json:"birthDate" binding:"required,ISO8601date"`
 }
 
 func (l RegisterHandler) Handle(c *gin.Context) {
@@ -52,13 +47,21 @@ func (l RegisterHandler) Handle(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   err.Error(),
-			"message": "Invalid birth date format. Must be in RFC3339 format.",
+			"message": "Cannot parse request",
 		})
 		return
 	}
 
 	err = l.registerUserUseCase.Execute(c, *userRequest)
 	if err != nil {
+		if errors.Is(err, UserAlreadyExistsErr) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":          err.Error(),
+				"messageDisplay": "Un utilisateur existe déjà avec cet email.",
+				"level":          "warning",
+			})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -69,17 +72,9 @@ func (l RegisterHandler) Handle(c *gin.Context) {
 }
 
 func (l RegisterHandler) RegisterUserRequest(request RegisterRequest) (*RegisterUserRequest, error) {
-	parsedBirthDate, err := time.Parse("2006-01-02", request.BirthDate)
-	if err != nil {
-		return nil, err
-	}
 
 	return &RegisterUserRequest{
-		Email:     request.Email,
-		FirstName: request.FirstName,
-		LastName:  request.LastName,
-		Pseudo:    request.Pseudo,
-		Password:  request.Password,
-		BirthDate: parsedBirthDate,
+		Token:    request.Token,
+		Password: request.Password,
 	}, nil
 }

@@ -8,6 +8,7 @@ import (
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	uberdig "go.uber.org/dig"
+	"time"
 )
 
 var (
@@ -29,7 +30,10 @@ type MongoChannel struct {
 	Id          bson.ObjectID `bson:"_id"`
 	Name        string        `bson:"name"`
 	Topic       string        `bson:"topic"`
+	Kind        string        `bson:"kind"`
 	WorkspaceId bson.ObjectID `bson:"workspace_id"`
+	CreatedAt   time.Time     `bson:"created_at"`
+	UpdatedAt   time.Time     `bson:"updated_at"`
 }
 
 func NewMongoChannelRepository(deps MongoChannelRepositoryDeps) ChannelRepository {
@@ -100,4 +104,18 @@ func (m MongoChannelRepository) List(ctx context.Context, workspaceId workspace_
 	}
 
 	return channels, nil
+}
+
+func (m MongoChannelRepository) CountByWorkspaceId(ctx context.Context, id workspace_entity.WorkspaceId) (uint, error) {
+	workspaceObjectId, err := bson.ObjectIDFromHex(string(id))
+	if err != nil {
+		return 0, err
+	}
+
+	count, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).CountDocuments(ctx, bson.M{"workspace_id": workspaceObjectId})
+	if err != nil {
+		return 0, err
+	}
+
+	return uint(count), nil
 }

@@ -1,0 +1,63 @@
+package messages
+
+import (
+	"github.com/google/uuid"
+	"time"
+)
+
+type Action string
+
+// Outbound actions are actions that are sent from the server to the client.
+const (
+	OutboundSendChannelMessageAction      Action = "send-channel-message"
+	OutboundSendDirectMessageAction       Action = "send-direct-message"
+	OutboundChannelRoomJoinedAction       Action = "channel-room-joined"
+	OutboundDirectRoomJoinedAction        Action = "direct-room-joined"
+	OutboundChannelCreatedAction          Action = "channel-created"
+	OutboundChannelMessageReactionAdded   Action = "channel-message-reaction-added"
+	OutboundChannelMessageReactionRemoved Action = "channel-message-reaction-removed"
+	OutboundDirectMessageReactionAdded    Action = "direct-message-reaction-added"
+	OutboundDirectMessageReactionRemoved  Action = "direct-message-reaction-removed"
+)
+
+// Inbound actions are actions that are sent from the client to the server.
+const (
+	InboundSendChannelMessageAction     Action = "send-channel-message"
+	InboundSendDirectMessageAction      Action = "send-direct-message"
+	InboundJoinDirectRoomAction         Action = "join-direct-room"
+	InboundJoinGroupRoomAction          Action = "join-group-room"
+	InboundJoinChannelRoomAction        Action = "join-channel-room"
+	InboundLeaveRoomAction              Action = "leave-room"
+	InboundUnselectWorkspaceAction      Action = "unselect-workspace"
+	InboundSelectWorkspaceAction        Action = "select-workspace"
+	InboundChannelMessageReactionToggle Action = "channel-message-reaction-toggle"
+	InboundDirectMessageReactionToggle  Action = "direct-message-reaction-toggle"
+)
+
+type Message interface {
+	GetActionName() Action
+	SetId(string)
+	SetCreatedAt(time.Time)
+	Encode() ([]byte, error)
+	mustExtendDefaultMessage()
+}
+
+type DefaultMessage struct {
+	TransportMessageId        string    `json:"transportMessageId"`
+	Action                    Action    `json:"action"`
+	TransportMessageCreatedAt time.Time `json:"transportMessageCreatedAt"`
+}
+
+func (m *DefaultMessage) SetId(id string) {
+	m.TransportMessageId = id
+}
+
+func (m *DefaultMessage) SetCreatedAt(createdAt time.Time) {
+	m.TransportMessageCreatedAt = createdAt
+}
+
+func (m *DefaultMessage) mustExtendDefaultMessage() {}
+
+func NewDefaultMessage(action Action) DefaultMessage {
+	return DefaultMessage{TransportMessageId: uuid.NewString(), Action: action, TransportMessageCreatedAt: time.Now()}
+}
