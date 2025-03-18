@@ -31,12 +31,13 @@ func NewListRecentChatsUseCase(deps ListRecentChatsUseCaseDeps) *ListRecentChats
 func (u *ListRecentChatsUseCase) Execute(ctx context.Context, currentUserId user_entity.UserId) ([]*entity.RecentChat, error) {
 	// Call the ListRecentGroupsUseCase and ListRecentChatDirectUseCase and sort by updated_at
 
+	// TODO impl groups
 	groups, err := u.deps.ListRecentGroupsUseCase.Execute(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	directs, err := u.deps.ListRecentChatDirectUseCase.Execute(ctx)
+	directs, err := u.deps.ListRecentChatDirectUseCase.Execute(ctx, currentUserId)
 	if err != nil {
 		return nil, err
 	}

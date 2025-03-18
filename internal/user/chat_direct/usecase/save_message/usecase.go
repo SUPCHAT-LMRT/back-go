@@ -5,12 +5,14 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/search/message"
 	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
+	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/is_first_message"
 	uberdig "go.uber.org/dig"
 )
 
 type SaveDirectMessageUseCaseDeps struct {
 	uberdig.In
 	Repository               repository.ChatDirectRepository
+	IsFirstMessageUseCase    *is_first_message.IsFirstMessageUseCase
 	SearchMessageSyncManager message.SearchMessageSyncManager
 }
 

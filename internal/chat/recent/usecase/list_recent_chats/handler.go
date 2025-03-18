@@ -45,8 +45,7 @@ func (h *ListRecentChatsHandler) Handle(c *gin.Context) {
 }
 
 type RecentChatResponse struct {
-	Id        entity.RecentChatId   `json:"id"`
-	Kind      entity.RecentChatKind `json:"kind"`
-	AvatarUrl string                `json:"avatarUrl"`
-	Name      string                `json:"name"`
+	Id   entity.RecentChatId   `json:"id"`
+	Kind entity.RecentChatKind `json:"kind"`
+	Name string                `json:"name"`
 }

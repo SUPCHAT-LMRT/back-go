@@ -75,9 +75,21 @@ func (m MongoChatDirectRepository) Create(ctx context.Context, chatDirect *entit
 	return nil
 }
 
-func (m MongoChatDirectRepository) ListRecentChats(ctx context.Context) ([]*entity.ChatDirect, error) {
+func (m MongoChatDirectRepository) ListRecentChats(ctx context.Context, userId user_entity.UserId) ([]*entity.ChatDirect, error) {
+	userObjectId, err := bson.ObjectIDFromHex(string(userId))
+	if err != nil {
+		return nil, err
+	}
+
 	pipeline := mongo2.Pipeline{
-		// Étape 1 : Ajouter un champ `pairKey` qui normalise l'ordre des IDs
+		// Étape 0 : Filtrer les conversations où l'utilisateur est impliqué
+		{{"$match", bson.D{
+			{"$or", bson.A{
+				bson.D{{"user1Id", userObjectId}},
+				bson.D{{"user2Id", userObjectId}},
+			}},
+		}}},
+		// Étape 1 : Ajouter un champ `sortedIds` qui normalise l'ordre des IDs
 		{{"$addFields", bson.D{
 			{"sortedIds", bson.D{
 				{"$cond", bson.D{
@@ -119,6 +131,33 @@ func (m MongoChatDirectRepository) ListRecentChats(ctx context.Context) ([]*enti
 	}
 
 	return chatDirects, nil
+}
+
+func (m MongoChatDirectRepository) IsFirstMessage(ctx context.Context, user1Id, user2Id user_entity.UserId) (bool, error) {
+	user1IdHex, err := bson.ObjectIDFromHex(string(user1Id))
+	if err != nil {
+		return false, err
+	}
+
+	user2IdHex, err := bson.ObjectIDFromHex(string(user2Id))
+	if err != nil {
+		return false, err
+	}
+
+	filter := bson.D{
+		{"$or", bson.A{
+			bson.D{{"user1Id", user1IdHex}, {"user2Id", user2IdHex}},
+			bson.D{{"user1Id", user2IdHex}, {"user2Id", user1IdHex}},
+		},
+		},
+	}
+
+	count, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).CountDocuments(ctx, filter)
+	if err != nil {
+		return false, err
+	}
+
+	return count == 0, nil
 }
 
 func (m MongoChatDirectRepository) ListByUser(ctx context.Context, user1Id, user2Id user_entity.UserId, params ListByUserQueryParams) ([]*entity.ChatDirect, error) {

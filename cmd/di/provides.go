@@ -24,6 +24,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/search/usecase/search"
 	"github.com/supchat-lmrt/back-go/internal/search/user"
 	user_chat_direct_repository "github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
+	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/is_first_message"
 	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
 	list_recent_chats_direct "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_recent_direct_chats"
 	save_direct_message "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/save_message"
@@ -267,6 +268,7 @@ func NewDi() *uberdig.Container {
 		// User chat direct usecases
 		dig.NewProvider(list_recent_chats_direct.NewListRecentChatDirectUseCase),
 		dig.NewProvider(save_direct_message.NewSaveDirectMessageUseCase),
+		dig.NewProvider(is_first_message.NewIsFirstMessageUseCase),
 		dig.NewProvider(list_direct_messages.NewListDirectMessagesUseCase),
 		dig.NewProvider(toggle_chat_direct_reaction.NewToggleReactionDirectMessageUseCase),
 		// USer chat direct handlers
