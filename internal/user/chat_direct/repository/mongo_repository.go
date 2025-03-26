@@ -157,7 +157,7 @@ func (m MongoChatDirectRepository) IsFirstMessage(ctx context.Context, user1Id, 
 		return false, err
 	}
 
-	return count == 0, nil
+	return count == 1, nil
 }
 
 func (m MongoChatDirectRepository) ListByUser(ctx context.Context, user1Id, user2Id user_entity.UserId, params ListByUserQueryParams) ([]*entity.ChatDirect, error) {

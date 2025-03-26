@@ -5,15 +5,14 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/search/message"
 	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
-	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/is_first_message"
 	uberdig "go.uber.org/dig"
 )
 
 type SaveDirectMessageUseCaseDeps struct {
 	uberdig.In
 	Repository               repository.ChatDirectRepository
-	IsFirstMessageUseCase    *is_first_message.IsFirstMessageUseCase
 	SearchMessageSyncManager message.SearchMessageSyncManager
+	Observers                []MessageSavedObserver `group:"save_direct_chat_message_observers"`
 }
 
 type SaveDirectMessageUseCase struct {
@@ -29,6 +28,7 @@ func (u SaveDirectMessageUseCase) Execute(ctx context.Context, msg *chat_direct_
 	if msg.User2Id.IsAfter(msg.User1Id) {
 		msg.User1Id, msg.User2Id = msg.User2Id, msg.User1Id
 	}
+
 	err := u.deps.Repository.Create(ctx, msg)
 	if err != nil {
 		return err
@@ -48,6 +48,10 @@ func (u SaveDirectMessageUseCase) Execute(ctx context.Context, msg *chat_direct_
 	})
 	if err != nil {
 		return err
+	}
+
+	for _, observer := range u.deps.Observers {
+		observer.NotifyMessageSaved(msg)
 	}
 
 	return err

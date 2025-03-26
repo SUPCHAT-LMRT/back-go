@@ -3,7 +3,9 @@ package websocket
 import (
 	"context"
 	"github.com/goccy/go-json"
-	"github.com/google/uuid"
+	"github.com/supchat-lmrt/back-go/internal/event"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
+	"github.com/supchat-lmrt/back-go/internal/websocket/messages/outbound"
 )
 
 type WsServer struct {
@@ -21,14 +23,64 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 		return nil, err
 	}
 
-	return &WsServer{
+	server := &WsServer{
 		Deps:           deps,
 		clients:        make(map[*Client]bool),
 		Register:       make(chan *Client),
 		Unregister:     make(chan *Client),
 		rooms:          make(map[*Room]bool),
 		backIdentifier: backIdentifier,
-	}, nil
+	}
+
+	server.Deps.EventBus.Subscribe(event.DirectChatMessageSavedEventType, func(evt event.Event) {
+		if messageSavedEvent, ok := evt.(*event.DirectChatMessageSavedEvent); ok {
+			logg := deps.Logger.With().
+				Str("user1", messageSavedEvent.Message.User1Id.String()).
+				Str("user2", messageSavedEvent.Message.User2Id.String()).Logger()
+
+			user1Client := server.findClientByUserId(messageSavedEvent.Message.User1Id)
+			if user1Client != nil {
+				user2, err := deps.GetUserByIdUseCase.Execute(context.Background(), messageSavedEvent.Message.User2Id)
+				if err != nil {
+					logg.Error().Err(err).
+						Msg("failed to get user2")
+					return
+				}
+
+				err = user1Client.SendMessage(&outbound.OutboundAddRecentDirectChat{
+					OtherUserId: messageSavedEvent.Message.User2Id,
+					ChatName:    user2.FullName(),
+				})
+				if err != nil {
+					logg.Error().Err(err).
+						Msg("failed to send message to user1")
+					return
+				}
+			}
+
+			user2Client := server.findClientByUserId(messageSavedEvent.Message.User2Id)
+			if user2Client != nil {
+				user1, err := deps.GetUserByIdUseCase.Execute(context.Background(), messageSavedEvent.Message.User1Id)
+				if err != nil {
+					logg.Error().Err(err).
+						Msg("failed to get user1")
+					return
+				}
+
+				err = user2Client.SendMessage(&outbound.OutboundAddRecentDirectChat{
+					OtherUserId: messageSavedEvent.Message.User1Id,
+					ChatName:    user1.FullName(),
+				})
+				if err != nil {
+					logg.Error().Err(err).
+						Msg("failed to send message to user2")
+					return
+				}
+			}
+		}
+	})
+
+	return server, nil
 }
 
 func (s *WsServer) Run() {
@@ -88,16 +140,14 @@ func (s *WsServer) findRoomById(id string) *Room {
 	return foundRoom
 }
 
-func (s *WsServer) findClientById(clientId uuid.UUID) *Client {
-	var foundClient *Client
+func (s *WsServer) findClientByUserId(userId user_entity.UserId) *Client {
 	for client := range s.IterateClients {
-		if client.Id == clientId {
-			foundClient = client
-			break
+		if client.UserId == userId {
+			return client
 		}
 	}
 
-	return foundClient
+	return nil
 
 }
 
@@ -111,7 +161,7 @@ func (s *WsServer) createRoom(name string, roomData RoomData) *Room {
 
 func (s *WsServer) IterateClients(fn func(client *Client) bool) {
 	for client := range s.clients {
-		if fn(client) {
+		if !fn(client) {
 			break
 		}
 	}

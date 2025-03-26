@@ -336,7 +336,7 @@ func (c *Client) handleChannelMessageReactionToggleMessage(message *inbound.Inbo
 				return
 			}
 		} else {
-			err = foundRoom.SendMessage(&outbound.OutboundChannelMessageReactionAdded{
+			err = foundRoom.SendMessage(&outbound.OutboundChannelMessageReactionRemoved{
 				MessageId: message.MessageId,
 				Reaction:  message.Reaction,
 				Member:    *member,
