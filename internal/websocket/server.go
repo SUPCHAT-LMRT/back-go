@@ -33,49 +33,53 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 	}
 
 	server.Deps.EventBus.Subscribe(event.DirectChatMessageSavedEventType, func(evt event.Event) {
-		if messageSavedEvent, ok := evt.(*event.DirectChatMessageSavedEvent); ok {
-			logg := deps.Logger.With().
-				Str("user1", messageSavedEvent.Message.User1Id.String()).
-				Str("user2", messageSavedEvent.Message.User2Id.String()).Logger()
+		messageSavedEvent, ok := evt.(*event.DirectChatMessageSavedEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to DirectChatMessageSavedEvent")
+			return
+		}
 
-			user1Client := server.findClientByUserId(messageSavedEvent.Message.User1Id)
-			if user1Client != nil {
-				user2, err := deps.GetUserByIdUseCase.Execute(context.Background(), messageSavedEvent.Message.User2Id)
-				if err != nil {
-					logg.Error().Err(err).
-						Msg("failed to get user2")
-					return
-				}
+		logg := deps.Logger.With().
+			Str("user1", messageSavedEvent.Message.User1Id.String()).
+			Str("user2", messageSavedEvent.Message.User2Id.String()).Logger()
 
-				err = user1Client.SendMessage(&outbound.OutboundAddRecentDirectChat{
-					OtherUserId: messageSavedEvent.Message.User2Id,
-					ChatName:    user2.FullName(),
-				})
-				if err != nil {
-					logg.Error().Err(err).
-						Msg("failed to send message to user1")
-					return
-				}
+		user1Client := server.findClientByUserId(messageSavedEvent.Message.User1Id)
+		if user1Client != nil {
+			user2, err := deps.GetUserByIdUseCase.Execute(context.Background(), messageSavedEvent.Message.User2Id)
+			if err != nil {
+				logg.Error().Err(err).
+					Msg("failed to get user2")
+				return
 			}
 
-			user2Client := server.findClientByUserId(messageSavedEvent.Message.User2Id)
-			if user2Client != nil {
-				user1, err := deps.GetUserByIdUseCase.Execute(context.Background(), messageSavedEvent.Message.User1Id)
-				if err != nil {
-					logg.Error().Err(err).
-						Msg("failed to get user1")
-					return
-				}
+			err = user1Client.SendMessage(&outbound.OutboundAddRecentDirectChat{
+				OtherUserId: messageSavedEvent.Message.User2Id,
+				ChatName:    user2.FullName(),
+			})
+			if err != nil {
+				logg.Error().Err(err).
+					Msg("failed to send message to user1")
+				return
+			}
+		}
 
-				err = user2Client.SendMessage(&outbound.OutboundAddRecentDirectChat{
-					OtherUserId: messageSavedEvent.Message.User1Id,
-					ChatName:    user1.FullName(),
-				})
-				if err != nil {
-					logg.Error().Err(err).
-						Msg("failed to send message to user2")
-					return
-				}
+		user2Client := server.findClientByUserId(messageSavedEvent.Message.User2Id)
+		if user2Client != nil {
+			user1, err := deps.GetUserByIdUseCase.Execute(context.Background(), messageSavedEvent.Message.User1Id)
+			if err != nil {
+				logg.Error().Err(err).
+					Msg("failed to get user1")
+				return
+			}
+
+			err = user2Client.SendMessage(&outbound.OutboundAddRecentDirectChat{
+				OtherUserId: messageSavedEvent.Message.User1Id,
+				ChatName:    user1.FullName(),
+			})
+			if err != nil {
+				logg.Error().Err(err).
+					Msg("failed to send message to user2")
+				return
 			}
 		}
 	})
