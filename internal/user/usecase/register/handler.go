@@ -72,7 +72,6 @@ func (l RegisterHandler) Handle(c *gin.Context) {
 }
 
 func (l RegisterHandler) RegisterUserRequest(request RegisterRequest) (*RegisterUserRequest, error) {
-
 	return &RegisterUserRequest{
 		Token:    request.Token,
 		Password: request.Password,

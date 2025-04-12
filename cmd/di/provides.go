@@ -32,6 +32,11 @@ import (
 	toggle_chat_direct_reaction "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/toggle_reaction"
 	"github.com/supchat-lmrt/back-go/internal/user/gin/middlewares"
 	mongo2 "github.com/supchat-lmrt/back-go/internal/user/repository/mongo"
+	user_status_repository "github.com/supchat-lmrt/back-go/internal/user/status/repository"
+	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/get_or_create_status"
+	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/get_public_status"
+	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/get_status"
+	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/save_status"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists"
 	forgot_password_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/repository"
@@ -277,6 +282,17 @@ func NewDi() *uberdig.Container {
 		// User Oauth handler & usecase
 		dig.NewProvider(login_oauth.NewOAuthHandler),
 		dig.NewProvider(login_oauth.NewOAuthUseCase),
+		// User status
+		// User status repositories
+		dig.NewProvider(user_status_repository.NewMongoUserStatusRepository),
+		// User status usecases
+		dig.NewProvider(save_status.NewSaveStatusUseCase),
+		dig.NewProvider(save_status.NewUserStatusUpdateObserver, uberdig.Group("save_user_status_observers")),
+		dig.NewProvider(get_status.NewGetStatusUseCase),
+		dig.NewProvider(get_or_create_status.NewGetOrCreateStatusUseCase),
+		dig.NewProvider(get_public_status.NewGetPublicStatusUseCase),
+		// User status handlers
+		dig.NewProvider(save_status.NewSaveStatusHandler),
 		// Mail usecases
 		dig.NewProvider(sendmail.NewSendMailUseCase),
 		// Event bus

@@ -16,14 +16,6 @@ type User struct {
 	UpdatedAt time.Time
 }
 
-type UserStatus string
-
-var (
-	UserStatusOnline  UserStatus = "online"
-	UserStatusIdle    UserStatus = "idle"
-	UserStatusOffline UserStatus = "offline"
-)
-
 func (id UserId) String() string {
 	return string(id)
 }

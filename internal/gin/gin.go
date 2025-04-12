@@ -11,6 +11,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/search/usecase/search"
 	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/user/gin/middlewares"
+	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/save_status"
 	request_forgot_password "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/request"
 	validate_forgot_password "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/validate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_my_account"
@@ -97,12 +98,14 @@ type GinRouterDeps struct {
 	// User reset password
 	RequestResetPasswordHandler  *request_reset_password.RequestResetPasswordHandler
 	ValidateResetPasswordHandler *validate_reset_password.ValidateResetPasswordHandler
-	// Invite link
+	// User Invite link
 	CreateInviteLinkHandler    *user_invite_link_generate.CreateInviteLinkHandler
 	GetInviteLinkDataHandler   *get_data_token_invite.GetInviteLinkDataHandler
 	JoinWorkspaceInviteHandler *join_workspace_invite.JoinWorkspaceInviteHandler
 	// User OAuth connection
 	OAuthHandler *login_oauth.OAuthHandler
+	// User status
+	SaveStatusHandler *save_status.SaveStatusHandler
 	// Ws
 	WebsocketHandler *websocket.WebsocketHandler
 	// Chat
@@ -131,7 +134,8 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	{
 		accountGroup.GET("/me", authMiddleware, d.deps.GetMyAccountHandler.Handle)
 		accountGroup.PUT("/personal-informations", authMiddleware, d.deps.UpdateAccountPersonalInformationsHandler.Handle)
-		accountGroup.PUT("/avatar", authMiddleware, d.deps.UpdateUserAvatarHandler.Handle)
+		accountGroup.PATCH("/avatar", authMiddleware, d.deps.UpdateUserAvatarHandler.Handle)
+		accountGroup.PATCH("/status", authMiddleware, d.deps.SaveStatusHandler.Handle)
 
 		authGroup := accountGroup.Group("/auth")
 		{
@@ -220,7 +224,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 func (d *DefaultGinRouter) AddCorsHeaders() {
 	d.Router.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", os.Getenv("CORS_ORIGIN"))
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		c.Header("Access-Control-Allow-Credentials", "true")
 		if c.Request.Method == "OPTIONS" {
@@ -232,10 +236,16 @@ func (d *DefaultGinRouter) AddCorsHeaders() {
 }
 
 func (d *DefaultGinRouter) Run() error {
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		err := v.RegisterValidation("ISO8601date", validator2.IsISO8601Date)
-		if err != nil {
-			return err
+	if validatorEngine, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		validationBinding := map[string]validator.Func{
+			"ISO8601date": validator2.IsISO8601Date,
+			"userStatus":  validator2.IsUserStatus,
+		}
+		for tag, v := range validationBinding {
+			err := validatorEngine.RegisterValidation(tag, v)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
