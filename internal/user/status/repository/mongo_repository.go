@@ -38,19 +38,19 @@ func (m MongoUserStatusRepository) Get(ctx context.Context, userId user_entity.U
 		return nil, err
 	}
 
-	var mongoUserSatus MongoUserStatus
-	err = m.client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"user_id": userObjectId}).Decode(&mongoUserSatus)
+	var mongoUserStatus MongoUserStatus
+	err = m.client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"user_id": userObjectId}).Decode(&mongoUserStatus)
 	if err != nil {
 		return nil, err
 	}
 
-	parsedUserStatus := entity.ParseStatus(mongoUserSatus.UserStatus)
+	parsedUserStatus := entity.ParseStatus(mongoUserStatus.UserStatus)
 	if parsedUserStatus == entity.StatusUnknown {
 		return nil, UnknownUserStatusErr
 	}
 
 	return &entity.UserStatus{
-		UserId: user_entity.UserId(mongoUserSatus.UserId.Hex()),
+		UserId: user_entity.UserId(mongoUserStatus.UserId.Hex()),
 		Status: parsedUserStatus,
 	}, nil
 }
