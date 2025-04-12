@@ -30,7 +30,7 @@ type UserResponse struct {
 	Status    string `json:"status"`
 }
 
-func (g GetMyUserAccountHandler) Handle(c *gin.Context) {
+func (g *GetMyUserAccountHandler) Handle(c *gin.Context) {
 	user := c.MustGet("user").(*entity.User)
 
 	userStatus, err := g.deps.GetOrCreateStatusUseCase.Execute(c, user.Id, user_status_entity.StatusOnline)
