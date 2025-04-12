@@ -51,7 +51,7 @@ func (u SaveDirectMessageUseCase) Execute(ctx context.Context, msg *chat_direct_
 	}
 
 	for _, observer := range u.deps.Observers {
-		observer.NotifyMessageSaved(msg)
+		observer.NotifyUserStatusSaved(msg)
 	}
 
 	return err

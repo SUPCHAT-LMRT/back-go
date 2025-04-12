@@ -224,7 +224,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 func (d *DefaultGinRouter) AddCorsHeaders() {
 	d.Router.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", os.Getenv("CORS_ORIGIN"))
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		c.Header("Access-Control-Allow-Credentials", "true")
 		if c.Request.Method == "OPTIONS" {

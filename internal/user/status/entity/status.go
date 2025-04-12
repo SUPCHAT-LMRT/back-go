@@ -38,3 +38,14 @@ func ParseStatus(status string) Status {
 		return StatusUnknown
 	}
 }
+
+func (s Status) ToPublic() Status {
+	switch s {
+	case StatusOnline, StatusDoNotDisturb, StatusAway:
+		return s
+	case StatusInvisible, StatusOffline:
+		return StatusOffline
+	default:
+		return StatusUnknown
+	}
+}

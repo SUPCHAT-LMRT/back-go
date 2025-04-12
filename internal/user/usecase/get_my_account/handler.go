@@ -4,16 +4,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	user_status_entity "github.com/supchat-lmrt/back-go/internal/user/status/entity"
-	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/get_status"
-	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/save_status"
+	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/get_or_create_status"
 	uberdig "go.uber.org/dig"
 	"net/http"
 )
 
 type GetMyUserAccountHandlerDeps struct {
 	uberdig.In
-	GetStatusUseCase  *get_status.GetStatusUseCase
-	SaveStatusUseCase *save_status.SaveStatusUseCase
+	GetOrCreateStatusUseCase *get_or_create_status.GetOrCreateStatusUseCase
 }
 
 type GetMyUserAccountHandler struct {
@@ -32,24 +30,19 @@ type UserResponse struct {
 	Status    string `json:"status"`
 }
 
-func (g *GetMyUserAccountHandler) Handle(c *gin.Context) {
+func (g GetMyUserAccountHandler) Handle(c *gin.Context) {
 	user := c.MustGet("user").(*entity.User)
 
-	userStatus, err := g.deps.GetStatusUseCase.Execute(c, user.Id)
+	userStatus, err := g.deps.GetOrCreateStatusUseCase.Execute(c, user.Id, user_status_entity.StatusOnline)
 	if err != nil {
-		newStatus := user_status_entity.StatusOnline
-		err = g.deps.SaveStatusUseCase.Execute(c, user.Id, newStatus)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "message": "Failed to save status"})
-			return
-		}
-		userStatus = newStatus
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "message": "Failed to save status"})
+		return
 	}
 
 	c.JSON(http.StatusOK, g.Response(user, userStatus))
 }
 
-func (g *GetMyUserAccountHandler) Response(user *entity.User, status user_status_entity.Status) *UserResponse {
+func (g GetMyUserAccountHandler) Response(user *entity.User, status user_status_entity.Status) *UserResponse {
 	return &UserResponse{
 		ID:        user.Id.String(),
 		FirstName: user.FirstName,

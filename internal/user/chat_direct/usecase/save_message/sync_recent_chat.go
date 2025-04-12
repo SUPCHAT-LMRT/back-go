@@ -24,7 +24,7 @@ func NewSyncRecentChatObserver(deps SyncRecentChatObserverDeps) MessageSavedObse
 	return &SyncRecentChatObserver{deps: deps}
 }
 
-func (o SyncRecentChatObserver) NotifyMessageSaved(msg *entity.ChatDirect) {
+func (o SyncRecentChatObserver) NotifyUserStatusSaved(msg *entity.ChatDirect) {
 	// Check if the message is the first message between the two users
 	isFirst, err := o.deps.IsFirstMessageUseCase.Execute(context.Background(), msg.User1Id, msg.User2Id)
 	if err != nil {

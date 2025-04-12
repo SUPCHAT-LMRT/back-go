@@ -63,6 +63,11 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 			}
 		}
 
+		if messageSavedEvent.Message.User1Id == messageSavedEvent.Message.User2Id {
+			// Skip sending message to self twice (user1 and user2 are the same)
+			return
+		}
+
 		user2Client := server.findClientByUserId(messageSavedEvent.Message.User2Id)
 		if user2Client != nil {
 			user1, err := deps.GetUserByIdUseCase.Execute(context.Background(), messageSavedEvent.Message.User1Id)
@@ -82,6 +87,33 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 				return
 			}
 		}
+	})
+
+	server.Deps.EventBus.Subscribe(event.UserStatusSavedEventType, func(evt event.Event) {
+		userStatusSavedEvent, ok := evt.(*event.UserStatusSavedEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to DirectChatMessageSavedEvent")
+			return
+		}
+
+		logg := deps.Logger.With().
+			Str("user1", userStatusSavedEvent.UserStatus.UserId.String()).
+			Str("status", userStatusSavedEvent.UserStatus.Status.String()).Logger()
+
+		// Broadcast the status change to all clients
+		server.IterateClients(func(client *Client) bool {
+			err = client.SendMessage(&outbound.OutboundUserStatusUpdated{
+				UserId: userStatusSavedEvent.UserStatus.UserId,
+				Status: userStatusSavedEvent.UserStatus.Status.ToPublic(),
+			})
+			if err != nil {
+				logg.Error().Err(err).
+					Msg("failed to send status change to client")
+				return false
+			}
+
+			return true
+		})
 	})
 
 	return server, nil
