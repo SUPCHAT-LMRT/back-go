@@ -7,9 +7,10 @@ import (
 
 type OutboundDirectMessageReactionAdded struct {
 	messages.DefaultMessage
-	MessageId string                              `json:"messageId"`
-	Member    OutboundDirectMessageReactionMember `json:"member"`
-	Reaction  string                              `json:"reaction"`
+	MessageId   string                              `json:"messageId"`
+	OtherUserId string                              `json:"otherUserId"`
+	Member      OutboundDirectMessageReactionMember `json:"member"`
+	Reaction    string                              `json:"reaction"`
 }
 
 type OutboundDirectMessageReactionMember struct {
@@ -28,9 +29,10 @@ func (o OutboundDirectMessageReactionAdded) Encode() ([]byte, error) {
 
 type OutboundDirectMessageReactionRemoved struct {
 	messages.DefaultMessage
-	MessageId string                              `json:"messageId"`
-	Member    OutboundDirectMessageReactionMember `json:"member"`
-	Reaction  string                              `json:"reaction"`
+	MessageId   string                              `json:"messageId"`
+	OtherUserId string                              `json:"otherUserId"`
+	Member      OutboundDirectMessageReactionMember `json:"member"`
+	Reaction    string                              `json:"reaction"`
 }
 
 func (o OutboundDirectMessageReactionRemoved) GetActionName() messages.Action {
