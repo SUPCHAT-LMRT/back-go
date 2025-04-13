@@ -4,6 +4,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"os"
+	"time"
 )
 
 // ZerologLogger is a wrapper around zerolog.Logger that implements the Logger interface.
@@ -108,6 +109,17 @@ func (z *ZerologLogEntry) Float64(key string, value float64) logger.LogEntry {
 		z.ctx = &ctx
 	} else if z.event != nil {
 		z.event = z.event.Float64(key, value)
+	}
+	return z
+}
+
+// Dur adds a time.Duration field to the log entry.
+func (z *ZerologLogEntry) Dur(key string, value time.Duration) logger.LogEntry {
+	if z.ctx != nil {
+		ctx := z.ctx.Dur(key, value)
+		z.ctx = &ctx
+	} else if z.event != nil {
+		z.event = z.event.Dur(key, value)
 	}
 	return z
 }

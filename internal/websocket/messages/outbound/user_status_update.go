@@ -21,3 +21,17 @@ func (m OutboundUserStatusUpdated) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }
+
+type OutboundSelfStatusUpdated struct {
+	messages.DefaultMessage
+	Status entity.Status `json:"status"`
+}
+
+func (m OutboundSelfStatusUpdated) GetActionName() messages.Action {
+	return messages.OutboundSelfStatusUpdatedAction
+}
+
+func (m OutboundSelfStatusUpdated) Encode() ([]byte, error) {
+	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
+	return json.Marshal(m)
+}

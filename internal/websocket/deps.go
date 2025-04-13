@@ -6,6 +6,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/redis"
 	toggle_direct_message_reaction "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/toggle_reaction"
+	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/save_status"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
 	toggle_channel_message_reaction "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/toggle_reaction"
@@ -24,6 +25,7 @@ type WebSocketDeps struct {
 	SendDirectMessageObservers          []SendDirectMessageObserver  `group:"send_direct_message_observers"`
 	ToggleReactionChannelMessageUseCase *toggle_channel_message_reaction.ToggleReactionChannelMessageUseCase
 	ToggleReactionDirectMessageUseCase  *toggle_direct_message_reaction.ToggleReactionDirectMessageUseCase
+	SaveStatusUseCase                   *save_status.SaveStatusUseCase
 	Logger                              logger.Logger
 	RedisClient                         *redis.Client
 	GetBackIdentifierUseCase            *usecase.GetBackIdentifierUseCase

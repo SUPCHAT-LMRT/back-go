@@ -102,6 +102,20 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 
 		// Broadcast the status change to all clients
 		server.IterateClients(func(client *Client) bool {
+			// Check if the client is the one who changed the status, if so, send the status to self (a private status)
+			// This is useful for the client to update its own status on different devices (changing status on phone and updating on web...)
+			// Send to self, also the status change like for other users (to update the status on the recent chats for example) (this can be avoided by handling the self status in the frontend client)
+			if client.UserId == userStatusSavedEvent.UserStatus.UserId {
+				err = client.SendMessage(&outbound.OutboundSelfStatusUpdated{
+					Status: userStatusSavedEvent.UserStatus.Status,
+				})
+				if err != nil {
+					logg.Error().Err(err).
+						Msg("failed to send status change to self client")
+					return false
+				}
+			}
+
 			err = client.SendMessage(&outbound.OutboundUserStatusUpdated{
 				UserId: userStatusSavedEvent.UserStatus.UserId,
 				Status: userStatusSavedEvent.UserStatus.Status.ToPublic(),

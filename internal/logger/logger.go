@@ -1,5 +1,9 @@
 package logger
 
+import (
+	"time"
+)
+
 // Logger is the interface that all loggers should implement.
 type Logger interface {
 	// With returns a new logger with the given fields added to the existing ones.
@@ -40,6 +44,9 @@ type LogEntry interface {
 
 	// Float64 adds a float64 field to the log entry.
 	Float64(key string, value float64) LogEntry
+
+	// Dur adds a time.Duration field to the log entry.
+	Dur(key string, value time.Duration) LogEntry
 
 	// Any adds any field to the log entry.
 	Any(key string, value interface{}) LogEntry

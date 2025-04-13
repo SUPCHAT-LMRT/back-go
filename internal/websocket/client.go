@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
+	user_status_entity "github.com/supchat-lmrt/back-go/internal/user/status/entity"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages/inbound"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages/outbound"
@@ -374,9 +375,10 @@ func (c *Client) handleDirectMessageReactionToggleMessage(message *inbound.Inbou
 
 		if added {
 			err = foundRoom.SendMessage(&outbound.OutboundDirectMessageReactionAdded{
-				MessageId: message.MessageId,
-				Reaction:  message.Reaction,
-				Member:    *member,
+				MessageId:   message.MessageId,
+				Reaction:    message.Reaction,
+				OtherUserId: message.OtherUserId.String(),
+				Member:      *member,
 			})
 			if err != nil {
 				c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
@@ -384,9 +386,10 @@ func (c *Client) handleDirectMessageReactionToggleMessage(message *inbound.Inbou
 			}
 		} else {
 			err = foundRoom.SendMessage(&outbound.OutboundDirectMessageReactionRemoved{
-				MessageId: message.MessageId,
-				Reaction:  message.Reaction,
-				Member:    *member,
+				MessageId:   message.MessageId,
+				Reaction:    message.Reaction,
+				OtherUserId: message.OtherUserId.String(),
+				Member:      *member,
 			})
 			if err != nil {
 				c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
@@ -472,7 +475,17 @@ func (c *Client) ReadPump() {
 
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	c.conn.SetPongHandler(func(string) error {
+		c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
+
+	// Set the user status to offline
+	err := c.wsServer.Deps.SaveStatusUseCase.Execute(context.Background(), c.UserId, user_status_entity.StatusOnline)
+	if err != nil {
+		c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on setting user status to online")
+		return
+	}
 
 	for {
 		_, jsonMessage, err := c.conn.ReadMessage()
@@ -541,6 +554,13 @@ func (c *Client) disconnect() {
 	}
 	close(c.send)
 	c.conn.Close()
+
+	// Set the user status to offline
+	err := c.wsServer.Deps.SaveStatusUseCase.Execute(context.Background(), c.UserId, user_status_entity.StatusOffline)
+	if err != nil {
+		c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on setting user status to offline")
+		return
+	}
 }
 
 func (c *Client) toOutboundSendChannelMessageSender(roomId string) (*outbound.OutboundSendMessageToChannelSender, error) {
