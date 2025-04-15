@@ -23,6 +23,12 @@ type Channel struct {
 	WorkspaceId workspace_entity.WorkspaceId
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	Index       int
+}
+
+type ChannelIdWithIndex struct {
+	ChannelId ChannelId
+	Index     int
 }
 
 func (id ChannelId) String() string {

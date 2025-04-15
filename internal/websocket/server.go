@@ -130,6 +130,41 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 		})
 	})
 
+	server.Deps.EventBus.Subscribe(event.ChannelsReorderedEventType, func(evt event.Event) {
+		// Cast the event to ChannelsReorderedEvent
+		channelsReorderedEvent, ok := evt.(*event.ChannelsReorderedEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to ChannelsReorderedEvent")
+			return
+		}
+
+		// Convert []event.ChannelReorderMessage to []outbound.ChannelReorderMessage
+		var outboundChannelReorders []outbound.ChannelReorderMessage
+		for _, reorder := range channelsReorderedEvent.ChannelReorders {
+			outboundChannelReorders = append(outboundChannelReorders, outbound.ChannelReorderMessage{
+				ChannelId: reorder.ChannelId,
+				NewOrder:  reorder.NewOrder,
+			})
+		}
+
+		// Broadcast the reordered channels to all connected clients
+		server.IterateClients(func(client *Client) bool {
+			if client.CurrentRoomId.Load() != channelsReorderedEvent.WorkspaceId.String() {
+				// Skip clients that are not in the same room
+				return true
+			}
+			err := client.SendMessage(&outbound.OutboundChannelsReordered{
+				ChannelReorders: outboundChannelReorders,
+			})
+			if err != nil {
+				server.Deps.Logger.Error().Err(err).
+					Msg("failed to send channel reorder message to client")
+				return false
+			}
+			return true
+		})
+	})
+
 	return server, nil
 }
 

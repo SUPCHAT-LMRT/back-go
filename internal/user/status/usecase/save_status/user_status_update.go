@@ -3,16 +3,14 @@ package save_status
 import (
 	"github.com/supchat-lmrt/back-go/internal/event"
 	"github.com/supchat-lmrt/back-go/internal/logger"
-	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/is_first_message"
 	user_status_entity "github.com/supchat-lmrt/back-go/internal/user/status/entity"
 	uberdig "go.uber.org/dig"
 )
 
 type UserStatusUpdateObserverDeps struct {
 	uberdig.In
-	IsFirstMessageUseCase *is_first_message.IsFirstMessageUseCase
-	EventBus              *event.EventBus
-	Logger                logger.Logger
+	EventBus *event.EventBus
+	Logger   logger.Logger
 }
 
 type UserStatusUpdateObserver struct {

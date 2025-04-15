@@ -21,6 +21,7 @@ const (
 	OutboundRecentDirectChatAddedAction         Action = "recent-direct-chat-added"
 	OutboundUserStatusUpdatedAction             Action = "user-status-updated"
 	OutboundSelfStatusUpdatedAction             Action = "self-status-updated"
+	OutboundChannelsReorderedAction             Action = "channels-reordered"
 )
 
 // Inbound actions are actions that are sent from the client to the server.

@@ -33,6 +33,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/reoder_channels"
 	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
 	workspace_invite_link_generate "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/generate"
 	get_data_token_invite2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/get_data_token_invite"
@@ -79,6 +80,7 @@ type GinRouterDeps struct {
 	// Workspaces channels
 	ListChannelsHandler        *list_channels.ListChannelsHandler
 	CreateChannelHandler       *create_channel.CreateChannelHandler
+	ReorderChannelHandler      *reoder_channels.ReorderChannelHandler
 	ListChannelMessagesHandler *list_messages.ListChannelMessagesHandler
 	GetChannelHandler          *get_channel.GetChannelHandler
 	// User chat
@@ -207,6 +209,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				channelGroup.GET("/:channel_id", d.deps.GetChannelHandler.Handle)
 				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
 				channelGroup.GET("/:channel_id/messages", d.deps.ListChannelMessagesHandler.Handle)
+				channelGroup.POST("/reorder", d.deps.ReorderChannelHandler.Handle)
 			}
 		}
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
 	"time"
 )
@@ -34,6 +35,7 @@ type MongoChannel struct {
 	WorkspaceId bson.ObjectID `bson:"workspace_id"`
 	CreatedAt   time.Time     `bson:"created_at"`
 	UpdatedAt   time.Time     `bson:"updated_at"`
+	Index       int           `bson:"index"`
 }
 
 func NewMongoChannelRepository(deps MongoChannelRepositoryDeps) ChannelRepository {
@@ -58,6 +60,7 @@ func (m MongoChannelRepository) Create(ctx context.Context, channel *entity.Chan
 
 func (m MongoChannelRepository) GetById(ctx context.Context, id entity.ChannelId) (*entity.Channel, error) {
 	objectId, err := bson.ObjectIDFromHex(string(id))
+
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +85,12 @@ func (m MongoChannelRepository) List(ctx context.Context, workspaceId workspace_
 		return nil, err
 	}
 
-	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{"workspace_id": workspaceObjectId})
+	findOptions := options.Find().SetSort(bson.D{{Key: "index", Value: 1}})
+
+	cursor, err := m.deps.Client.Client.
+		Database(databaseName).
+		Collection(collectionName).
+		Find(ctx, bson.M{"workspace_id": workspaceObjectId}, findOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -118,4 +126,25 @@ func (m MongoChannelRepository) CountByWorkspaceId(ctx context.Context, id works
 	}
 
 	return uint(count), nil
+}
+
+func (m MongoChannelRepository) UpdateIndex(ctx context.Context, channelId entity.ChannelId, index int) error {
+	objectId, err := bson.ObjectIDFromHex(string(channelId))
+	if err != nil {
+		return err
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"index":      index,
+			"updated_at": time.Now(),
+		},
+	}
+
+	_, err = m.deps.Client.Client.
+		Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, bson.M{"_id": objectId}, update)
+
+	return err
 }

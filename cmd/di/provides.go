@@ -78,6 +78,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/reoder_channels"
 	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/repository"
 	add_member2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/add_member"
@@ -166,12 +167,15 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(create_channel.NewCreateChannelUseCase),
 		dig.NewProvider(get_channel.NewGetChannelUseCase),
 		dig.NewProvider(count_channels.NewCountChannelsUseCase),
+		dig.NewProvider(reoder_channels.NewReorderChannelsUseCase),
 		// Workspaces channels observers
 		dig.NewProvider(create_channel.NewNotifyWebSocketObserver, uberdig.Group("create_channel_observers")),
+		dig.NewProvider(reoder_channels.NewUserStatusUpdateObserver, uberdig.Group("reorder_channels_observers")),
 		// Workspace channels handlers
 		dig.NewProvider(list_channels.NewListChannelsHandler),
 		dig.NewProvider(create_channel.NewCreateChannelHandler),
 		dig.NewProvider(get_channel.NewGetChannelHandler),
+		dig.NewProvider(reoder_channels.NewReorderChannelHandler),
 		// Workspace channels chat
 		// Workspace channels chat repository
 		dig.NewProvider(chat_message_repository.NewMongoChannelMessageRepository),
