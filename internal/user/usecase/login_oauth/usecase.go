@@ -15,8 +15,8 @@ import (
 
 func init() {
 	goth.UseProviders(
-		google.New(os.Getenv("GOOGLECREDID"), os.Getenv("GOOGLECREDSECRET"), os.Getenv("GOOGLECREDCALLBACKURL")),
-		facebook.New(os.Getenv("FBCREDCREDID"), os.Getenv("FBCREDCREDSECRET"), os.Getenv("FBCREDCREDCALLBACKURL")),
+		google.New(os.Getenv("GOOGLE_CRED_ID"), os.Getenv("GOOGLE_CRED_SECRET"), os.Getenv("GOOGLE_CRED_CALLBACK_URL")),
+		facebook.New(os.Getenv("FACEBOOK_CRED_CRED_ID"), os.Getenv("FACEBOOK_CRED_SECRET"), os.Getenv("FACEBOOK_CRED_CALLBACK_URL")),
 	)
 }
 

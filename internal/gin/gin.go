@@ -142,11 +142,16 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		authGroup := accountGroup.Group("/auth")
 		{
 			authGroup.POST("/login", d.deps.LoginHandler.Handle)
+			authGroup.POST("/login/oauth/:provider", d.deps.OAuthHandler.AuthProvider)
+			authGroup.POST("/login/oauth/:provider/callback", d.deps.OAuthHandler.AuthCallback)
+
 			authGroup.POST("/register", d.deps.RegisterHandler.Handle)
+			authGroup.GET("/register/oauth/:provider", d.deps.OAuthHandler.AuthProvider)
+			authGroup.GET("/register/oauth/:provider/callback", d.deps.OAuthHandler.AuthCallback)
+
 			authGroup.POST("/token/access/renew", d.deps.RefreshTokenHandler.Handle)
 			authGroup.POST("/logout", authMiddleware, d.deps.LogoutHandler.Handle)
-			authGroup.GET("/oauth/:provider", d.deps.OAuthHandler.AuthProvider)
-			authGroup.GET("/oauth/:provider/callback", d.deps.OAuthHandler.AuthCallback)
+
 		}
 		forgotPasswordGroup := accountGroup.Group("/forgot-password")
 		{
