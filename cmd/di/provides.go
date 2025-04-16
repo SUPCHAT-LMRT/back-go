@@ -99,6 +99,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_banner"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_icon"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_info_workspaces"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_type_workspace"
 	uberdig "go.uber.org/dig"
 	"log"
 	"os"
@@ -148,6 +149,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(get_workspace.NewGetWorkspaceUseCase),
 		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkDataUseCase),
 		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesUseCase),
+		dig.NewProvider(update_type_workspace.NewUpdateTypeWorkspaceUseCase),
 		// Workspace handlers
 		dig.NewProvider(list_workspaces.NewListWorkspaceHandler),
 		dig.NewProvider(discovery_list_workspaces.NewDiscoverListWorkspaceHandler),
@@ -160,8 +162,11 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(get_workspace.NewGetWorkspaceHandler),
 		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkWorkspaceDataHandler),
 		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesHandler),
+		dig.NewProvider(update_type_workspace.NewUpdateTypeWorkspaceHandler),
 		// Workspace observers
 		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesObserver, uberdig.Group("update_info_workspaces_observers")),
+		dig.NewProvider(update_icon.NewUpdateWorkspaceIconObserver, uberdig.Group("update_icon_workspace_observers")),
+		dig.NewProvider(update_type_workspace.NewNotifyUpdateTypeWorkspaceObserver, uberdig.Group("update_type_workspace_observers")),
 		// Workspace mappers
 		dig.NewProvider(repository3.NewRedisInviteLinkMapper),
 		// Workspace channels

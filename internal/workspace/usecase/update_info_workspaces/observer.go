@@ -5,5 +5,5 @@ import (
 )
 
 type SaveInfoWorkspacesObserver interface {
-	NotifyUpdateInfoWorkspaces(workspaces *workspace_entity.Workspace)
+	NotifyUpdateInfoWorkspaces(workspace *workspace_entity.Workspace)
 }

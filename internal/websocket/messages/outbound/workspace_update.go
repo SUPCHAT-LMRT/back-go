@@ -10,6 +10,7 @@ type OutboundWorkspaceUpdated struct {
 	WorkspaceId string `json:"workspaceId"`
 	Name        string `json:"name"`
 	Topic       string `json:"topic"`
+	Type        string `json:"type"`
 }
 
 func (m OutboundWorkspaceUpdated) GetActionName() messages.Action {

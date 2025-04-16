@@ -199,6 +199,7 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 				WorkspaceId: workspaceId.String(),
 				Name:        workspaceUpdatedEvent.Workspace.Name,
 				Topic:       workspaceUpdatedEvent.Workspace.Topic,
+				Type:        string(workspaceUpdatedEvent.Workspace.Type),
 			})
 			if err != nil {
 				logg.Error().Err(err).

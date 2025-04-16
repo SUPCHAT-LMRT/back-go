@@ -16,6 +16,7 @@ type UpdateWorkspaceIconUseCaseDeps struct {
 	uberdig.In
 	Strategy   UpdateWorkspaceIconStrategy
 	Repository repository.WorkspaceRepository
+	Observers  []SaveIconWorkspaceObserver `group:"update_icon_workspace_observers"`
 }
 
 type UpdateWorkspaceIconUseCase struct {
@@ -35,7 +36,20 @@ func (u *UpdateWorkspaceIconUseCase) Execute(ctx context.Context, workspaceId en
 		return WorkspaceNotFoundErr
 	}
 
-	return u.deps.Strategy.Handle(ctx, workspaceId, image.ImageReader, image.ContentType)
+	if err := u.deps.Strategy.Handle(ctx, workspaceId, image.ImageReader, image.ContentType); err != nil {
+		return err
+	}
+
+	workspace, err := u.deps.Repository.GetById(ctx, workspaceId)
+	if err != nil {
+		return err
+	}
+
+	for _, observer := range u.deps.Observers {
+		observer.NotifyUpdateIconWorkspace(workspace)
+	}
+
+	return nil
 }
 
 type UpdateImage struct {
