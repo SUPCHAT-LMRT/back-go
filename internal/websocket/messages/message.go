@@ -22,6 +22,7 @@ const (
 	OutboundUserStatusUpdatedAction             Action = "user-status-updated"
 	OutboundSelfStatusUpdatedAction             Action = "self-status-updated"
 	OutboundChannelsReorderedAction             Action = "channels-reordered"
+	OutboundWorkspaceUpdatedAction              Action = "workspace-updated"
 )
 
 // Inbound actions are actions that are sent from the client to the server.

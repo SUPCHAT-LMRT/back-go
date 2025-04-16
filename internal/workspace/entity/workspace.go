@@ -15,6 +15,7 @@ const (
 type Workspace struct {
 	Id      WorkspaceId
 	Name    string
+	Topic   string
 	Type    WorkspaceType
 	OwnerId entity.UserId
 }

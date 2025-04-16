@@ -28,6 +28,7 @@ func (m MongoWorkspaceMapper) MapFromEntity(entity *entity.Workspace) (*MongoWor
 	return &MongoWorkspace{
 		Id:      workspaceObjectId,
 		Name:    entity.Name,
+		Topic:   entity.Topic,
 		Type:    string(entity.Type),
 		OwnerId: ownerObjectId,
 	}, nil
@@ -37,6 +38,7 @@ func (m MongoWorkspaceMapper) MapToEntity(databaseWorkspace *MongoWorkspace) (*e
 	return &entity.Workspace{
 		Id:      entity.WorkspaceId(databaseWorkspace.Id.Hex()),
 		Name:    databaseWorkspace.Name,
+		Topic:   databaseWorkspace.Topic,
 		Type:    entity.WorkspaceType(databaseWorkspace.Type),
 		OwnerId: user_entity.UserId(databaseWorkspace.OwnerId.Hex()),
 	}, nil

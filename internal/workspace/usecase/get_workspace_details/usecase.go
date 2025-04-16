@@ -12,8 +12,8 @@ import (
 
 type GetWorkspaceDetailsUseCaseDeps struct {
 	uberdig.In
-	WorkspaceRepository       repository.WorkspaceRepository
-	WorskpaceMemberRepository repository2.WorkspaceMemberRepository
+	WorkspaceRepository             repository.WorkspaceRepository
+	WorskpaceMemberRepository       repository2.WorkspaceMemberRepository
 	CountChannelsUseCase            *count_channels.CountChannelsUseCase
 	CountMessagesByWorkspaceUseCase *count_messages_by_workspace.CountMessagesByWorkspaceUseCase
 }
@@ -59,6 +59,7 @@ func (u *GetWorkspaceDetailsUseCase) Execute(ctx context.Context, workspaceId en
 type WorkspaceDetails struct {
 	Id            entity.WorkspaceId
 	Name          string
+	Topic         string
 	Type          entity.WorkspaceType
 	MembersCount  uint
 	ChannelsCount uint

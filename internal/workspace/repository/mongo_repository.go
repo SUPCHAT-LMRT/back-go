@@ -32,6 +32,7 @@ type MongoWorkspaceRepository struct {
 type MongoWorkspace struct {
 	Id      bson.ObjectID `bson:"_id"`
 	Name    string        `bson:"name"`
+	Topic   string        `bson:"topic"`
 	Type    string        `bson:"type"`
 	OwnerId bson.ObjectID `bson:"owner_id"`
 }
@@ -199,12 +200,17 @@ func (m MongoWorkspaceRepository) ListByUserId(ctx context.Context, userId user_
 }
 
 func (m MongoWorkspaceRepository) Update(ctx context.Context, workspace *entity.Workspace) error {
+	workspaceObjectId, err := bson.ObjectIDFromHex(workspace.Id.String())
+	if err != nil {
+		return err
+	}
+
 	mongoWorkspace, err := m.deps.WorkspaceMapper.MapFromEntity(workspace)
 	if err != nil {
 		return err
 	}
 
-	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"_id": workspace.Id}, bson.M{"$set": mongoWorkspace})
+	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"_id": workspaceObjectId}, bson.M{"$set": mongoWorkspace})
 	if err != nil {
 		return err
 	}

@@ -41,10 +41,12 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workpace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
 	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace_details"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_banner"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_icon"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_info_workspaces"
 	uberdig "go.uber.org/dig"
 	"os"
 )
@@ -72,6 +74,8 @@ type GinRouterDeps struct {
 	UpdateWorkspaceIconHandler        *update_icon.UpdateWorkspaceIconHandler
 	UpdateWorkspaceBannerHandler      *update_banner.UpdateWorkspaceBannerHandler
 	ListWorkspaceMembersHandler       *list_workpace_members.ListWorkspaceMembersHandler
+	UpdateWorkspaceInfosHandler       *update_info_workspaces.UpdateInfoWorkspacesHandler
+	GetWorkspaceHandler               *get_workspace.GetWorkspaceHandler
 	DiscoverListWorkspaceHandler      *discovery_list_workspaces.DiscoverListWorkspaceHandler
 	GetWorkspaceDetailsHandler        *get_workspace_details.GetWorkspaceDetailsHandler
 	GetMinutelyMessageSentHandler     *get_minutely.GetMinutelyMessageSentHandler
@@ -206,6 +210,8 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			specificWorkspaceGroup.GET("/members", d.deps.ListWorkspaceMembersHandler.Handle)
 			specificWorkspaceGroup.GET("/details", d.deps.GetWorkspaceDetailsHandler.Handle)
 			specificWorkspaceGroup.GET("/time-series/messages", d.deps.GetMinutelyMessageSentHandler.Handle)
+			specificWorkspaceGroup.PUT("", d.deps.UpdateWorkspaceInfosHandler.Handle)
+			specificWorkspaceGroup.GET("", d.deps.GetWorkspaceHandler.Handle)
 
 			channelGroup := specificWorkspaceGroup.Group("/channels")
 			{

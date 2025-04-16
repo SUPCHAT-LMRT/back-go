@@ -165,6 +165,51 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 		})
 	})
 
+	server.Deps.EventBus.Subscribe(event.WorkspaceUpdatedEventType, func(evt event.Event) {
+		workspaceUpdatedEvent, ok := evt.(*event.WorkspaceUpdatedEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to WorkspaceUpdatedEvent")
+			return
+		}
+
+		logg := deps.Logger.With().
+			Str("workspaceId", workspaceUpdatedEvent.Workspace.Id.String()).Logger()
+
+		workspaceId := workspaceUpdatedEvent.Workspace.Id
+
+		server.IterateClients(func(client *Client) bool {
+			isMember, err := deps.IsUserInWorkspaceUseCase.Execute(
+				context.Background(),
+				workspaceId,
+				client.UserId,
+			)
+
+			if err != nil {
+				logg.Error().Err(err).
+					Str("userId", client.UserId.String()).
+					Msg("failed to check if user is in workspace")
+				return true
+			}
+
+			if !isMember {
+				return true
+			}
+
+			err = client.SendMessage(&outbound.OutboundWorkspaceUpdated{
+				WorkspaceId: workspaceId.String(),
+				Name:        workspaceUpdatedEvent.Workspace.Name,
+				Topic:       workspaceUpdatedEvent.Workspace.Topic,
+			})
+			if err != nil {
+				logg.Error().Err(err).
+					Str("userId", client.UserId.String()).
+					Msg("failed to send workspace update message to client")
+				return false
+			}
+			return true
+		})
+	})
+
 	return server, nil
 }
 

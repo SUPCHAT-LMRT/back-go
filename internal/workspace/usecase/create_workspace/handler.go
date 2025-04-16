@@ -18,8 +18,9 @@ func NewCreateWorkspaceHandler(useCase *CreateWorkspaceUseCase) *CreateWorkspace
 
 func (l CreateWorkspaceHandler) Handle(c *gin.Context) {
 	var body struct {
-		Name string `json:"name" binding:"required"`
-		Type string `json:"type" binding:"required,oneof=PUBLIC PRIVATE"`
+		Name  string `json:"name" binding:"required"`
+		Topic string `json:"topic"`
+		Type  string `json:"type" binding:"required,oneof=PUBLIC PRIVATE"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -40,6 +41,7 @@ func (l CreateWorkspaceHandler) Handle(c *gin.Context) {
 
 	workspace := entity.Workspace{
 		Name:    body.Name,
+		Topic:   body.Topic,
 		Type:    l.mapWorkspaceType(body.Type),
 		OwnerId: user.Id,
 	}
@@ -56,6 +58,7 @@ func (l CreateWorkspaceHandler) Handle(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"id":      workspace.Id,
 		"name":    workspace.Name,
+		"topic":   workspace.Topic,
 		"type":    workspace.Type,
 		"ownerId": workspace.OwnerId,
 	})

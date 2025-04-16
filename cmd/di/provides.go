@@ -98,6 +98,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_banner"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_icon"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_info_workspaces"
 	uberdig "go.uber.org/dig"
 	"log"
 	"os"
@@ -133,7 +134,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(repository3.NewRedisInviteLinkRepository),
 		// Workspace usecases
 		dig.NewProvider(list_workspaces.NewListWorkspacesUseCase),
-		dig.NewProvider(discovery_list_workspaces.NewDiscoveryListWorkspacesUseCase),
+		dig.NewProvider(discovery_list_workspaces.NewDiscoverListWorkspacesUseCase),
 		dig.NewProvider(create_workspace.NewCreateWorkspaceUseCase),
 		dig.NewProvider(get_workpace_member.NewGetWorkspaceMemberUseCase),
 		dig.NewProvider(is_user_in_workspace.NewIsUserInWorkspaceUseCase),
@@ -146,6 +147,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(generate3.NewInviteLinkUseCase),
 		dig.NewProvider(get_workspace.NewGetWorkspaceUseCase),
 		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkDataUseCase),
+		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesUseCase),
 		// Workspace handlers
 		dig.NewProvider(list_workspaces.NewListWorkspaceHandler),
 		dig.NewProvider(discovery_list_workspaces.NewDiscoverListWorkspaceHandler),
@@ -155,7 +157,11 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_banner.NewUpdateWorkspaceBannerHandler),
 		dig.NewProvider(list_workpace_members2.NewListWorkspaceHandler),
 		dig.NewProvider(generate3.NewCreateInviteLinkHandler),
+		dig.NewProvider(get_workspace.NewGetWorkspaceHandler),
 		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkWorkspaceDataHandler),
+		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesHandler),
+		// Workspace observers
+		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesObserver, uberdig.Group("update_info_workspaces_observers")),
 		// Workspace mappers
 		dig.NewProvider(repository3.NewRedisInviteLinkMapper),
 		// Workspace channels
