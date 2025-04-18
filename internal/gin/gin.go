@@ -18,8 +18,8 @@ import (
 	user_invite_link_generate "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/generate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/login_oauth"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/logout"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/oauth"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/public_profile"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/register"
 	request_reset_password "github.com/supchat-lmrt/back-go/internal/user/usecase/reset_password/usecase/request"
@@ -122,7 +122,7 @@ type GinRouterDeps struct {
 	GetInviteLinkDataHandler   *get_data_token_invite.GetInviteLinkDataHandler
 	JoinWorkspaceInviteHandler *join_workspace_invite.JoinWorkspaceInviteHandler
 	// User OAuth connection
-	OAuthHandler *login_oauth.OAuthHandler
+	RegisterOAuthHandler *oauth.RegisterOAuthHandler
 	// User status
 	SaveStatusHandler *save_status.SaveStatusHandler
 	// Ws
@@ -159,12 +159,9 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		authGroup := accountGroup.Group("/auth")
 		{
 			authGroup.POST("/login", d.deps.LoginHandler.Handle)
-			authGroup.POST("/login/oauth/:provider", d.deps.OAuthHandler.AuthProvider)
-			authGroup.POST("/login/oauth/:provider/callback", d.deps.OAuthHandler.AuthCallback)
-
 			authGroup.POST("/register", d.deps.RegisterHandler.Handle)
-			authGroup.GET("/register/oauth/:provider", d.deps.OAuthHandler.AuthProvider)
-			authGroup.GET("/register/oauth/:provider/callback", d.deps.OAuthHandler.AuthCallback)
+			authGroup.GET("/oauth/:provider", d.deps.RegisterOAuthHandler.Provider)
+			authGroup.GET("/oauth/:provider/callback", d.deps.RegisterOAuthHandler.Callback)
 
 			authGroup.POST("/token/access/renew", d.deps.RefreshTokenHandler.Handle)
 			authGroup.POST("/logout", authMiddleware, d.deps.LogoutHandler.Handle)

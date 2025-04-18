@@ -47,10 +47,13 @@ func (m RedisInviteLinkRepository) GenerateInviteLink(ctx context.Context, link 
 }
 
 func (m RedisInviteLinkRepository) GetInviteLinkData(ctx context.Context, token string) (*entity.InviteLink, error) {
-
 	databaseInviteLink, err := m.client.Client.HGetAll(ctx, buildInviteLinkRedisKey(token)).Result()
 	if err != nil {
 		return nil, err
+	}
+
+	if len(databaseInviteLink) == 0 {
+		return nil, InviteLinkNotFoundErr
 	}
 
 	inviteLinkData, err := m.mapper.MapToEntity(databaseInviteLink)

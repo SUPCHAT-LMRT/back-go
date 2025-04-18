@@ -41,7 +41,6 @@ func NewRegisterUserUseCase(deps RegisterUserDeps) *RegisterUserUseCase {
 }
 
 func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserRequest) error {
-
 	inviteLinkData, err := r.deps.GetInviteLinkDataUseCase.GetInviteLinkData(ctx, request.Token)
 	if err != nil {
 		return fmt.Errorf("error getting invite link data: %w", err)
@@ -55,12 +54,14 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserR
 		return UserAlreadyExistsErr
 	}
 
-	hash, err := r.deps.CryptStrategy.Hash(request.Password)
-	if err != nil {
-		return fmt.Errorf("error hashing password: %w", err)
-	}
+	if request.Password != "" {
+		hash, err := r.deps.CryptStrategy.Hash(request.Password)
+		if err != nil {
+			return fmt.Errorf("error hashing password: %w", err)
+		}
 
-	request.Password = hash
+		request.Password = hash
+	}
 
 	user := r.EntityUser(request, inviteLinkData)
 	user.Id = entity.UserId(bson.NewObjectID().Hex())

@@ -51,8 +51,8 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/generate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/login_oauth"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/logout"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/oauth"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/public_profile"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/register"
 	reset_password_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/reset_password/repository"
@@ -316,8 +316,9 @@ func NewDi() *uberdig.Container {
 		// USer chat direct handlers
 		dig.NewProvider(list_direct_messages.NewListDirectMessagesHandler),
 		// User Oauth handler & usecase
-		dig.NewProvider(login_oauth.NewOAuthHandler),
-		dig.NewProvider(login_oauth.NewOAuthUseCase),
+		dig.NewProvider(oauth.NewRegisterOAuthHandler),
+		dig.NewProvider(oauth.NewLoginOAuthUseCase),
+		dig.NewProvider(oauth.NewRegisterOAuthUseCase),
 		// User status
 		// User status repositories
 		dig.NewProvider(user_status_repository.NewMongoUserStatusRepository),
