@@ -91,6 +91,12 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/is_user_in_workspace"
 	list_workpace_members2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workpace_members"
 	workspace_repository "github.com/supchat-lmrt/back-go/internal/workspace/repository"
+	roles_repository "github.com/supchat-lmrt/back-go/internal/workspace/roles/repository"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/create_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/delete_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/get_list_roles"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/get_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/update_role"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
 	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace"
@@ -173,6 +179,21 @@ func NewDi() *uberdig.Container {
 		// Workspace channels repository
 		dig.NewProvider(channel_repository.NewMongoChannelRepository),
 		dig.NewProvider(channel_repository.NewMongoChannelMapper),
+		// Workspace roles repository
+		dig.NewProvider(roles_repository.NewMongoRoleRepository),
+		dig.NewProvider(roles_repository.NewMongoRoleMapper),
+		// Workspace roles usecases
+		dig.NewProvider(create_role.NewCreateRoleHandler),
+		dig.NewProvider(get_role.NewGetRoleUseCase),
+		dig.NewProvider(get_list_roles.NewGetListRolesUseCase),
+		dig.NewProvider(update_role.NewUpdateRoleUseCase),
+		dig.NewProvider(delete_role.NewDeleteRoleUseCase),
+		// Workspace roles handlers
+		dig.NewProvider(create_role.NewCreateRoleUseCase),
+		dig.NewProvider(get_role.NewGetRoleHandler),
+		dig.NewProvider(get_list_roles.NewGetListRolesHandler),
+		dig.NewProvider(update_role.NewUpdateRoleHandler),
+		dig.NewProvider(delete_role.NewDeleteRoleHandler),
 		// Workspace channels usecases
 		dig.NewProvider(list_channels.NewListChannelsUseCase),
 		dig.NewProvider(create_channel.NewCreateChannelUseCase),

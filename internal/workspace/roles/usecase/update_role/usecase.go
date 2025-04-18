@@ -1,0 +1,33 @@
+package update_role
+
+import (
+	"context"
+	"fmt"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/entity"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/repository"
+)
+
+type UpdateRoleUseCase struct {
+	roleRepository repository.RoleRepository
+}
+
+func NewUpdateRoleUseCase(roleRepository repository.RoleRepository) *UpdateRoleUseCase {
+	return &UpdateRoleUseCase{roleRepository: roleRepository}
+}
+
+func (u *UpdateRoleUseCase) Execute(ctx context.Context, role entity.Role) error {
+	if role.Id == "" {
+		return fmt.Errorf("role ID is required")
+	}
+
+	if role.Permissions == 0 {
+		return fmt.Errorf("role must have at least one permission")
+	}
+
+	err := u.roleRepository.Update(ctx, &role)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

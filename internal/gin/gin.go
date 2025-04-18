@@ -39,6 +39,11 @@ import (
 	get_data_token_invite2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/join_workspace_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workpace_members"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/create_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/delete_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/get_list_roles"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/get_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/update_role"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
 	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace"
@@ -89,6 +94,12 @@ type GinRouterDeps struct {
 	ReorderChannelHandler      *reoder_channels.ReorderChannelHandler
 	ListChannelMessagesHandler *list_messages.ListChannelMessagesHandler
 	GetChannelHandler          *get_channel.GetChannelHandler
+	// Workspace roles
+	CreateRoleHandler   *create_role.CreateRoleHandler
+	GetRoleHandler      *get_role.GetRoleHandler
+	GetListRolesHandler *get_list_roles.GetListRolesHandler
+	UpdateRoleHandler   *update_role.UpdateRoleHandler
+	DeleteRoleHandler   *delete_role.DeleteRoleHandler
 	// User chat
 	ListDirectMessagesHandler *list_direct_messages.ListDirectMessagesHandler
 	// User
@@ -173,7 +184,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 
 		inviteLinkGroup := accountGroup.Group("/invite-link")
 		{
-			// Todo permits only the admin to create an invite link
+			// Todo permits only the admin to create_role an invite link
 			inviteLinkGroup.POST("", d.deps.CreateInviteLinkHandler.Handle)
 			inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkDataHandler.Handle)
 
@@ -224,6 +235,15 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
 				channelGroup.GET("/:channel_id/messages", d.deps.ListChannelMessagesHandler.Handle)
 				channelGroup.POST("/reorder", d.deps.ReorderChannelHandler.Handle)
+			}
+
+			roleGroup := specificWorkspaceGroup.Group("/roles")
+			{
+				roleGroup.POST("", d.deps.CreateRoleHandler.Handle)
+				roleGroup.GET("/:role_id", d.deps.GetRoleHandler.Handle)
+				roleGroup.GET("", d.deps.GetListRolesHandler.Handle)
+				roleGroup.PUT("/:role_id", d.deps.UpdateRoleHandler.Handle)
+				roleGroup.DELETE("/:role_id", d.deps.DeleteRoleHandler.Handle)
 			}
 		}
 	}
