@@ -12,6 +12,7 @@ type UserRepository interface {
 	Create(ctx context.Context, user *entity.User) error
 	GetById(ctx context.Context, userId entity.UserId) (user *entity.User, err error)
 	GetByEmail(ctx context.Context, userEmail string, options ...GetUserOptionFunc) (user *entity.User, err error)
+	GetByOauthEmail(ctx context.Context, oauthEmail string) (user *entity.User, err error)
 	List(ctx context.Context) (users []*entity.User, err error)
 	Update(ctx context.Context, user *entity.User) error
 	Delete(ctx context.Context, userId entity.UserId) error

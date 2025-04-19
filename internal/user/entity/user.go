@@ -7,13 +7,14 @@ import (
 type UserId string
 
 type User struct {
-	Id        UserId
-	FirstName string
-	LastName  string
-	Email     string
-	Password  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Id         UserId
+	FirstName  string
+	LastName   string
+	Email      string
+	Password   string
+	OauthEmail string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 func (id UserId) String() string {

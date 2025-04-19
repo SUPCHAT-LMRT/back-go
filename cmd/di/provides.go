@@ -38,13 +38,15 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/get_status"
 	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/save_status"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists_by_email"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists_by_oauthemail"
 	forgot_password_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/repository"
 	forgot_password_service "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/service"
 	forgot_password_request_usecase "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/request"
 	forgot_password_validate_usecase "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/validate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_email"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_oauthemail"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_my_account"
 	repository2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/repository"
 	delete2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/delete"
@@ -244,8 +246,10 @@ func NewDi() *uberdig.Container {
 		// User usecases
 		dig.NewProvider(get_by_id.NewGetUserByIdUseCase),
 		dig.NewProvider(get_by_email.NewGetUserByEmailUseCase),
+		dig.NewProvider(get_by_oauthemail.NewGetUserByOauthEmailUseCase),
 		dig.NewProvider(login.NewLoginUserUseCase),
-		dig.NewProvider(exists.NewExistsUserUseCase),
+		dig.NewProvider(exists_by_email.NewExistsUserByEmailUseCase),
+		dig.NewProvider(exists_by_oauthemail.NewExistsUserByOauthEmailUseCase),
 		dig.NewProvider(register.NewRegisterUserUseCase),
 		dig.NewProvider(token.NewRefreshAccessTokenUseCase),
 		dig.NewProvider(update_password.NewChangePasswordUseCase),

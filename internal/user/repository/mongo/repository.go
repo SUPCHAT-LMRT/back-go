@@ -29,26 +29,27 @@ type MongoUserRepository struct {
 }
 
 type MongoUser struct {
-	Id        bson.ObjectID `bson:"_id"`
-	FirstName string        `bson:"first_name"`
-	LastName  string        `bson:"last_name"`
-	Email     string        `bson:"email"`
-	Password  string        `bson:"password"`
-	CreatedAt time.Time     `bson:"created_at"`
-	UpdatedAt time.Time     `bson:"updated_at"`
+	Id         bson.ObjectID `bson:"_id"`
+	FirstName  string        `bson:"first_name"`
+	LastName   string        `bson:"last_name"`
+	Email      string        `bson:"email"`
+	OauthEmail string        `bson:"oauth_email"`
+	Password   string        `bson:"password"`
+	CreatedAt  time.Time     `bson:"created_at"`
+	UpdatedAt  time.Time     `bson:"updated_at"`
 }
 
 func NewMongoUserRepository(deps MongoUserRepositoryDeps) repository.UserRepository {
 	return &MongoUserRepository{deps: deps}
 }
 
-func (m MongoUserRepository) Create(ctx context.Context, user *entity.User) error {
-	mongoEntity, err := m.deps.UserMapper.MapFromEntity(user)
+func (r MongoUserRepository) Create(ctx context.Context, user *entity.User) error {
+	mongoEntity, err := r.deps.UserMapper.MapFromEntity(user)
 	if err != nil {
 		return err
 	}
 
-	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).InsertOne(ctx, mongoEntity)
+	_, err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).InsertOne(ctx, mongoEntity)
 	if err != nil {
 		return err
 	}
@@ -56,14 +57,14 @@ func (m MongoUserRepository) Create(ctx context.Context, user *entity.User) erro
 	return nil
 }
 
-func (m MongoUserRepository) GetById(ctx context.Context, userId entity.UserId) (user *entity.User, err error) {
+func (r MongoUserRepository) GetById(ctx context.Context, userId entity.UserId) (user *entity.User, err error) {
 	userObjectId, err := bson.ObjectIDFromHex(userId.String())
 	if err != nil {
 		return nil, err
 	}
 
 	var mongoUser *MongoUser
-	err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"_id": userObjectId}).Decode(&mongoUser)
+	err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"_id": userObjectId}).Decode(&mongoUser)
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
 			return nil, repository.UserNotFoundErr
@@ -71,7 +72,7 @@ func (m MongoUserRepository) GetById(ctx context.Context, userId entity.UserId) 
 		return nil, err
 	}
 
-	user, err = m.deps.UserMapper.MapToEntity(mongoUser)
+	user, err = r.deps.UserMapper.MapToEntity(mongoUser)
 	if err != nil {
 		return nil, err
 	}
@@ -79,9 +80,9 @@ func (m MongoUserRepository) GetById(ctx context.Context, userId entity.UserId) 
 	return user, nil
 }
 
-func (m MongoUserRepository) GetByEmail(ctx context.Context, userEmail string, options ...repository.GetUserOptionFunc) (user *entity.User, err error) {
+func (r MongoUserRepository) GetByEmail(ctx context.Context, userEmail string, options ...repository.GetUserOptionFunc) (user *entity.User, err error) {
 	var mongoUser *MongoUser
-	err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"email": userEmail}).Decode(&mongoUser)
+	err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"email": userEmail}).Decode(&mongoUser)
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
 			return nil, repository.UserNotFoundErr
@@ -89,7 +90,7 @@ func (m MongoUserRepository) GetByEmail(ctx context.Context, userEmail string, o
 		return nil, err
 	}
 
-	user, err = m.deps.UserMapper.MapToEntity(mongoUser)
+	user, err = r.deps.UserMapper.MapToEntity(mongoUser)
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +98,26 @@ func (m MongoUserRepository) GetByEmail(ctx context.Context, userEmail string, o
 	return user, nil
 }
 
-func (m MongoUserRepository) List(ctx context.Context) (users []*entity.User, err error) {
-	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{})
+func (r MongoUserRepository) GetByOauthEmail(ctx context.Context, oauthEmail string) (user *entity.User, err error) {
+	var mongoUser *MongoUser
+	err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"oauth_email": oauthEmail}).Decode(&mongoUser)
+	if err != nil {
+		if errors.Is(err, mongo2.ErrNoDocuments) {
+			return nil, repository.UserNotFoundErr
+		}
+		return nil, err
+	}
+
+	user, err = r.deps.UserMapper.MapToEntity(mongoUser)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (r MongoUserRepository) List(ctx context.Context) (users []*entity.User, err error) {
+	cursor, err := r.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +129,7 @@ func (m MongoUserRepository) List(ctx context.Context) (users []*entity.User, er
 			return nil, err
 		}
 
-		user, err := m.deps.UserMapper.MapToEntity(mongoUser)
+		user, err := r.deps.UserMapper.MapToEntity(mongoUser)
 		if err != nil {
 			return nil, err
 		}
@@ -121,13 +140,13 @@ func (m MongoUserRepository) List(ctx context.Context) (users []*entity.User, er
 	return users, nil
 }
 
-func (m MongoUserRepository) Update(ctx context.Context, user *entity.User) error {
-	mongoEntity, err := m.deps.UserMapper.MapFromEntity(user)
+func (r MongoUserRepository) Update(ctx context.Context, user *entity.User) error {
+	mongoEntity, err := r.deps.UserMapper.MapFromEntity(user)
 	if err != nil {
 		return err
 	}
 
-	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"_id": mongoEntity.Id}, bson.M{"$set": mongoEntity})
+	_, err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"_id": mongoEntity.Id}, bson.M{"$set": mongoEntity})
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
 			return repository.UserNotFoundErr
@@ -138,8 +157,8 @@ func (m MongoUserRepository) Update(ctx context.Context, user *entity.User) erro
 	return nil
 }
 
-func (m MongoUserRepository) Delete(ctx context.Context, userId entity.UserId) error {
-	_, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).DeleteOne(ctx, bson.M{"_id": userId})
+func (r MongoUserRepository) Delete(ctx context.Context, userId entity.UserId) error {
+	_, err := r.deps.Client.Client.Database(databaseName).Collection(collectionName).DeleteOne(ctx, bson.M{"_id": userId})
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
 			return repository.UserNotFoundErr

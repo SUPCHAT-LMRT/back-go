@@ -20,12 +20,13 @@ func (m RedisUserMapper) MapFromEntity(entity *entity.User) (map[string]string, 
 	}
 
 	return map[string]string{
-		"Id":        userObjectId.Hex(),
-		"FirstName": entity.FirstName,
-		"LastName":  entity.LastName,
-		"Email":     entity.Email,
-		"CreatedAt": entity.CreatedAt.Format(time.RFC3339),
-		"UpdatedAt": entity.UpdatedAt.Format(time.RFC3339),
+		"Id":         userObjectId.Hex(),
+		"FirstName":  entity.FirstName,
+		"LastName":   entity.LastName,
+		"Email":      entity.Email,
+		"OauthEmail": entity.OauthEmail,
+		"CreatedAt":  entity.CreatedAt.Format(time.RFC3339),
+		"UpdatedAt":  entity.UpdatedAt.Format(time.RFC3339),
 	}, nil
 }
 
@@ -41,11 +42,12 @@ func (m RedisUserMapper) MapToEntity(databaseUser map[string]string) (*entity.Us
 	}
 
 	return &entity.User{
-		Id:        entity.UserId(databaseUser["Id"]),
-		FirstName: databaseUser["FirstName"],
-		LastName:  databaseUser["LastName"],
-		Email:     databaseUser["Email"],
-		CreatedAt: parsedCreatedAtTime,
-		UpdatedAt: parsedUpdatedAtTime,
+		Id:         entity.UserId(databaseUser["Id"]),
+		FirstName:  databaseUser["FirstName"],
+		LastName:   databaseUser["LastName"],
+		Email:      databaseUser["Email"],
+		OauthEmail: databaseUser["OauthEmail"],
+		CreatedAt:  parsedCreatedAtTime,
+		UpdatedAt:  parsedUpdatedAtTime,
 	}, nil
 }

@@ -8,7 +8,8 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists_by_email"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists_by_oauthemail"
 	entity2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/entity"
 	delete2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/delete"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
@@ -23,13 +24,14 @@ var (
 
 type RegisterUserDeps struct {
 	uberdig.In
-	ExistsUserUseCase        *exists.ExistsUserUseCase
-	CryptStrategy            crypt.CryptStrategy
-	Repository               repository.UserRepository
-	Observers                []RegisterUserObserver `group:"register_user_observers"`
-	DeleteInviteLinkUseCase  *delete2.DeleteInviteLinkUseCase
-	GetInviteLinkDataUseCase *get_data_token_invite.GetInviteLinkDataUseCase
-	SearchUserSyncManager    user_search.SearchUserSyncManager
+	ExistsUserUseCase             *exists_by_email.ExistsUserByEmailUseCase
+	ExistsUserByOauthEmailUseCase *exists_by_oauthemail.ExistsUserByOauthEmailUseCase
+	CryptStrategy                 crypt.CryptStrategy
+	Repository                    repository.UserRepository
+	Observers                     []RegisterUserObserver `group:"register_user_observers"`
+	DeleteInviteLinkUseCase       *delete2.DeleteInviteLinkUseCase
+	GetInviteLinkDataUseCase      *get_data_token_invite.GetInviteLinkDataUseCase
+	SearchUserSyncManager         user_search.SearchUserSyncManager
 }
 
 type RegisterUserUseCase struct {
@@ -61,6 +63,20 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserR
 		}
 
 		request.Password = hash
+	} else {
+		// If no password is provided, we need to check if the user is using OAuth
+		if request.OauthEmail == "" {
+			return fmt.Errorf("error: no password provided and no oauth email in invite link")
+		}
+
+		// Check if a user with this oauth email already exists
+		oauthUserExists, err := r.deps.ExistsUserByOauthEmailUseCase.Execute(ctx, request.OauthEmail)
+		if err != nil {
+			return fmt.Errorf("error checking if user exists by oauth email: %w", err)
+		}
+		if oauthUserExists {
+			return UserAlreadyExistsErr
+		}
 	}
 
 	user := r.EntityUser(request, inviteLinkData)
@@ -99,14 +115,18 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserR
 
 func (r *RegisterUserUseCase) EntityUser(user RegisterUserRequest, link *entity2.InviteLink) *entity.User {
 	return &entity.User{
-		FirstName: link.FirstName,
-		LastName:  link.LastName,
-		Email:     link.Email,
-		Password:  user.Password,
+		FirstName:  link.FirstName,
+		LastName:   link.LastName,
+		Email:      link.Email,
+		OauthEmail: user.OauthEmail,
+		Password:   user.Password,
 	}
 }
 
 type RegisterUserRequest struct {
-	Token    string
+	Token string
+	// OauthEmail is the email used for OAuth registration (optional if password is provided)
+	OauthEmail string
+	// Password is the password used for registration (optional if oauth)
 	Password string
 }

@@ -1,4 +1,4 @@
-package exists
+package exists_by_email
 
 import (
 	"context"
@@ -6,15 +6,15 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
 )
 
-type ExistsUserUseCase struct {
+type ExistsUserByEmailUseCase struct {
 	userRepository repository.UserRepository
 }
 
-func NewExistsUserUseCase(userRepository repository.UserRepository) *ExistsUserUseCase {
-	return &ExistsUserUseCase{userRepository: userRepository}
+func NewExistsUserByEmailUseCase(userRepository repository.UserRepository) *ExistsUserByEmailUseCase {
+	return &ExistsUserByEmailUseCase{userRepository: userRepository}
 }
 
-func (u *ExistsUserUseCase) Execute(ctx context.Context, userEmail string) (bool, error) {
+func (u *ExistsUserByEmailUseCase) Execute(ctx context.Context, userEmail string) (bool, error) {
 	_, err := u.userRepository.GetByEmail(ctx, userEmail)
 	if err != nil {
 		if errors.Is(err, repository.UserNotFoundErr) {
