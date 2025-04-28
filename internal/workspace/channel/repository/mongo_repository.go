@@ -148,3 +148,17 @@ func (m MongoChannelRepository) UpdateIndex(ctx context.Context, channelId entit
 
 	return err
 }
+
+func (m MongoChannelRepository) Delete(ctx context.Context, channelId entity.ChannelId) error {
+	objectId, err := bson.ObjectIDFromHex(string(channelId))
+	if err != nil {
+		return err
+	}
+
+	_, err = m.deps.Client.Client.
+		Database(databaseName).
+		Collection(collectionName).
+		DeleteOne(ctx, bson.M{"_id": objectId})
+
+	return err
+}

@@ -31,6 +31,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/time_series/message_sent/usecase/get_minutely"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/delete_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/reoder_channels"
@@ -94,6 +95,7 @@ type GinRouterDeps struct {
 	ReorderChannelHandler      *reoder_channels.ReorderChannelHandler
 	ListChannelMessagesHandler *list_messages.ListChannelMessagesHandler
 	GetChannelHandler          *get_channel.GetChannelHandler
+	DeleteChannelHandler       *delete_channels.DeleteChannelHandler
 	// Workspace roles
 	CreateRoleHandler   *create_role.CreateRoleHandler
 	GetRoleHandler      *get_role.GetRoleHandler
@@ -232,6 +234,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
 				channelGroup.GET("/:channel_id/messages", d.deps.ListChannelMessagesHandler.Handle)
 				channelGroup.POST("/reorder", d.deps.ReorderChannelHandler.Handle)
+				channelGroup.DELETE("/:channel_id", d.deps.DeleteChannelHandler.Handle)
 			}
 
 			roleGroup := specificWorkspaceGroup.Group("/roles")

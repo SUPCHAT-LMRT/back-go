@@ -7,11 +7,17 @@ import (
 
 const (
 	ChannelsReorderedEventType EventType = "channels_reordered"
+	ChannelsDeletedEventType   EventType = "channels_deleted"
 )
 
 type ChannelsReorderedEvent struct {
 	ChannelReorders []ChannelReorderMessage      `json:"channelReorders"`
 	WorkspaceId     workspace_entity.WorkspaceId `json:"workspaceId"`
+}
+
+type ChannelsDeletedEvent struct {
+	ChannelId   entity.ChannelId             `json:"channelId"`
+	WorkspaceId workspace_entity.WorkspaceId `json:"workspaceId"`
 }
 
 type ChannelReorderMessage struct {
@@ -21,4 +27,8 @@ type ChannelReorderMessage struct {
 
 func (e ChannelsReorderedEvent) Type() EventType {
 	return ChannelsReorderedEventType
+}
+
+func (c ChannelsDeletedEvent) Type() EventType {
+	return ChannelsDeletedEventType
 }

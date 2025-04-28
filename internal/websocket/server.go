@@ -149,7 +149,7 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 
 		// Broadcast the reordered channels to all connected clients
 		server.IterateClients(func(client *Client) bool {
-			if client.CurrentRoomId.Load() != channelsReorderedEvent.WorkspaceId.String() {
+			if client.CurrentSelectedWorkspace.Load() != channelsReorderedEvent.WorkspaceId.String() {
 				// Skip clients that are not in the same room
 				return true
 			}
@@ -159,6 +159,35 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 			if err != nil {
 				server.Deps.Logger.Error().Err(err).
 					Msg("failed to send channel reorder message to client")
+				return false
+			}
+			return true
+		})
+	})
+
+	server.Deps.EventBus.Subscribe(event.ChannelsDeletedEventType, func(evt event.Event) {
+		// Cast the event to ChannelsDeletedEvent
+		channelsDeletedEvent, ok := evt.(*event.ChannelsDeletedEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to ChannelsDeletedEvent")
+			return
+		}
+
+		logg := deps.Logger.With().
+			Str("channelId", channelsDeletedEvent.ChannelId.String()).Logger()
+		// Broadcast the deleted channels to all connected clients
+		server.IterateClients(func(client *Client) bool {
+			if client.CurrentSelectedWorkspace.Load() != channelsDeletedEvent.WorkspaceId.String() {
+				// Skip clients that are not in the same room
+				return true
+			}
+			err := client.SendMessage(&outbound.OutboundChannelsDeleted{
+				ChannelId:   channelsDeletedEvent.ChannelId,
+				WorkspaceId: channelsDeletedEvent.WorkspaceId,
+			})
+			if err != nil {
+				logg.Error().Err(err).
+					Msg("failed to send channel delete message to client")
 				return false
 			}
 			return true

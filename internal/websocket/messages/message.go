@@ -22,6 +22,7 @@ const (
 	OutboundUserStatusUpdatedAction             Action = "user-status-updated"
 	OutboundSelfStatusUpdatedAction             Action = "self-status-updated"
 	OutboundChannelsReorderedAction             Action = "channels-reordered"
+	OutboundChannelsDeletedAction               Action = "channels-deleted"
 	OutboundWorkspaceUpdatedAction              Action = "workspace-updated"
 )
 

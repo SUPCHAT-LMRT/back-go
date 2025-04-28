@@ -38,27 +38,27 @@ const (
 )
 
 type Client struct {
-	Id            uuid.UUID
-	UserId        user_entity.UserId `json:"userId"`
-	CurrentRoomId atomic.Value
-	conn          *websocket.Conn
-	wsServer      *WsServer
-	rooms         map[*Room]bool
-	send          chan []byte
+	Id                       uuid.UUID
+	UserId                   user_entity.UserId `json:"userId"`
+	CurrentSelectedWorkspace atomic.Value
+	conn                     *websocket.Conn
+	wsServer                 *WsServer
+	rooms                    map[*Room]bool
+	send                     chan []byte
 }
 
 func NewClient(user *user_entity.User, conn *websocket.Conn, wsServer *WsServer) *Client {
 	c := &Client{
-		Id:            uuid.New(),
-		UserId:        user.Id,
-		CurrentRoomId: atomic.Value{},
-		conn:          conn,
-		wsServer:      wsServer,
-		rooms:         make(map[*Room]bool),
-		send:          make(chan []byte, 256),
+		Id:                       uuid.New(),
+		UserId:                   user.Id,
+		CurrentSelectedWorkspace: atomic.Value{},
+		conn:                     conn,
+		wsServer:                 wsServer,
+		rooms:                    make(map[*Room]bool),
+		send:                     make(chan []byte, 256),
 	}
 
-	c.CurrentRoomId.Store("")
+	c.CurrentSelectedWorkspace.Store("")
 
 	return c
 }
@@ -277,11 +277,11 @@ func (c *Client) handleLeaveRoomMessage(message *inbound.InboundLeaveRoom) {
 }
 
 func (c *Client) handleSelectWorkspaceMessage(message *inbound.InboundSelectWorkspace) {
-	c.CurrentRoomId.Store(message.WorkspaceId.String())
+	c.CurrentSelectedWorkspace.Store(message.WorkspaceId.String())
 }
 
 func (c *Client) handleUnselectWorkspaceMessage(message *inbound.InboundUnselectWorkspace) {
-	c.CurrentRoomId.Store("")
+	c.CurrentSelectedWorkspace.Store("")
 }
 
 //func (c *Client) handleJoinRoomPrivateMessage(message Message) {

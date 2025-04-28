@@ -12,4 +12,5 @@ type ChannelRepository interface {
 	List(ctx context.Context, workspaceId workspace_entity.WorkspaceId) ([]*entity.Channel, error)
 	CountByWorkspaceId(ctx context.Context, id workspace_entity.WorkspaceId) (uint, error)
 	UpdateIndex(ctx context.Context, id entity.ChannelId, index int) error
+	Delete(ctx context.Context, id entity.ChannelId) error
 }
