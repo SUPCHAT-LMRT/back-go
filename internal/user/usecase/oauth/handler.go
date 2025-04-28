@@ -52,7 +52,7 @@ func (h *RegisterOAuthHandler) Callback(c *gin.Context) {
 	q := c.Request.URL.Query()
 	q.Add("provider", provider)
 	c.Request.URL.RawQuery = q.Encode()
-	_, err := gothic.CompleteUserAuth(c.Writer, c.Request)
+	oauthUser, err := gothic.CompleteUserAuth(c.Writer, c.Request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -75,7 +75,7 @@ func (h *RegisterOAuthHandler) Callback(c *gin.Context) {
 	}
 
 	// If an invite token is provided, redirect to the login page
-	err = h.deps.RegisterOAuthUseCase.Execute(c, inviteToken)
+	err = h.deps.RegisterOAuthUseCase.Execute(c, inviteToken, provider, oauthUser.UserID, oauthUser.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

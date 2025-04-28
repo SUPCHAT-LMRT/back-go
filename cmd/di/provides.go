@@ -152,6 +152,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_banner.NewS3UpdateWorkspaceBannerStrategy),
 		dig.NewProvider(list_workpace_members2.NewListWorkspaceMembersUseCase),
 		dig.NewProvider(generate3.NewInviteLinkUseCase),
+		dig.NewProvider(generate.NewSendMailGenerateInviteLinkObserver, uberdig.Group("generate_invite_link_observers")),
 		dig.NewProvider(get_workspace.NewGetWorkspaceUseCase),
 		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkDataUseCase),
 		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesUseCase),

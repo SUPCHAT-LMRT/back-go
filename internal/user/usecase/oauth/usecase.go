@@ -66,10 +66,8 @@ func NewRegisterOAuthUseCase(deps RegisterOAuthUseCaseDeps) *RegisterOAuthUseCas
 	return &RegisterOAuthUseCase{deps: deps}
 }
 
-func (u RegisterOAuthUseCase) Execute(ctx context.Context, inviteToken string) error {
-	err := u.deps.RegisterUserUseCase.Execute(ctx, register.RegisterUserRequest{
-		Token: inviteToken,
-	})
+func (u RegisterOAuthUseCase) Execute(ctx context.Context, provider string, oauthUserId string, oauthEmail string, inviteToken string) error {
+	err := u.deps.RegisterUserUseCase.Execute(ctx, inviteToken, register.WithOauth(provider, oauthUserId, oauthEmail))
 	if err != nil {
 		return fmt.Errorf("failed to register user: %w", err)
 	}

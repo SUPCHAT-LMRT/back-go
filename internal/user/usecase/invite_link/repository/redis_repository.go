@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"errors"
+	redis2 "github.com/redis/go-redis/v9"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/redis"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/entity"
@@ -11,6 +13,9 @@ import (
 var (
 	buildInviteLinkRedisKey = func(token string) string {
 		return "invite_link_workspace:" + token
+	}
+	buildInviteLinkEmailBindingRedisKey = func(email string) string {
+		return "invite_link_workspace_email:" + email
 	}
 )
 
@@ -42,6 +47,11 @@ func (m RedisInviteLinkRepository) GenerateInviteLink(ctx context.Context, link 
 		return err
 	}
 
+	_, err = m.client.Client.Set(ctx, buildInviteLinkEmailBindingRedisKey(link.Email), link.Token, RedisInviteLinkExpiredTime).Result()
+	if err != nil {
+		return err
+	}
+
 	return nil
 
 }
@@ -64,9 +74,39 @@ func (m RedisInviteLinkRepository) GetInviteLinkData(ctx context.Context, token 
 	return inviteLinkData, nil
 }
 
-func (m RedisInviteLinkRepository) DeleteInviteLink(ctx context.Context, token string) error {
+func (m RedisInviteLinkRepository) GetInviteLinkDataByEmail(ctx context.Context, email string) (*entity.InviteLink, error) {
+	token, err := m.client.Client.Get(ctx, buildInviteLinkEmailBindingRedisKey(email)).Result()
+	if err != nil {
+		if errors.Is(err, redis2.Nil) {
+			return nil, InviteLinkNotFoundErr
+		}
+		return nil, err
+	}
 
+	databaseInviteLink, err := m.client.Client.HGetAll(ctx, buildInviteLinkRedisKey(token)).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(databaseInviteLink) == 0 {
+		return nil, InviteLinkNotFoundErr
+	}
+
+	inviteLinkData, err := m.mapper.MapToEntity(databaseInviteLink)
+	if err != nil {
+		return nil, err
+	}
+
+	return inviteLinkData, nil
+}
+
+func (m RedisInviteLinkRepository) DeleteInviteLink(ctx context.Context, token string) error {
 	_, err := m.client.Client.Del(ctx, buildInviteLinkRedisKey(token)).Result()
+	if err != nil {
+		return err
+	}
+
+	_, err = m.client.Client.Del(ctx, buildInviteLinkEmailBindingRedisKey(token)).Result()
 	if err != nil {
 		return err
 	}
