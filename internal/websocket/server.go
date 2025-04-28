@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"context"
+	"fmt"
 	"github.com/goccy/go-json"
 	"github.com/supchat-lmrt/back-go/internal/event"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
@@ -126,6 +127,48 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 				return false
 			}
 
+			return true
+		})
+	})
+
+	server.Deps.EventBus.Subscribe(event.ChannelCreatedEventType, func(evt event.Event) {
+		fmt.Println("Channel created event received")
+		// Cast the event to ChannelCreatedEvent
+		channelCreatedEvent, ok := evt.(*event.ChannelCreatedEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to ChannelCreatedEvent")
+			return
+		}
+
+		fmt.Println("Channel created event received")
+
+		logg := deps.Logger.With().
+			Str("channelId", channelCreatedEvent.Channel.Id.String()).Logger()
+
+		// Broadcast the created channels to all connected clients
+		server.IterateClients(func(client *Client) bool {
+			if client.CurrentSelectedWorkspace.Load() != channelCreatedEvent.Channel.WorkspaceId.String() {
+				// Skip clients that are not in the same room
+				return true
+			}
+			err := client.SendMessage(&outbound.OutboundChannelCreated{
+				Channel: outbound.OutboundChannelCreatedChannel{
+					Id:          channelCreatedEvent.Channel.Id,
+					Name:        channelCreatedEvent.Channel.Name,
+					Kind:        channelCreatedEvent.Channel.Kind,
+					Topic:       channelCreatedEvent.Channel.Topic,
+					WorkspaceId: channelCreatedEvent.Channel.WorkspaceId,
+					CreatedAt:   channelCreatedEvent.Channel.CreatedAt,
+					UpdatedAt:   channelCreatedEvent.Channel.UpdatedAt,
+					Index:       channelCreatedEvent.Channel.Index,
+				},
+			})
+
+			if err != nil {
+				logg.Error().Err(err).
+					Msg("failed to send channel create message to client")
+				return false
+			}
 			return true
 		})
 	})

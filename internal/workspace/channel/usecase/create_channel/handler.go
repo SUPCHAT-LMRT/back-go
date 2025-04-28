@@ -32,6 +32,7 @@ func (h *CreateChannelHandler) Handle(c *gin.Context) {
 		Name:        req.Name,
 		Topic:       req.Topic,
 		WorkspaceId: entity.WorkspaceId(workspaceId),
+		Kind:        channel_entity.ChannelKindText,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

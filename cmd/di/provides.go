@@ -205,7 +205,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(reoder_channels.NewReorderChannelsUseCase),
 		dig.NewProvider(delete_channels.NewDeleteChannelUseCase),
 		// Workspaces channels observers
-		dig.NewProvider(create_channel.NewNotifyWebSocketObserver, uberdig.Group("create_channel_observers")),
+		dig.NewProvider(create_channel.NewCreateChannelObserver, uberdig.Group("create_channel_observers")),
 		dig.NewProvider(reoder_channels.NewUserStatusUpdateObserver, uberdig.Group("reorder_channels_observers")),
 		dig.NewProvider(delete_channels.NewDeleteChannelsObserver, uberdig.Group("delete_channels_observers")),
 		// Workspace channels handlers

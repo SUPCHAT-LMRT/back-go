@@ -2,17 +2,19 @@ package create_channel
 
 import (
 	"context"
+	"fmt"
 	"github.com/supchat-lmrt/back-go/internal/search/channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
 	uberdig "go.uber.org/dig"
+	"time"
 )
 
 type CreateChannelUseCaseDeps struct {
 	uberdig.In
 	Repository               repository.ChannelRepository
 	SearchChannelSyncManager channel.SearchChannelSyncManager
-	Observers                []CreateChannelObserver `group:"create_channel_observers"`
+	Observers                []CreateSpecifyChannelObserver `group:"create_channel_observers"`
 }
 
 type CreateChannelUseCase struct {
@@ -24,7 +26,15 @@ func NewCreateChannelUseCase(deps CreateChannelUseCaseDeps) *CreateChannelUseCas
 }
 
 func (u *CreateChannelUseCase) Execute(ctx context.Context, chann *entity.Channel) error {
-	err := u.deps.Repository.Create(ctx, chann)
+	channelCount, err := u.deps.Repository.CountByWorkspaceId(ctx, chann.WorkspaceId)
+	if err != nil {
+		return err
+	}
+	chann.CreatedAt = time.Now()
+	chann.UpdatedAt = chann.CreatedAt
+	chann.Index = int(channelCount)
+
+	err = u.deps.Repository.Create(ctx, chann)
 	if err != nil {
 		return err
 	}
@@ -42,8 +52,10 @@ func (u *CreateChannelUseCase) Execute(ctx context.Context, chann *entity.Channe
 		return err
 	}
 
+	fmt.Println(u.deps.Observers)
+
 	for _, observer := range u.deps.Observers {
-		observer.ChannelCreated(chann)
+		observer.NotifyChannelCreated(chann)
 	}
 
 	return err
