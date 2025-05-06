@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
+	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	uberdig "go.uber.org/dig"
@@ -26,11 +28,12 @@ type MongoRoleRepository struct {
 }
 
 type MongoRole struct {
-	Id          bson.ObjectID `bson:"_id"`
-	Name        string        `bson:"name"`
-	WorkspaceId bson.ObjectID `bson:"workspace_id"`
-	Permissions uint64        `bson:"permissions"`
-	Color       string        `bson:"color"`
+	Id            bson.ObjectID `bson:"_id"`
+	Name          string        `bson:"name"`
+	WorkspaceId   bson.ObjectID `bson:"workspace_id"`
+	Permissions   uint64        `bson:"permissions"`
+	Color         string        `bson:"color"`
+	AssignedUsers []string      `bson:"assigned_users"`
 }
 
 func NewMongoRoleRepository(deps MongoRoleRepositoryDeps) RoleRepository {
@@ -142,4 +145,110 @@ func (m MongoRoleRepository) Delete(ctx context.Context, roleId string) error {
 	}
 
 	return nil
+}
+
+func (m MongoRoleRepository) AssignRoleToUser(ctx context.Context, userId string, roleId string, workspaceId string) error {
+	objectId, err := bson.ObjectIDFromHex(roleId)
+	if err != nil {
+		return fmt.Errorf("invalid role ID: %w", err)
+	}
+
+	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId)
+	if err != nil {
+		return fmt.Errorf("invalid workspace ID: %w", err)
+	}
+
+	filter := bson.M{"_id": objectId, "workspace_id": workspaceObjectId}
+
+	// Étape 1 : Vérifier et forcer l'initialisation de `assigned_users` comme tableau
+	initUpdate := bson.M{
+		"$set": bson.M{"assigned_users": bson.A{}},
+	}
+	_, err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, filter, initUpdate)
+	if err != nil {
+		return fmt.Errorf("error initializing assigned_users: %w", err)
+	}
+
+	// Étape 2 : Ajouter l'utilisateur
+	addUpdate := bson.M{
+		"$addToSet": bson.M{"assigned_users": userId},
+	}
+	_, err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, filter, addUpdate)
+	if err != nil {
+		return fmt.Errorf("error assigning role to user: %w", err)
+	}
+
+	return nil
+}
+
+func (m MongoRoleRepository) DessassignRoleFromUser(ctx context.Context, userId string, roleId string, workspaceId string) error {
+	objectId, err := bson.ObjectIDFromHex(roleId)
+	if err != nil {
+		return fmt.Errorf("invalid role ID: %w", err)
+	}
+
+	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId)
+	if err != nil {
+		return fmt.Errorf("invalid workspace ID: %w", err)
+	}
+
+	filter := bson.M{"_id": objectId, "workspace_id": workspaceObjectId}
+	update := bson.M{"$pull": bson.M{"assigned_users": userId}}
+
+	_, err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("error unassigning role from user: %w", err)
+	}
+
+	return nil
+}
+
+func (m MongoRoleRepository) GetRolesWithAssignmentForMember(ctx context.Context, workspaceId workspace_entity.WorkspaceId, WorkspaceMemberId entity2.WorkspaceMemberId) ([]*entity.Role, error) {
+	workspaceObjectId, err := bson.ObjectIDFromHex(string(workspaceId))
+	if err != nil {
+		return nil, fmt.Errorf("invalid workspace ID: %w", err)
+	}
+
+	cursor, err := m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		Find(ctx, bson.M{"workspace_id": workspaceObjectId})
+	if err != nil {
+		return nil, fmt.Errorf("error fetching roles: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var roles []*entity.Role
+	for cursor.Next(ctx) {
+		var mongoRole MongoRole
+		if err := cursor.Decode(&mongoRole); err != nil {
+			return nil, fmt.Errorf("error decoding role: %w", err)
+		}
+
+		isAssigned := false
+		for _, assignedUser := range mongoRole.AssignedUsers {
+			if assignedUser == string(WorkspaceMemberId) {
+				isAssigned = true
+				break
+			}
+		}
+
+		role, err := m.deps.RoleMapper.MapToEntity(&mongoRole)
+		if err != nil {
+			return nil, fmt.Errorf("error mapping role: %w", err)
+		}
+		role.IsAssigned = isAssigned
+		roles = append(roles, role)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating roles: %w", err)
+	}
+
+	return roles, nil
 }

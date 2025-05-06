@@ -29,6 +29,13 @@ type Role struct {
 	WorkspaceId workspace_entity.WorkspaceId
 	Permissions uint64
 	Color       string
+	IsAssigned  bool
+}
+
+type UserRole struct {
+	UserId      string
+	RoleId      RoleId
+	WorkspaceId WorkspaceId
 }
 
 // Vérifie si un rôle possède une permission spécifique

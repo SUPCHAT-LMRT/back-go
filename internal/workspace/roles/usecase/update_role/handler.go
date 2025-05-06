@@ -38,6 +38,7 @@ func (h UpdateRoleHandler) Handle(c *gin.Context) {
 		Name:        req.Name,
 		WorkspaceId: workspace_entity.WorkspaceId(workspaceId),
 		Permissions: req.Permissions,
+		Color:       req.Color,
 	}
 
 	err := h.useCase.Execute(c, role)
@@ -51,5 +52,6 @@ func (h UpdateRoleHandler) Handle(c *gin.Context) {
 
 type UpdateRoleRequest struct {
 	Name        string `json:"name" binding:"required,min=1,max=100"`
-	Permissions uint64 `json:"permissions" binding:"required"`
+	Permissions uint64 `json:"permissions" binding:"min=0"`
+	Color       string `json:"color" binding:"hexcolor"`
 }

@@ -40,10 +40,15 @@ import (
 	get_data_token_invite2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/join_workspace_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workpace_members"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/entity"
+	middlewares2 "github.com/supchat-lmrt/back-go/internal/workspace/roles/gin/middlewares"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/assign_role"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/create_role"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/delete_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/dessassign_role"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/get_list_roles"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/get_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/get_roles_for_member"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/update_role"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
 	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
@@ -72,8 +77,9 @@ type DefaultGinRouter struct {
 type GinRouterDeps struct {
 	uberdig.In
 	// Middlewares
-	AuthMiddleware            *middlewares.AuthMiddleware
-	UserInWorkspaceMiddleware *workspace_middlewares.UserInWorkspaceMiddleware
+	AuthMiddleware                  *middlewares.AuthMiddleware
+	UserInWorkspaceMiddleware       *workspace_middlewares.UserInWorkspaceMiddleware
+	HasMembersPermissionsMiddleware *middlewares2.HasPermissionsMiddleware
 	// Handlers
 	// Workspace
 	ListWorkspaceHandler              *list_workspaces.ListWorkspaceHandler
@@ -97,11 +103,14 @@ type GinRouterDeps struct {
 	GetChannelHandler          *get_channel.GetChannelHandler
 	DeleteChannelHandler       *delete_channels.DeleteChannelHandler
 	// Workspace roles
-	CreateRoleHandler   *create_role.CreateRoleHandler
-	GetRoleHandler      *get_role.GetRoleHandler
-	GetListRolesHandler *get_list_roles.GetListRolesHandler
-	UpdateRoleHandler   *update_role.UpdateRoleHandler
-	DeleteRoleHandler   *delete_role.DeleteRoleHandler
+	CreateRoleHandler        *create_role.CreateRoleHandler
+	GetRoleHandler           *get_role.GetRoleHandler
+	GetListRolesHandler      *get_list_roles.GetListRolesHandler
+	UpdateRoleHandler        *update_role.UpdateRoleHandler
+	DeleteRoleHandler        *delete_role.DeleteRoleHandler
+	AssignRoleHandler        *assign_role.AssignRoleToUserHandler
+	DessassignRoleHandler    *dessassign_role.DessassignRoleFromUserHandler
+	GetRolesForMemberHandler *get_roles_for_member.GetRolesForMemberHandler
 	// User chat
 	ListDirectMessagesHandler *list_direct_messages.ListDirectMessagesHandler
 	// User
@@ -147,6 +156,7 @@ func NewGinRouter(deps GinRouterDeps) GinRouter {
 func (d *DefaultGinRouter) RegisterRoutes() {
 	authMiddleware := d.deps.AuthMiddleware.Execute
 	userInWorkspaceMiddleware := d.deps.UserInWorkspaceMiddleware.Execute
+	hasPermissionsMiddleware := d.deps.HasMembersPermissionsMiddleware.Execute
 
 	apiGroup := d.Router.Group("/api")
 	apiGroup.GET("/ws", authMiddleware, d.deps.WebsocketHandler.Handle)
@@ -231,8 +241,9 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				channelGroup.GET("", d.deps.ListChannelsHandler.Handle)
 				// TODO: add middleware to check if the user can access the channel
 				channelGroup.GET("/:channel_id", d.deps.GetChannelHandler.Handle)
-				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
 				channelGroup.GET("/:channel_id/messages", d.deps.ListChannelMessagesHandler.Handle)
+				channelGroup.Use(hasPermissionsMiddleware(entity.PermissionManageChannels))
+				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
 				channelGroup.POST("/reorder", d.deps.ReorderChannelHandler.Handle)
 				channelGroup.DELETE("/:channel_id", d.deps.DeleteChannelHandler.Handle)
 			}
@@ -244,15 +255,20 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				roleGroup.GET("", d.deps.GetListRolesHandler.Handle)
 				roleGroup.PUT("/:role_id", d.deps.UpdateRoleHandler.Handle)
 				roleGroup.DELETE("/:role_id", d.deps.DeleteRoleHandler.Handle)
+				roleGroup.POST("/assign", d.deps.AssignRoleHandler.Handle)
+				roleGroup.POST("/dessassign", d.deps.DessassignRoleHandler.Handle)
+				roleGroup.GET("/members/:user_id", d.deps.GetRolesForMemberHandler.Handle)
 			}
 		}
 	}
 
 	inviteLinkGroup := apiGroup.Group("/workspace-invite-link")
 	{
-		inviteLinkGroup.POST("", d.deps.CreateInviteLinkWorkspaceHandler.Handle)
 		inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkWorkspaceDataHandler.Handle)
 		inviteLinkGroup.POST("/:token/join", authMiddleware, d.deps.JoinWorkspaceInviteHandler.Handle)
+		inviteLinkGroup.Use(authMiddleware, userInWorkspaceMiddleware, hasPermissionsMiddleware(entity.PermissionInviteMembers))
+		inviteLinkGroup.POST("create/:workspace_id", d.deps.CreateInviteLinkWorkspaceHandler.Handle)
+		// TODO : add middleware to check if the user can manage the invite link (delete, list)
 	}
 
 	apiGroup.GET("/search", authMiddleware, d.deps.SearchTermHandler.Handle)

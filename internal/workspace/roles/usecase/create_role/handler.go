@@ -27,6 +27,10 @@ func (h CreateRoleHandler) Handle(c *gin.Context) {
 		return
 	}
 
+	if req.Color == "" {
+		req.Color = "#6366f1"
+	}
+
 	role := entity.Role{
 		Name:        req.Name,
 		WorkspaceId: workspace_entity.WorkspaceId(workspaceId),

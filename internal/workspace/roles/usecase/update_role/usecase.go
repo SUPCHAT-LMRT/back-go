@@ -20,10 +20,6 @@ func (u *UpdateRoleUseCase) Execute(ctx context.Context, role entity.Role) error
 		return fmt.Errorf("role ID is required")
 	}
 
-	if role.Permissions == 0 {
-		return fmt.Errorf("role must have at least one permission")
-	}
-
 	err := u.roleRepository.Update(ctx, &role)
 	if err != nil {
 		return err
