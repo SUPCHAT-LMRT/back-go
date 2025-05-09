@@ -39,10 +39,12 @@ import (
 	workspace_invite_link_generate "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/generate"
 	get_data_token_invite2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/join_workspace_invite"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/kick_member"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workpace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/entity"
 	middlewares2 "github.com/supchat-lmrt/back-go/internal/workspace/roles/gin/middlewares"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/assign_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/check_permissions"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/create_role"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/delete_role"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/dessassign_role"
@@ -95,6 +97,7 @@ type GinRouterDeps struct {
 	GetMinutelyMessageSentHandler     *get_minutely.GetMinutelyMessageSentHandler
 	CreateInviteLinkWorkspaceHandler  *workspace_invite_link_generate.CreateInviteLinkHandler
 	GetInviteLinkWorkspaceDataHandler *get_data_token_invite2.GetInviteLinkWorkspaceDataHandler
+	KickMemberHandler                 *kick_member.KickMemberHandler
 	// Workspaces channels
 	ListChannelsHandler        *list_channels.ListChannelsHandler
 	CreateChannelHandler       *create_channel.CreateChannelHandler
@@ -111,6 +114,7 @@ type GinRouterDeps struct {
 	AssignRoleHandler        *assign_role.AssignRoleToUserHandler
 	DessassignRoleHandler    *dessassign_role.DessassignRoleFromUserHandler
 	GetRolesForMemberHandler *get_roles_for_member.GetRolesForMemberHandler
+	CheckPermissionsHandler  *check_permissions.CheckPermissionsHandler
 	// User chat
 	ListDirectMessagesHandler *list_direct_messages.ListDirectMessagesHandler
 	// User
@@ -235,6 +239,12 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			specificWorkspaceGroup.PUT("", d.deps.UpdateWorkspaceInfosHandler.Handle)
 			specificWorkspaceGroup.PUT("/type", d.deps.UpdateWorkspaceTypeHandler.Handle)
 			specificWorkspaceGroup.GET("", d.deps.GetWorkspaceHandler.Handle)
+			specificWorkspaceGroup.DELETE("/members/:user_id", hasPermissionsMiddleware(entity.PermissionKickMembers), d.deps.KickMemberHandler.Handle)
+
+			permissionsGroup := specificWorkspaceGroup.Group("/permissions")
+			{
+				permissionsGroup.POST("/check", authMiddleware, userInWorkspaceMiddleware, d.deps.CheckPermissionsHandler.Handle)
+			}
 
 			channelGroup := specificWorkspaceGroup.Group("/channels")
 			{
@@ -250,6 +260,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 
 			roleGroup := specificWorkspaceGroup.Group("/roles")
 			{
+				roleGroup.Use(hasPermissionsMiddleware(entity.PermissionManageRoles))
 				roleGroup.POST("", d.deps.CreateRoleHandler.Handle)
 				roleGroup.GET("/:role_id", d.deps.GetRoleHandler.Handle)
 				roleGroup.GET("", d.deps.GetListRolesHandler.Handle)

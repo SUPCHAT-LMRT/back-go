@@ -48,7 +48,6 @@ func (u *CreateWorkspaceUseCase) Execute(ctx context.Context, workspace *entity.
 		WorkspaceId: workspace.Id,
 		Color:       "#f97316",
 		Permissions: entity3.PermissionManageChannels |
-			entity3.PermissionManageRoles |
 			entity3.PermissionManageMessages |
 			entity3.PermissionManageInvites |
 			entity3.PermissionSendMessages |
@@ -56,7 +55,9 @@ func (u *CreateWorkspaceUseCase) Execute(ctx context.Context, workspace *entity.
 			entity3.PermissionPinMessages |
 			entity3.PermissionMentionEveryone |
 			entity3.PermissionKickMembers |
-			entity3.PermissionInviteMembers,
+			entity3.PermissionInviteMembers |
+			entity3.PermissionManageWorkspaceSettings |
+			entity3.PermissionManageRoles,
 	}
 
 	err = u.addRoleUseCase.Execute(ctx, &ownerRole)

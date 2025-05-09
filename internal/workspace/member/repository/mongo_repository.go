@@ -163,21 +163,50 @@ func (m MongoWorkspaceMemberRepository) GetMemberByUserId(ctx context.Context, w
 	return m.deps.WorkspaceMemberMapper.MapToEntity(&mongoWorkspaceMember)
 }
 
-func (m MongoWorkspaceMemberRepository) IsMemberExists(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (bool, error) {
+func (m MongoWorkspaceMemberRepository) IsMemberExists(ctx context.Context, workspaceId entity.WorkspaceId, memberId entity2.WorkspaceMemberId) (bool, error) {
 	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId.String())
 	if err != nil {
 		return false, err
 	}
 
-	userObjectId, err := bson.ObjectIDFromHex(userId.String())
+	memberObjectId, err := bson.ObjectIDFromHex(memberId.String())
 	if err != nil {
 		return false, err
 	}
 
-	count, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).CountDocuments(ctx, bson.M{"workspace_id": workspaceObjectId, "user_id": userObjectId})
+	count, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).CountDocuments(ctx, bson.M{
+		"workspace_id": workspaceObjectId,
+		"_id":          memberObjectId,
+	})
 	if err != nil {
 		return false, err
 	}
 
 	return count > 0, nil
+}
+
+func (m MongoWorkspaceMemberRepository) RemoveMember(ctx context.Context, workspaceId entity.WorkspaceId, memberId entity2.WorkspaceMemberId) error {
+	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId.String())
+	if err != nil {
+		return err
+	}
+
+	memberObjectId, err := bson.ObjectIDFromHex(memberId.String())
+	if err != nil {
+		return err
+	}
+
+	result, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).DeleteOne(ctx, bson.M{
+		"workspace_id": workspaceObjectId,
+		"_id":          memberObjectId,
+	})
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		return WorkspaceMemberNotFoundErr
+	}
+
+	return nil
 }

@@ -116,14 +116,16 @@ func (m MongoRoleRepository) Update(ctx context.Context, role *entity.Role) erro
 		return fmt.Errorf("invalid role ID: %w", err)
 	}
 
-	mongoRole, err := m.deps.RoleMapper.MapFromEntity(role)
-	if err != nil {
-		return fmt.Errorf("error mapping role: %w", err)
+	// Préparez uniquement les champs à mettre à jour
+	updateFields := bson.M{
+		"name":        role.Name,
+		"permissions": role.Permissions,
+		"color":       role.Color,
 	}
 
 	_, err = m.deps.Client.Client.Database(databaseName).
 		Collection(collectionName).
-		UpdateOne(ctx, bson.M{"_id": objectId}, bson.M{"$set": mongoRole})
+		UpdateOne(ctx, bson.M{"_id": objectId}, bson.M{"$set": updateFields})
 	if err != nil {
 		return fmt.Errorf("error updating role: %w", err)
 	}

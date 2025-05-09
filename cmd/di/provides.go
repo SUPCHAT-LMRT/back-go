@@ -92,11 +92,13 @@ import (
 	get_data_token_invite3 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/join_workspace_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/is_user_in_workspace"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/kick_member"
 	list_workpace_members2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workpace_members"
 	workspace_repository "github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	has_permissions "github.com/supchat-lmrt/back-go/internal/workspace/roles/gin/middlewares"
 	roles_repository "github.com/supchat-lmrt/back-go/internal/workspace/roles/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/assign_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/check_permissions"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/create_role"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/delete_role"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/dessassign_role"
@@ -164,6 +166,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkDataUseCase),
 		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesUseCase),
 		dig.NewProvider(update_type_workspace.NewUpdateTypeWorkspaceUseCase),
+		dig.NewProvider(kick_member.NewKickMemberUseCase),
 		// Workspace handlers
 		dig.NewProvider(list_workspaces.NewListWorkspaceHandler),
 		dig.NewProvider(discovery_list_workspaces.NewDiscoverListWorkspaceHandler),
@@ -177,6 +180,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkWorkspaceDataHandler),
 		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesHandler),
 		dig.NewProvider(update_type_workspace.NewUpdateTypeWorkspaceHandler),
+		dig.NewProvider(kick_member.NewKickMemberHandler),
 		// Workspace observers
 		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesObserver, uberdig.Group("update_info_workspaces_observers")),
 		dig.NewProvider(update_icon.NewUpdateWorkspaceIconObserver, uberdig.Group("update_icon_workspace_observers")),
@@ -205,6 +209,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(assign_role.NewAssignRoleToUserHandler),
 		dig.NewProvider(dessassign_role.NewDessassignRoleFromUserHandler),
 		dig.NewProvider(get_roles_for_member.NewGetRolesForMemberHandler),
+		dig.NewProvider(check_permissions.NewCheckPermissionsHandler),
 		// Workspace channels usecases
 		dig.NewProvider(list_channels.NewListChannelsUseCase),
 		dig.NewProvider(create_channel.NewCreateChannelUseCase),
