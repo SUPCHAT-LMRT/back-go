@@ -37,7 +37,7 @@ func (h CreateRoleHandler) Handle(c *gin.Context) {
 		Color:       req.Color,
 	}
 
-	err := h.useCase.Execute(c, role)
+	err := h.useCase.Execute(c, &role)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return

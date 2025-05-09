@@ -1,6 +1,10 @@
 package assign_role
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/entity"
+)
 
 type AssignRoleToUserHandler struct {
 	useCase *AssignRoleToUserUsecase
@@ -16,7 +20,12 @@ func (h AssignRoleToUserHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	err := h.useCase.Execute(c, req.UserId, req.RoleId, req.WorkspaceId)
+	err := h.useCase.Execute(
+		c,
+		entity2.WorkspaceMemberId(req.UserId),
+		entity.RoleId(req.RoleId),
+		entity.WorkspaceId(req.WorkspaceId),
+	)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return

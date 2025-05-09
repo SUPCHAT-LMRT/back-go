@@ -8,12 +8,12 @@ import (
 )
 
 type RoleRepository interface {
-	Create(ctx context.Context, role *entity.Role) error
+	Create(ctx context.Context, role *entity.Role) (entity.RoleId, error)
 	GetById(ctx context.Context, roleId string) (*entity.Role, error)
 	GetList(ctx context.Context, workspaceId string) ([]*entity.Role, error)
 	Update(ctx context.Context, role *entity.Role) error
 	Delete(ctx context.Context, roleId string) error
-	AssignRoleToUser(ctx context.Context, userId string, roleId string, workspaceId string) error
+	AssignRoleToUser(ctx context.Context, workspaceMemberId entity2.WorkspaceMemberId, roleId entity.RoleId, workspaceId workspace_entity.WorkspaceId) error
 	DessassignRoleFromUser(ctx context.Context, userId string, roleId string, workspaceId string) error
 	GetRolesWithAssignmentForMember(ctx context.Context, workspaceId workspace_entity.WorkspaceId, workspaceMemberId entity2.WorkspaceMemberId) ([]*entity.Role, error)
 }

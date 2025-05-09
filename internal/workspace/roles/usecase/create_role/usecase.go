@@ -13,12 +13,12 @@ type CreateRoleUseCase struct {
 func NewCreateRoleUseCase(roleRepository repository.RoleRepository) *CreateRoleUseCase {
 	return &CreateRoleUseCase{roleRepository: roleRepository}
 }
-
-func (u *CreateRoleUseCase) Execute(ctx context.Context, role entity.Role) error {
-	err := u.roleRepository.Create(ctx, &role)
+func (u *CreateRoleUseCase) Execute(ctx context.Context, role *entity.Role) error {
+	id, err := u.roleRepository.Create(ctx, role)
 	if err != nil {
 		return err
 	}
 
+	role.Id = id
 	return nil
 }

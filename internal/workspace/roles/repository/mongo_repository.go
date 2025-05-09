@@ -40,20 +40,20 @@ func NewMongoRoleRepository(deps MongoRoleRepositoryDeps) RoleRepository {
 	return &MongoRoleRepository{deps: deps}
 }
 
-func (m MongoRoleRepository) Create(ctx context.Context, role *entity.Role) error {
+func (m MongoRoleRepository) Create(ctx context.Context, role *entity.Role) (entity.RoleId, error) {
 	role.Id = entity.RoleId(bson.NewObjectID().Hex())
 
 	mongoRole, err := m.deps.RoleMapper.MapFromEntity(role)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).InsertOne(ctx, mongoRole)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return role.Id, nil
 }
 
 func (m MongoRoleRepository) GetById(ctx context.Context, roleId string) (*entity.Role, error) {
@@ -146,14 +146,13 @@ func (m MongoRoleRepository) Delete(ctx context.Context, roleId string) error {
 
 	return nil
 }
-
-func (m MongoRoleRepository) AssignRoleToUser(ctx context.Context, userId string, roleId string, workspaceId string) error {
-	objectId, err := bson.ObjectIDFromHex(roleId)
+func (m MongoRoleRepository) AssignRoleToUser(ctx context.Context, workspaceMemberId entity2.WorkspaceMemberId, roleId entity.RoleId, workspaceId workspace_entity.WorkspaceId) error {
+	objectId, err := bson.ObjectIDFromHex(string(roleId))
 	if err != nil {
 		return fmt.Errorf("invalid role ID: %w", err)
 	}
 
-	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId)
+	workspaceObjectId, err := bson.ObjectIDFromHex(string(workspaceId))
 	if err != nil {
 		return fmt.Errorf("invalid workspace ID: %w", err)
 	}
@@ -173,7 +172,7 @@ func (m MongoRoleRepository) AssignRoleToUser(ctx context.Context, userId string
 
 	// Étape 2 : Ajouter l'utilisateur
 	addUpdate := bson.M{
-		"$addToSet": bson.M{"assigned_users": userId},
+		"$addToSet": bson.M{"assigned_users": string(workspaceMemberId)},
 	}
 	_, err = m.deps.Client.Client.Database(databaseName).
 		Collection(collectionName).
