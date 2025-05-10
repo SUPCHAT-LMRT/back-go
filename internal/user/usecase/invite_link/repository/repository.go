@@ -18,5 +18,6 @@ var (
 type InviteLinkRepository interface {
 	GenerateInviteLink(ctx context.Context, link *entity.InviteLink) error
 	GetInviteLinkData(ctx context.Context, token string) (*entity.InviteLink, error)
+	GetInviteLinkDataByEmail(ctx context.Context, email string) (*entity.InviteLink, error)
 	DeleteInviteLink(ctx context.Context, token string) error
 }

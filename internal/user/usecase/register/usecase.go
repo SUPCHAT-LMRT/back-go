@@ -8,8 +8,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists_by_email"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists_by_oauthemail"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists"
 	entity2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/entity"
 	delete2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/delete"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
@@ -24,14 +23,13 @@ var (
 
 type RegisterUserDeps struct {
 	uberdig.In
-	ExistsUserUseCase             *exists_by_email.ExistsUserByEmailUseCase
-	ExistsUserByOauthEmailUseCase *exists_by_oauthemail.ExistsUserByOauthEmailUseCase
-	CryptStrategy                 crypt.CryptStrategy
-	Repository                    repository.UserRepository
-	Observers                     []RegisterUserObserver `group:"register_user_observers"`
-	DeleteInviteLinkUseCase       *delete2.DeleteInviteLinkUseCase
-	GetInviteLinkDataUseCase      *get_data_token_invite.GetInviteLinkDataUseCase
-	SearchUserSyncManager         user_search.SearchUserSyncManager
+	ExistsUserUseCase        *exists.ExistsUserUseCase
+	CryptStrategy            crypt.CryptStrategy
+	Repository               repository.UserRepository
+	Observers                []RegisterUserObserver `group:"register_user_observers"`
+	DeleteInviteLinkUseCase  *delete2.DeleteInviteLinkUseCase
+	GetInviteLinkDataUseCase *get_data_token_invite.GetInviteLinkDataUseCase
+	SearchUserSyncManager    user_search.SearchUserSyncManager
 }
 
 type RegisterUserUseCase struct {
@@ -42,8 +40,13 @@ func NewRegisterUserUseCase(deps RegisterUserDeps) *RegisterUserUseCase {
 	return &RegisterUserUseCase{deps: deps}
 }
 
-func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserRequest) error {
-	inviteLinkData, err := r.deps.GetInviteLinkDataUseCase.GetInviteLinkData(ctx, request.Token)
+func (r *RegisterUserUseCase) Execute(ctx context.Context, token string, opts ...RegisterOption) error {
+	options := RegisterOptions{}
+	for _, opt := range opts {
+		opt(&options)
+	}
+
+	inviteLinkData, err := r.deps.GetInviteLinkDataUseCase.GetInviteLinkData(ctx, token)
 	if err != nil {
 		return fmt.Errorf("error getting invite link data: %w", err)
 	}
@@ -56,30 +59,16 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserR
 		return UserAlreadyExistsErr
 	}
 
-	if request.Password != "" {
-		hash, err := r.deps.CryptStrategy.Hash(request.Password)
+	if options.Mode == RegisterModePassword {
+		hash, err := r.deps.CryptStrategy.Hash(options.Password)
 		if err != nil {
 			return fmt.Errorf("error hashing password: %w", err)
 		}
 
-		request.Password = hash
-	} else {
-		// If no password is provided, we need to check if the user is using OAuth
-		if request.OauthEmail == "" {
-			return fmt.Errorf("error: no password provided and no oauth email in invite link")
-		}
-
-		// Check if a user with this oauth email already exists
-		oauthUserExists, err := r.deps.ExistsUserByOauthEmailUseCase.Execute(ctx, request.OauthEmail)
-		if err != nil {
-			return fmt.Errorf("error checking if user exists by oauth email: %w", err)
-		}
-		if oauthUserExists {
-			return UserAlreadyExistsErr
-		}
+		options.Password = hash
 	}
 
-	user := r.EntityUser(request, inviteLinkData)
+	user := r.EntityUser(options.Password, inviteLinkData)
 	user.Id = entity.UserId(bson.NewObjectID().Hex())
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = user.CreatedAt
@@ -89,7 +78,7 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserR
 		return fmt.Errorf("error adding user: %w", err)
 	}
 
-	err = r.deps.DeleteInviteLinkUseCase.Execute(ctx, request.Token)
+	err = r.deps.DeleteInviteLinkUseCase.Execute(ctx, token)
 	if err != nil {
 		return fmt.Errorf("error deleting invite link: %w", err)
 	}
@@ -106,6 +95,10 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserR
 		return fmt.Errorf("error syncing user: %w", err)
 	}
 
+	if options.Mode == RegisterModeOauth {
+		// Handle Oauth binding between user and provider
+	}
+
 	for _, observer := range r.deps.Observers {
 		go observer.NotifyUserRegistered(*user)
 	}
@@ -113,20 +106,48 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, request RegisterUserR
 	return nil
 }
 
-func (r *RegisterUserUseCase) EntityUser(user RegisterUserRequest, link *entity2.InviteLink) *entity.User {
+func (r *RegisterUserUseCase) EntityUser(password string, link *entity2.InviteLink) *entity.User {
 	return &entity.User{
-		FirstName:  link.FirstName,
-		LastName:   link.LastName,
-		Email:      link.Email,
-		OauthEmail: user.OauthEmail,
-		Password:   user.Password,
+		FirstName: link.FirstName,
+		LastName:  link.LastName,
+		Email:     link.Email,
+		Password:  password,
 	}
 }
 
-type RegisterUserRequest struct {
-	Token string
-	// OauthEmail is the email used for OAuth registration (optional if password is provided)
-	OauthEmail string
-	// Password is the password used for registration (optional if oauth)
+type RegisterMode uint
+
+const (
+	RegisterModePassword RegisterMode = iota
+	RegisterModeOauth
+)
+
+type RegisterOptions struct {
+	Mode     RegisterMode
 	Password string
+	Oauth    OauthRegisterOptions
+}
+
+type OauthRegisterOptions struct {
+	Provider string
+	UserId   string
+	Email    string
+}
+
+type RegisterOption func(*RegisterOptions)
+
+func WithPassword(password string) RegisterOption {
+	return func(options *RegisterOptions) {
+		options.Password = password
+		options.Mode = RegisterModePassword
+	}
+}
+
+func WithOauth(provider string, userId string, email string) RegisterOption {
+	return func(options *RegisterOptions) {
+		options.Oauth.Provider = provider
+		options.Oauth.UserId = userId
+		options.Oauth.Email = email
+		options.Mode = RegisterModeOauth
+	}
 }

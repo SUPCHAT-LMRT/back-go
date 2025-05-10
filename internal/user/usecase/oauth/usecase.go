@@ -10,7 +10,6 @@ import (
 	"github.com/markbates/goth/providers/google"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_email"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_oauthemail"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/register"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/token"
 	uberdig "go.uber.org/dig"
@@ -30,8 +29,8 @@ func init() {
 
 type LoginOAuthUseCaseDeps struct {
 	uberdig.In
-	GetUserByOauthEmailUseCase *get_by_oauthemail.GetUserByOauthEmailUseCase
-	TokenStrategy              token.TokenStrategy
+	GetUserByEmailUseCase *get_by_email.GetUserByEmailUseCase
+	TokenStrategy         token.TokenStrategy
 }
 
 type LoginOAuthUseCase struct {
@@ -45,7 +44,7 @@ func NewLoginOAuthUseCase(deps LoginOAuthUseCaseDeps) *LoginOAuthUseCase {
 // Execute handles the OAuth registration process, create a new user if it doesn't exist and generate tokens
 func (u LoginOAuthUseCase) Execute(ctx context.Context, email string) (*OAuthResult, error) {
 	// Vérifier si l'utilisateur existe déjà
-	user, err := u.deps.GetUserByOauthEmailUseCase.Execute(ctx, email)
+	user, err := u.deps.GetUserByEmailUseCase.Execute(ctx, email)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -67,11 +66,8 @@ func NewRegisterOAuthUseCase(deps RegisterOAuthUseCaseDeps) *RegisterOAuthUseCas
 	return &RegisterOAuthUseCase{deps: deps}
 }
 
-func (u RegisterOAuthUseCase) Execute(ctx context.Context, inviteToken string, oauthEmail string) error {
-	err := u.deps.RegisterUserUseCase.Execute(ctx, register.RegisterUserRequest{
-		Token:      inviteToken,
-		OauthEmail: oauthEmail,
-	})
+func (u RegisterOAuthUseCase) Execute(ctx context.Context, provider string, oauthUserId string, oauthEmail string, inviteToken string) error {
+	err := u.deps.RegisterUserUseCase.Execute(ctx, inviteToken, register.WithOauth(provider, oauthUserId, oauthEmail))
 	if err != nil {
 		return fmt.Errorf("failed to register user: %w", err)
 	}
