@@ -6,6 +6,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
@@ -32,6 +33,8 @@ type MongoChannel struct {
 	Name        string        `bson:"name"`
 	Topic       string        `bson:"topic"`
 	Kind        string        `bson:"kind"`
+	IsPrivate   bool          `bson:"is_private"`
+	Members     []string      `bson:"members"`
 	WorkspaceId bson.ObjectID `bson:"workspace_id"`
 	CreatedAt   time.Time     `bson:"created_at"`
 	UpdatedAt   time.Time     `bson:"updated_at"`
@@ -85,12 +88,17 @@ func (m MongoChannelRepository) List(ctx context.Context, workspaceId workspace_
 		return nil, err
 	}
 
+	filter := bson.M{
+		"workspace_id": workspaceObjectId,
+		"is_private":   false,
+	}
+
 	findOptions := options.Find().SetSort(bson.D{{Key: "index", Value: 1}})
 
 	cursor, err := m.deps.Client.Client.
 		Database(databaseName).
 		Collection(collectionName).
-		Find(ctx, bson.M{"workspace_id": workspaceObjectId}, findOptions)
+		Find(ctx, filter, findOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -161,4 +169,45 @@ func (m MongoChannelRepository) Delete(ctx context.Context, channelId entity.Cha
 		DeleteOne(ctx, bson.M{"_id": objectId})
 
 	return err
+}
+
+func (m MongoChannelRepository) ListPrivateChannels(ctx context.Context, workspaceId workspace_entity.WorkspaceId, workspaceMemberId entity2.WorkspaceMemberId) ([]*entity.Channel, error) {
+	workspaceObjectId, err := bson.ObjectIDFromHex(string(workspaceId))
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{
+		"workspace_id": workspaceObjectId,
+		"is_private":   true,
+		"members":      workspaceMemberId,
+	}
+
+	findOptions := options.Find().SetSort(bson.D{{Key: "index", Value: 1}})
+
+	cursor, err := m.deps.Client.Client.
+		Database(databaseName).
+		Collection(collectionName).
+		Find(ctx, filter, findOptions)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var mongoChannels []*MongoChannel
+	err = cursor.All(ctx, &mongoChannels)
+	if err != nil {
+		return nil, err
+	}
+
+	channels := make([]*entity.Channel, len(mongoChannels))
+	for i, mongoChannel := range mongoChannels {
+		channel, err := m.deps.Mapper.MapToEntity(mongoChannel)
+		if err != nil {
+			return nil, err
+		}
+		channels[i] = channel
+	}
+
+	return channels, nil
 }

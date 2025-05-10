@@ -2,7 +2,6 @@ package create_channel
 
 import (
 	"context"
-	"fmt"
 	"github.com/supchat-lmrt/back-go/internal/search/channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
@@ -43,6 +42,8 @@ func (u *CreateChannelUseCase) Execute(ctx context.Context, chann *entity.Channe
 		Id:          chann.Id,
 		Name:        chann.Name,
 		Topic:       chann.Topic,
+		IsPrivate:   chann.IsPrivate,
+		Members:     chann.Members,
 		Kind:        mapChannelKindToSearchResultChannelKind(chann.Kind),
 		WorkspaceId: chann.WorkspaceId,
 		CreatedAt:   chann.CreatedAt,
@@ -51,8 +52,6 @@ func (u *CreateChannelUseCase) Execute(ctx context.Context, chann *entity.Channe
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(u.deps.Observers)
 
 	for _, observer := range u.deps.Observers {
 		observer.NotifyChannelCreated(chann)

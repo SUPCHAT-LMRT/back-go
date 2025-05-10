@@ -21,6 +21,8 @@ type Channel struct {
 	Topic       string
 	Kind        ChannelKind
 	WorkspaceId workspace_entity.WorkspaceId
+	IsPrivate   bool
+	Members     []string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	Index       int
