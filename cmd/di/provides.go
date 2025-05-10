@@ -81,6 +81,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/delete_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_private_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/reoder_channels"
 	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/repository"
@@ -109,6 +110,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/update_role"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
 	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_member_id"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace_details"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
@@ -167,6 +169,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesUseCase),
 		dig.NewProvider(update_type_workspace.NewUpdateTypeWorkspaceUseCase),
 		dig.NewProvider(kick_member.NewKickMemberUseCase),
+		dig.NewProvider(get_member_id.NewGetMemberIdUsecase),
 		// Workspace handlers
 		dig.NewProvider(list_workspaces.NewListWorkspaceHandler),
 		dig.NewProvider(discovery_list_workspaces.NewDiscoverListWorkspaceHandler),
@@ -181,6 +184,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesHandler),
 		dig.NewProvider(update_type_workspace.NewUpdateTypeWorkspaceHandler),
 		dig.NewProvider(kick_member.NewKickMemberHandler),
+		dig.NewProvider(get_member_id.NewGetMemberIdHandler),
 		// Workspace observers
 		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesObserver, uberdig.Group("update_info_workspaces_observers")),
 		dig.NewProvider(update_icon.NewUpdateWorkspaceIconObserver, uberdig.Group("update_icon_workspace_observers")),
@@ -212,6 +216,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(check_permissions.NewCheckPermissionsHandler),
 		// Workspace channels usecases
 		dig.NewProvider(list_channels.NewListChannelsUseCase),
+		dig.NewProvider(list_private_channels.NewGetPrivateChannelsUseCase),
 		dig.NewProvider(create_channel.NewCreateChannelUseCase),
 		dig.NewProvider(get_channel.NewGetChannelUseCase),
 		dig.NewProvider(count_channels.NewCountChannelsUseCase),
@@ -227,6 +232,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(delete_channels.NewDeleteChannelsObserver, uberdig.Group("delete_channels_observers")),
 		// Workspace channels handlers
 		dig.NewProvider(list_channels.NewListChannelsHandler),
+		dig.NewProvider(list_private_channels.NewGetPrivateChannelsHandler),
 		dig.NewProvider(create_channel.NewCreateChannelHandler),
 		dig.NewProvider(get_channel.NewGetChannelHandler),
 		dig.NewProvider(reoder_channels.NewReorderChannelHandler),

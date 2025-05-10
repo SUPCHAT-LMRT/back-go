@@ -226,3 +226,32 @@ func (m MongoWorkspaceRepository) Delete(ctx context.Context, id entity.Workspac
 
 	return nil
 }
+
+func (m MongoWorkspaceRepository) GetMemberId(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (entity2.WorkspaceMemberId, error) {
+	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId.String())
+	if err != nil {
+		return "", err
+	}
+
+	userObjectId, err := bson.ObjectIDFromHex(userId.String())
+	if err != nil {
+		return "", err
+	}
+
+	var member struct {
+		Id bson.ObjectID `bson:"_id"`
+	}
+
+	err = m.deps.Client.Client.Database(databaseName).Collection(membersCollectionName).FindOne(ctx, bson.M{
+		"workspace_id": workspaceObjectId,
+		"user_id":      userObjectId,
+	}).Decode(&member)
+	if err != nil {
+		if errors.Is(err, mongo2.ErrNoDocuments) {
+			return "", nil
+		}
+		return "", err
+	}
+
+	return entity2.WorkspaceMemberId(member.Id.Hex()), nil
+}

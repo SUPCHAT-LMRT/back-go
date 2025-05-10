@@ -34,6 +34,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/delete_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_private_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/reoder_channels"
 	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
 	workspace_invite_link_generate "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/generate"
@@ -54,6 +55,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/update_role"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
 	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_member_id"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace_details"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
@@ -98,8 +100,10 @@ type GinRouterDeps struct {
 	CreateInviteLinkWorkspaceHandler  *workspace_invite_link_generate.CreateInviteLinkHandler
 	GetInviteLinkWorkspaceDataHandler *get_data_token_invite2.GetInviteLinkWorkspaceDataHandler
 	KickMemberHandler                 *kick_member.KickMemberHandler
+	GetMemberIdHandler                *get_member_id.GetMemberIdHandler
 	// Workspaces channels
 	ListChannelsHandler        *list_channels.ListChannelsHandler
+	ListPrivateChannelsHandler *list_private_channels.GetPrivateChannelsHandler
 	CreateChannelHandler       *create_channel.CreateChannelHandler
 	ReorderChannelHandler      *reoder_channels.ReorderChannelHandler
 	ListChannelMessagesHandler *list_messages.ListChannelMessagesHandler
@@ -232,7 +236,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		{
 			specificWorkspaceGroup.Use(userInWorkspaceMiddleware)
 			specificWorkspaceGroup.PUT("/icon", d.deps.UpdateWorkspaceIconHandler.Handle)
-			specificWorkspaceGroup.PUT("/banner", d.deps.UpdateWorkspaceBannerHandler.Handle)
+			specificWorkspaceGroup.PUT("/banner", hasPermissionsMiddleware(entity.PermissionManageWorkspaceSettings), d.deps.UpdateWorkspaceBannerHandler.Handle)
 			specificWorkspaceGroup.GET("/members", d.deps.ListWorkspaceMembersHandler.Handle)
 			specificWorkspaceGroup.GET("/details", d.deps.GetWorkspaceDetailsHandler.Handle)
 			specificWorkspaceGroup.GET("/time-series/messages", d.deps.GetMinutelyMessageSentHandler.Handle)
@@ -240,6 +244,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			specificWorkspaceGroup.PUT("/type", d.deps.UpdateWorkspaceTypeHandler.Handle)
 			specificWorkspaceGroup.GET("", d.deps.GetWorkspaceHandler.Handle)
 			specificWorkspaceGroup.DELETE("/members/:user_id", hasPermissionsMiddleware(entity.PermissionKickMembers), d.deps.KickMemberHandler.Handle)
+			specificWorkspaceGroup.GET("/members/:user_id", d.deps.GetMemberIdHandler.Handle)
 
 			permissionsGroup := specificWorkspaceGroup.Group("/permissions")
 			{
@@ -249,6 +254,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			channelGroup := specificWorkspaceGroup.Group("/channels")
 			{
 				channelGroup.GET("", d.deps.ListChannelsHandler.Handle)
+				channelGroup.GET("/private/:user_id", d.deps.ListPrivateChannelsHandler.Handle)
 				// TODO: add middleware to check if the user can access the channel
 				channelGroup.GET("/:channel_id", d.deps.GetChannelHandler.Handle)
 				channelGroup.GET("/:channel_id/messages", d.deps.ListChannelMessagesHandler.Handle)

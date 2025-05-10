@@ -157,6 +157,7 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 					Name:        channelCreatedEvent.Channel.Name,
 					Kind:        channelCreatedEvent.Channel.Kind,
 					Topic:       channelCreatedEvent.Channel.Topic,
+					IsPrivate:   channelCreatedEvent.Channel.IsPrivate,
 					WorkspaceId: channelCreatedEvent.Channel.WorkspaceId,
 					CreatedAt:   channelCreatedEvent.Channel.CreatedAt,
 					UpdatedAt:   channelCreatedEvent.Channel.UpdatedAt,

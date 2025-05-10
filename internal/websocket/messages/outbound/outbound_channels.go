@@ -17,6 +17,7 @@ type OutboundChannelCreatedChannel struct {
 	Name        string                       `json:"name"`
 	Kind        entity.ChannelKind           `json:"kind"`
 	Topic       string                       `json:"topic"`
+	IsPrivate   bool                         `json:"isPrivate"`
 	WorkspaceId workspace_entity.WorkspaceId `json:"workspaceId"`
 	CreatedAt   time.Time                    `json:"createdAt"`
 	UpdatedAt   time.Time                    `json:"updatedAt"`
