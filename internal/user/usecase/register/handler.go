@@ -51,16 +51,7 @@ func (l RegisterHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	userRequest, err := l.RegisterUserRequest(request)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   err.Error(),
-			"message": "Cannot parse request",
-		})
-		return
-	}
-
-	err = l.registerUserUseCase.Execute(c, *userRequest)
+	err := l.registerUserUseCase.Execute(c, request.Token, WithPassword(request.Password))
 	if err != nil {
 		if errors.Is(err, UserAlreadyExistsErr) {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -90,11 +81,4 @@ func isPasswordStrong(password string) bool {
 	hasSpecial := regexp.MustCompile(`[@$!%*?&]`).MatchString(password)
 
 	return hasLowercase && hasUppercase && hasDigit && hasSpecial
-}
-
-func (l RegisterHandler) RegisterUserRequest(request RegisterRequest) (*RegisterUserRequest, error) {
-	return &RegisterUserRequest{
-		Token:    request.Token,
-		Password: request.Password,
-	}, nil
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists_by_email"
 	entity2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/entity"
 	delete2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/delete"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
@@ -23,7 +23,7 @@ var (
 
 type RegisterUserDeps struct {
 	uberdig.In
-	ExistsUserUseCase        *exists.ExistsUserUseCase
+	ExistsUserUseCase        *exists_by_email.ExistsUserByEmailUseCase
 	CryptStrategy            crypt.CryptStrategy
 	Repository               repository.UserRepository
 	Observers                []RegisterUserObserver `group:"register_user_observers"`
