@@ -10,6 +10,11 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/search/channel"
 	"github.com/supchat-lmrt/back-go/internal/search/message"
 	"github.com/supchat-lmrt/back-go/internal/search/user"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/repository"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/assign_job"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
+	user_repository "github.com/supchat-lmrt/back-go/internal/user/repository"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
@@ -71,6 +76,60 @@ func main() {
 		}
 
 		logg.Info().Str("collection", "workspace_message_sent_ts").Msg("Time-Series Collection created!")
+	})
+
+	// Ensure the Admin role exists and users
+	invokeFatal(logg, diContainer, func(
+		jobRepo repository.JobRepository,
+		userRepository user_repository.UserRepository,
+		assignJobUseCase *assign_job.AssignJobUseCase,
+		cryptStrategy crypt.CryptStrategy,
+	) {
+		createdRole, err := jobRepo.EnsureAdminRoleExists(appContext)
+		if err != nil {
+			logg.Fatal().Err(err).Msg("Unable to ensure Admin role exists")
+		}
+		logg.Info().Msg("Admin role ensured!")
+
+		users, err := userRepository.List(appContext)
+		if err != nil {
+			logg.Fatal().Err(err).Msg("Unable to list users")
+		}
+
+		if len(users) > 0 {
+			logg.Info().Msg("Users found! No need to create default users.")
+			return
+		}
+
+		logg.Info().Msg("No users found! Creating default users...")
+		hashedPassword, err := cryptStrategy.Hash(os.Getenv("INIT_USER_PASSWORD"))
+		if err != nil {
+			logg.Fatal().Err(err).Msg("Unable to hash password")
+		}
+
+		createdUser := &user_entity.User{
+			FirstName: os.Getenv("INIT_USER_FIRST_NAME"),
+			LastName:  os.Getenv("INIT_USER_LAST_NAME"),
+			Email:     os.Getenv("INIT_USER_EMAIL"),
+			Password:  hashedPassword,
+		}
+		err = userRepository.Create(appContext, createdUser)
+		if err != nil {
+			logg.Fatal().Err(err).Msg("Unable to create default user")
+		}
+
+		logg.Info().
+			Str("email", os.Getenv("INIT_USER_EMAIL")).
+			Msg("Default user created!")
+
+		err = assignJobUseCase.Execute(appContext, createdRole.Id, createdUser.Id)
+		if err != nil {
+			logg.Fatal().Err(err).Msg("Unable to assign Admin role to default user")
+		}
+		logg.Info().
+			Str("email", os.Getenv("INIT_USER_EMAIL")).
+			Str("role", createdRole.Name).
+			Msg("Default user assigned to Admin role!")
 	})
 
 	// Create the Meilisearch indexes if they don't exist

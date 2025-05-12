@@ -15,10 +15,5 @@ func NewGetInviteLinkDataUseCase(linkRepository repository.InviteLinkRepository)
 }
 
 func (u *GetInviteLinkDataUseCase) GetInviteLinkData(ctx context.Context, token string) (*entity.InviteLink, error) {
-	inviteLinkData, err := u.repository.GetInviteLinkData(ctx, token)
-	if err != nil {
-		return nil, err
-	}
-
-	return inviteLinkData, nil
+	return u.repository.GetInviteLinkData(ctx, token)
 }

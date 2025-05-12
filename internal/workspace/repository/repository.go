@@ -21,4 +21,5 @@ type WorkspaceRepository interface {
 	ListByUserId(ctx context.Context, userId user_entity.UserId) ([]*entity.Workspace, error)
 	Update(ctx context.Context, workspace *entity.Workspace) error
 	Delete(ctx context.Context, id entity.WorkspaceId) error
+	GetMemberId(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (entity2.WorkspaceMemberId, error)
 }

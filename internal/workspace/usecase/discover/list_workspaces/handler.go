@@ -8,11 +8,11 @@ import (
 )
 
 type DiscoverListWorkspaceHandler struct {
-	useCase            *DiscoveryListWorkspacesUseCase
+	useCase            *DiscoverListWorkspacesUseCase
 	getUserByIdUseCase *get_by_id.GetUserByIdUseCase
 }
 
-func NewDiscoverListWorkspaceHandler(useCase *DiscoveryListWorkspacesUseCase, getUserByIdUseCase *get_by_id.GetUserByIdUseCase) *DiscoverListWorkspaceHandler {
+func NewDiscoverListWorkspaceHandler(useCase *DiscoverListWorkspacesUseCase, getUserByIdUseCase *get_by_id.GetUserByIdUseCase) *DiscoverListWorkspaceHandler {
 	return &DiscoverListWorkspaceHandler{useCase: useCase, getUserByIdUseCase: getUserByIdUseCase}
 }
 
@@ -37,6 +37,7 @@ func (h DiscoverListWorkspaceHandler) Handle(c *gin.Context) {
 		result[i] = gin.H{
 			"id":           workspace.Id,
 			"name":         workspace.Name,
+			"topic":        workspace.Topic,
 			"ownerName":    ownerUser.FullName(),
 			"membersCount": workspace.MembersCount,
 		}

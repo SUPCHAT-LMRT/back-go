@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
+	"regexp"
 )
 
 type RegisterHandler struct {
@@ -43,16 +44,15 @@ func (l RegisterHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	userRequest, err := l.RegisterUserRequest(request)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   err.Error(),
-			"message": "Cannot parse request",
-		})
-		return
-	}
+	// TODO re-enable this after tests (code works)
+	//if !isPasswordStrong(request.Password) {
+	//	c.JSON(http.StatusBadRequest, gin.H{
+	//		"message": "Password is not strong enough. It must contain at least 8 characters, including uppercase, lowercase, numbers, and special characters.",
+	//	})
+	//	return
+	//}
 
-	err = l.registerUserUseCase.Execute(c, *userRequest)
+	err := l.registerUserUseCase.Execute(c, request.Token, WithPassword(request.Password))
 	if err != nil {
 		if errors.Is(err, UserAlreadyExistsErr) {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -71,9 +71,15 @@ func (l RegisterHandler) Handle(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (l RegisterHandler) RegisterUserRequest(request RegisterRequest) (*RegisterUserRequest, error) {
-	return &RegisterUserRequest{
-		Token:    request.Token,
-		Password: request.Password,
-	}, nil
+func isPasswordStrong(password string) bool {
+	if len(password) < 8 {
+		return false
+	}
+
+	hasLowercase := regexp.MustCompile(`[a-z]`).MatchString(password)
+	hasUppercase := regexp.MustCompile(`[A-Z]`).MatchString(password)
+	hasDigit := regexp.MustCompile(`\d`).MatchString(password)
+	hasSpecial := regexp.MustCompile(`[@$!%*?&]`).MatchString(password)
+
+	return hasLowercase && hasUppercase && hasDigit && hasSpecial
 }

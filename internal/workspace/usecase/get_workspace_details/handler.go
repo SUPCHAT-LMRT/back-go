@@ -30,6 +30,7 @@ func (h *GetWorkspaceDetailsHandler) Handle(c *gin.Context) {
 	c.JSON(http.StatusOK, WorkspaceDetailsResponse{
 		Id:            workspaceDetails.Id.String(),
 		Name:          workspaceDetails.Name,
+		Topic:         workspaceDetails.Topic,
 		Type:          string(workspaceDetails.Type),
 		MembersCount:  workspaceDetails.MembersCount,
 		ChannelsCount: workspaceDetails.ChannelsCount,
@@ -40,6 +41,7 @@ func (h *GetWorkspaceDetailsHandler) Handle(c *gin.Context) {
 type WorkspaceDetailsResponse struct {
 	Id            string `json:"id"`
 	Name          string `json:"name"`
+	Topic         string `json:"topic"`
 	Type          string `json:"type"`
 	MembersCount  uint   `json:"membersCount"`
 	ChannelsCount uint   `json:"channelsCount"`

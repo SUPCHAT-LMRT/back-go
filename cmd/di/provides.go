@@ -24,6 +24,16 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/search/message"
 	"github.com/supchat-lmrt/back-go/internal/search/usecase/search"
 	"github.com/supchat-lmrt/back-go/internal/search/user"
+	has_job "github.com/supchat-lmrt/back-go/internal/user/app_jobs/gin/middlewares"
+	app_jobs "github.com/supchat-lmrt/back-go/internal/user/app_jobs/repository"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/assign_job"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/create_job"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/delete_job"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/get_job_for_user"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/list_jobs"
+	permissions2 "github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/permissions"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/unassign_job"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/update_job"
 	user_chat_direct_repository "github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/is_first_message"
 	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
@@ -38,7 +48,8 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/get_status"
 	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/save_status"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/delete_user"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists_by_email"
 	forgot_password_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/repository"
 	forgot_password_service "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/service"
 	forgot_password_request_usecase "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/request"
@@ -50,9 +61,12 @@ import (
 	delete2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/delete"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/generate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_list_invite_link"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/list_all_users"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/login_oauth"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/logout"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/oauth"
+	user_oauth_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/oauth/repository"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/public_profile"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/register"
 	reset_password_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/reset_password/repository"
@@ -76,8 +90,11 @@ import (
 	channel_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/count_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/create_channel"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/delete_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_private_channels"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/reoder_channels"
 	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/repository"
 	add_member2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/add_member"
@@ -88,15 +105,31 @@ import (
 	get_data_token_invite3 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/join_workspace_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/is_user_in_workspace"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/kick_member"
 	list_workpace_members2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workpace_members"
 	workspace_repository "github.com/supchat-lmrt/back-go/internal/workspace/repository"
+	has_permissions "github.com/supchat-lmrt/back-go/internal/workspace/roles/gin/middlewares"
+	roles_repository "github.com/supchat-lmrt/back-go/internal/workspace/roles/repository"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/assign_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/check_permissions"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/create_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/delete_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/dessassign_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/get_list_roles"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/get_role"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/get_roles_for_member"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/permissions"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/update_role"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/create_workspace"
 	discovery_list_workspaces "github.com/supchat-lmrt/back-go/internal/workspace/usecase/discover/list_workspaces"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_member_id"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace_details"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/list_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_banner"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_icon"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_info_workspaces"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_type_workspace"
 	uberdig "go.uber.org/dig"
 	"log"
 	"os"
@@ -132,7 +165,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(repository3.NewRedisInviteLinkRepository),
 		// Workspace usecases
 		dig.NewProvider(list_workspaces.NewListWorkspacesUseCase),
-		dig.NewProvider(discovery_list_workspaces.NewDiscoveryListWorkspacesUseCase),
+		dig.NewProvider(discovery_list_workspaces.NewDiscoverListWorkspacesUseCase),
 		dig.NewProvider(create_workspace.NewCreateWorkspaceUseCase),
 		dig.NewProvider(get_workpace_member.NewGetWorkspaceMemberUseCase),
 		dig.NewProvider(is_user_in_workspace.NewIsUserInWorkspaceUseCase),
@@ -143,8 +176,13 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_banner.NewS3UpdateWorkspaceBannerStrategy),
 		dig.NewProvider(list_workpace_members2.NewListWorkspaceMembersUseCase),
 		dig.NewProvider(generate3.NewInviteLinkUseCase),
+		dig.NewProvider(generate.NewSendMailGenerateInviteLinkObserver, uberdig.Group("generate_invite_link_observers")),
 		dig.NewProvider(get_workspace.NewGetWorkspaceUseCase),
 		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkDataUseCase),
+		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesUseCase),
+		dig.NewProvider(update_type_workspace.NewUpdateTypeWorkspaceUseCase),
+		dig.NewProvider(kick_member.NewKickMemberUseCase),
+		dig.NewProvider(get_member_id.NewGetMemberIdUsecase),
 		// Workspace handlers
 		dig.NewProvider(list_workspaces.NewListWorkspaceHandler),
 		dig.NewProvider(discovery_list_workspaces.NewDiscoverListWorkspaceHandler),
@@ -154,24 +192,64 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_banner.NewUpdateWorkspaceBannerHandler),
 		dig.NewProvider(list_workpace_members2.NewListWorkspaceHandler),
 		dig.NewProvider(generate3.NewCreateInviteLinkHandler),
+		dig.NewProvider(get_workspace.NewGetWorkspaceHandler),
 		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkWorkspaceDataHandler),
+		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesHandler),
+		dig.NewProvider(update_type_workspace.NewUpdateTypeWorkspaceHandler),
+		dig.NewProvider(kick_member.NewKickMemberHandler),
+		dig.NewProvider(get_member_id.NewGetMemberIdHandler),
+		// Workspace observers
+		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesObserver, uberdig.Group("update_info_workspaces_observers")),
+		dig.NewProvider(update_icon.NewUpdateWorkspaceIconObserver, uberdig.Group("update_icon_workspace_observers")),
+		dig.NewProvider(update_type_workspace.NewNotifyUpdateTypeWorkspaceObserver, uberdig.Group("update_type_workspace_observers")),
 		// Workspace mappers
 		dig.NewProvider(repository3.NewRedisInviteLinkMapper),
 		// Workspace channels
 		// Workspace channels repository
 		dig.NewProvider(channel_repository.NewMongoChannelRepository),
 		dig.NewProvider(channel_repository.NewMongoChannelMapper),
+		// Workspace roles repository
+		dig.NewProvider(roles_repository.NewMongoRoleRepository),
+		dig.NewProvider(roles_repository.NewMongoRoleMapper),
+		// Workspace roles usecases
+		dig.NewProvider(create_role.NewCreateRoleHandler),
+		dig.NewProvider(get_role.NewGetRoleUseCase),
+		dig.NewProvider(get_list_roles.NewGetListRolesUseCase),
+		dig.NewProvider(update_role.NewUpdateRoleUseCase),
+		dig.NewProvider(delete_role.NewDeleteRoleUseCase),
+		// Workspace roles handlers
+		dig.NewProvider(create_role.NewCreateRoleUseCase),
+		dig.NewProvider(get_role.NewGetRoleHandler),
+		dig.NewProvider(get_list_roles.NewGetListRolesHandler),
+		dig.NewProvider(update_role.NewUpdateRoleHandler),
+		dig.NewProvider(delete_role.NewDeleteRoleHandler),
+		dig.NewProvider(assign_role.NewAssignRoleToUserHandler),
+		dig.NewProvider(dessassign_role.NewDessassignRoleFromUserHandler),
+		dig.NewProvider(get_roles_for_member.NewGetRolesForMemberHandler),
+		dig.NewProvider(check_permissions.NewCheckPermissionsHandler),
 		// Workspace channels usecases
 		dig.NewProvider(list_channels.NewListChannelsUseCase),
+		dig.NewProvider(list_private_channels.NewGetPrivateChannelsUseCase),
 		dig.NewProvider(create_channel.NewCreateChannelUseCase),
 		dig.NewProvider(get_channel.NewGetChannelUseCase),
 		dig.NewProvider(count_channels.NewCountChannelsUseCase),
+		dig.NewProvider(reoder_channels.NewReorderChannelsUseCase),
+		dig.NewProvider(delete_channels.NewDeleteChannelUseCase),
+		dig.NewProvider(assign_role.NewAssignRoleToUserUsecase),
+		dig.NewProvider(dessassign_role.NewDessassignRoleFromUserUsecase),
+		dig.NewProvider(get_roles_for_member.NewGetRolesForMemberUsecase),
+		dig.NewProvider(permissions.NewCheckPermissionUseCase),
 		// Workspaces channels observers
-		dig.NewProvider(create_channel.NewNotifyWebSocketObserver, uberdig.Group("create_channel_observers")),
+		dig.NewProvider(create_channel.NewCreateChannelObserver, uberdig.Group("create_channel_observers")),
+		dig.NewProvider(reoder_channels.NewUserStatusUpdateObserver, uberdig.Group("reorder_channels_observers")),
+		dig.NewProvider(delete_channels.NewDeleteChannelsObserver, uberdig.Group("delete_channels_observers")),
 		// Workspace channels handlers
 		dig.NewProvider(list_channels.NewListChannelsHandler),
+		dig.NewProvider(list_private_channels.NewGetPrivateChannelsHandler),
 		dig.NewProvider(create_channel.NewCreateChannelHandler),
 		dig.NewProvider(get_channel.NewGetChannelHandler),
+		dig.NewProvider(reoder_channels.NewReorderChannelHandler),
+		dig.NewProvider(delete_channels.NewDeleteChannelHandler),
 		// Workspace channels chat
 		// Workspace channels chat repository
 		dig.NewProvider(chat_message_repository.NewMongoChannelMessageRepository),
@@ -194,6 +272,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(get_minutely.NewGetMinutelyMessageSentHandler),
 		// Workspace misc
 		dig.NewProvider(workspace_middlewares.NewUserInWorkspaceMiddleware),
+		dig.NewProvider(has_permissions.NewHasPermissionsMiddleware),
 		// Workspace member usecases
 		dig.NewProvider(add_member2.NewAddMemberUseCase),
 		dig.NewProvider(delete3.NewDeleteInviteLinkWorkspaceUseCase),
@@ -209,7 +288,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(get_by_id.NewGetUserByIdUseCase),
 		dig.NewProvider(get_by_email.NewGetUserByEmailUseCase),
 		dig.NewProvider(login.NewLoginUserUseCase),
-		dig.NewProvider(exists.NewExistsUserUseCase),
+		dig.NewProvider(exists_by_email.NewExistsUserByEmailUseCase),
 		dig.NewProvider(register.NewRegisterUserUseCase),
 		dig.NewProvider(token.NewRefreshAccessTokenUseCase),
 		dig.NewProvider(update_password.NewChangePasswordUseCase),
@@ -217,9 +296,12 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_user_avatar.NewUpdateUserAvatarUseCase),
 		dig.NewProvider(update_user_avatar.NewS3UpdateUserAvatarStrategy),
 		dig.NewProvider(public_profile.NewGetPublicUserProfileUseCase),
+		dig.NewProvider(delete_user.NewDeleteUserUseCase),
+		dig.NewProvider(list_all_users.NewListUserUseCase),
 		// User handlers
 		dig.NewProvider(update_user_avatar.NewUpdateUserAvatarHandler),
 		dig.NewProvider(public_profile.NewGetPublicProfileHandler),
+		dig.NewProvider(list_all_users.NewListUserHandler),
 		// User forgot password repository
 		dig.NewProvider(forgot_password_repository.NewRedisForgotPasswordRepository),
 		// User forgot password service
@@ -253,9 +335,12 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(generate.NewInviteLinkUseCase),
 		dig.NewProvider(get_data_token_invite.NewGetInviteLinkDataUseCase),
 		dig.NewProvider(delete2.NewDeleteInviteLinkUseCase),
+		dig.NewProvider(get_list_invite_link.NewGetListInviteLinkUseCase),
 		// User invite link handlers
 		dig.NewProvider(generate.NewCreateInviteLinkHandler),
 		dig.NewProvider(get_data_token_invite.NewGetInviteLinkDataHandler),
+		dig.NewProvider(get_list_invite_link.NewGetListInviteLinkHandler),
+		dig.NewProvider(delete2.NewDeleteInviteLinkHandler),
 		// User handlers
 		dig.NewProvider(get_my_account.NewGetMyUserAccountHandler),
 		dig.NewProvider(login.NewLoginHandler),
@@ -263,10 +348,14 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(register.NewRegisterHandler),
 		dig.NewProvider(logout.NewLogoutHandler),
 		dig.NewProvider(update_user.NewUpdateAccountPersonalInformationsHandler),
+		dig.NewProvider(delete_user.NewDeleteUserHandler),
 		// User misc
 		dig.NewProvider(token.NewJwtTokenStrategy(os.Getenv("JWT_SECRET"))),
 		dig.NewProvider(crypt.NewBcryptStrategy),
 		dig.NewProvider(middlewares.NewAuthMiddleware),
+		// User Oauth repositories
+		dig.NewProvider(user_oauth_repository.NewMongoOauthConnectionRepository),
+		dig.NewProvider(user_oauth_repository.NewMongoOauthConnectionMapper),
 		// User chat direct
 		// User chat direct repository
 		dig.NewProvider(user_chat_direct_repository.NewMongoChatDirectRepository),
@@ -280,8 +369,9 @@ func NewDi() *uberdig.Container {
 		// USer chat direct handlers
 		dig.NewProvider(list_direct_messages.NewListDirectMessagesHandler),
 		// User Oauth handler & usecase
-		dig.NewProvider(login_oauth.NewOAuthHandler),
-		dig.NewProvider(login_oauth.NewOAuthUseCase),
+		dig.NewProvider(oauth.NewRegisterOAuthHandler),
+		dig.NewProvider(oauth.NewLoginOAuthUseCase),
+		dig.NewProvider(oauth.NewRegisterOAuthUseCase),
 		// User status
 		// User status repositories
 		dig.NewProvider(user_status_repository.NewMongoUserStatusRepository),
@@ -343,6 +433,29 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(message.NewMeilisearchSearchMessageSyncManager),
 		dig.NewProvider(channel.NewMeilisearchSearchChannelSyncManager),
 		dig.NewProvider(user.NewMeilisearchSearchUserSyncManager),
+		// Jobs
+		// Jobs repository
+		dig.NewProvider(app_jobs.NewMongoJobRepository),
+		dig.NewProvider(app_jobs.NewMongoJobMapper),
+		// Jobs middlewares
+		dig.NewProvider(has_job.NewHasJobPermissionsMiddleware),
+		// Jobs usecases
+		dig.NewProvider(create_job.NewCreateJobUseCase),
+		dig.NewProvider(delete_job.NewDeleteJobUseCase),
+		dig.NewProvider(update_job.NewUpdateJobUseCase),
+		dig.NewProvider(list_jobs.NewListJobsUseCase),
+		dig.NewProvider(assign_job.NewAssignJobUseCase),
+		dig.NewProvider(unassign_job.NewUnassignJobUseCase),
+		dig.NewProvider(get_job_for_user.NewGetJobForUserUseCase),
+		dig.NewProvider(permissions2.NewCheckPermissionJobUseCase),
+		// Jobs handlers
+		dig.NewProvider(create_job.NewCreateJobHandler),
+		dig.NewProvider(delete_job.NewDeleteJobHandler),
+		dig.NewProvider(update_job.NewUpdateJobHandler),
+		dig.NewProvider(list_jobs.NewListJobsHandler),
+		dig.NewProvider(assign_job.NewAssignJobHandler),
+		dig.NewProvider(unassign_job.NewUnassignJobHandler),
+		dig.NewProvider(get_job_for_user.NewGetJobForUserHandler),
 	}
 
 	for _, provider := range providers {

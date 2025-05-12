@@ -126,15 +126,15 @@ func (m MeilisearchSearchChannelSyncManager) AddChannel(ctx context.Context, cha
 	return nil
 }
 
-func (m MeilisearchSearchChannelSyncManager) RemoveChannel(ctx context.Context, channel *SearchChannel) error {
+func (m MeilisearchSearchChannelSyncManager) RemoveChannel(ctx context.Context, channelId channel_entity.ChannelId) error {
 	// Remove from main cache if exists
-	m.createCache.Remove(channel.Id)
+	m.createCache.Remove(channelId)
 
 	// Add to delete cache
-	m.deleteCache.Add(channel.Id, struct{}{})
+	m.deleteCache.Add(channelId, struct{}{})
 
 	m.logger.Info().
-		Str("channel_id", channel.Id.String()).
+		Str("channel_id", channelId.String()).
 		Msg("Channel marked for deletion")
 
 	return nil

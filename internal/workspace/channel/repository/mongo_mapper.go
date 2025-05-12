@@ -29,9 +29,12 @@ func (m MongoChannelMapper) MapFromEntity(entity *entity.Channel) (*MongoChannel
 		Name:        entity.Name,
 		Topic:       entity.Topic,
 		Kind:        entity.Kind.String(),
+		IsPrivate:   entity.IsPrivate,
+		Members:     entity.Members,
 		WorkspaceId: workspaceObjectId,
 		CreatedAt:   entity.CreatedAt,
 		UpdatedAt:   entity.UpdatedAt,
+		Index:       entity.Index,
 	}, nil
 }
 
@@ -41,8 +44,11 @@ func (m MongoChannelMapper) MapToEntity(mongo *MongoChannel) (*entity.Channel, e
 		Name:        mongo.Name,
 		Topic:       mongo.Topic,
 		Kind:        entity.ChannelKind(mongo.Kind),
+		IsPrivate:   mongo.IsPrivate,
+		Members:     mongo.Members,
 		WorkspaceId: workspace_entity.WorkspaceId(mongo.WorkspaceId.Hex()),
 		CreatedAt:   mongo.CreatedAt,
 		UpdatedAt:   mongo.UpdatedAt,
+		Index:       mongo.Index,
 	}, nil
 }

@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"context"
+	"fmt"
 	"github.com/goccy/go-json"
 	"github.com/supchat-lmrt/back-go/internal/event"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
@@ -126,6 +127,159 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 				return false
 			}
 
+			return true
+		})
+	})
+
+	server.Deps.EventBus.Subscribe(event.ChannelCreatedEventType, func(evt event.Event) {
+		fmt.Println("Channel created event received")
+		// Cast the event to ChannelCreatedEvent
+		channelCreatedEvent, ok := evt.(*event.ChannelCreatedEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to ChannelCreatedEvent")
+			return
+		}
+
+		fmt.Println("Channel created event received")
+
+		logg := deps.Logger.With().
+			Str("channelId", channelCreatedEvent.Channel.Id.String()).Logger()
+
+		// Broadcast the created channels to all connected clients
+		server.IterateClients(func(client *Client) bool {
+			if client.CurrentSelectedWorkspace.Load() != channelCreatedEvent.Channel.WorkspaceId.String() {
+				// Skip clients that are not in the same room
+				return true
+			}
+			err := client.SendMessage(&outbound.OutboundChannelCreated{
+				Channel: outbound.OutboundChannelCreatedChannel{
+					Id:          channelCreatedEvent.Channel.Id,
+					Name:        channelCreatedEvent.Channel.Name,
+					Kind:        channelCreatedEvent.Channel.Kind,
+					Topic:       channelCreatedEvent.Channel.Topic,
+					IsPrivate:   channelCreatedEvent.Channel.IsPrivate,
+					WorkspaceId: channelCreatedEvent.Channel.WorkspaceId,
+					CreatedAt:   channelCreatedEvent.Channel.CreatedAt,
+					UpdatedAt:   channelCreatedEvent.Channel.UpdatedAt,
+					Index:       channelCreatedEvent.Channel.Index,
+				},
+			})
+
+			if err != nil {
+				logg.Error().Err(err).
+					Msg("failed to send channel create message to client")
+				return false
+			}
+			return true
+		})
+	})
+
+	server.Deps.EventBus.Subscribe(event.ChannelsReorderedEventType, func(evt event.Event) {
+		// Cast the event to ChannelsReorderedEvent
+		channelsReorderedEvent, ok := evt.(*event.ChannelsReorderedEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to ChannelsReorderedEvent")
+			return
+		}
+
+		// Convert []event.ChannelReorderMessage to []outbound.ChannelReorderMessage
+		var outboundChannelReorders []outbound.ChannelReorderMessage
+		for _, reorder := range channelsReorderedEvent.ChannelReorders {
+			outboundChannelReorders = append(outboundChannelReorders, outbound.ChannelReorderMessage{
+				ChannelId: reorder.ChannelId,
+				NewOrder:  reorder.NewOrder,
+			})
+		}
+
+		// Broadcast the reordered channels to all connected clients
+		server.IterateClients(func(client *Client) bool {
+			if client.CurrentSelectedWorkspace.Load() != channelsReorderedEvent.WorkspaceId.String() {
+				// Skip clients that are not in the same room
+				return true
+			}
+			err := client.SendMessage(&outbound.OutboundChannelsReordered{
+				ChannelReorders: outboundChannelReorders,
+			})
+			if err != nil {
+				server.Deps.Logger.Error().Err(err).
+					Msg("failed to send channel reorder message to client")
+				return false
+			}
+			return true
+		})
+	})
+
+	server.Deps.EventBus.Subscribe(event.ChannelsDeletedEventType, func(evt event.Event) {
+		// Cast the event to ChannelsDeletedEvent
+		channelsDeletedEvent, ok := evt.(*event.ChannelsDeletedEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to ChannelsDeletedEvent")
+			return
+		}
+
+		logg := deps.Logger.With().
+			Str("channelId", channelsDeletedEvent.ChannelId.String()).Logger()
+		// Broadcast the deleted channels to all connected clients
+		server.IterateClients(func(client *Client) bool {
+			if client.CurrentSelectedWorkspace.Load() != channelsDeletedEvent.WorkspaceId.String() {
+				// Skip clients that are not in the same room
+				return true
+			}
+			err := client.SendMessage(&outbound.OutboundChannelsDeleted{
+				ChannelId:   channelsDeletedEvent.ChannelId,
+				WorkspaceId: channelsDeletedEvent.WorkspaceId,
+			})
+			if err != nil {
+				logg.Error().Err(err).
+					Msg("failed to send channel delete message to client")
+				return false
+			}
+			return true
+		})
+	})
+
+	server.Deps.EventBus.Subscribe(event.WorkspaceUpdatedEventType, func(evt event.Event) {
+		workspaceUpdatedEvent, ok := evt.(*event.WorkspaceUpdatedEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to WorkspaceUpdatedEvent")
+			return
+		}
+
+		logg := deps.Logger.With().
+			Str("workspaceId", workspaceUpdatedEvent.Workspace.Id.String()).Logger()
+
+		workspaceId := workspaceUpdatedEvent.Workspace.Id
+
+		server.IterateClients(func(client *Client) bool {
+			isMember, err := deps.IsUserInWorkspaceUseCase.Execute(
+				context.Background(),
+				workspaceId,
+				client.UserId,
+			)
+
+			if err != nil {
+				logg.Error().Err(err).
+					Str("userId", client.UserId.String()).
+					Msg("failed to check if user is in workspace")
+				return true
+			}
+
+			if !isMember {
+				return true
+			}
+
+			err = client.SendMessage(&outbound.OutboundWorkspaceUpdated{
+				WorkspaceId: workspaceId.String(),
+				Name:        workspaceUpdatedEvent.Workspace.Name,
+				Topic:       workspaceUpdatedEvent.Workspace.Topic,
+				Type:        string(workspaceUpdatedEvent.Workspace.Type),
+			})
+			if err != nil {
+				logg.Error().Err(err).
+					Str("userId", client.UserId.String()).
+					Msg("failed to send workspace update message to client")
+				return false
+			}
 			return true
 		})
 	})

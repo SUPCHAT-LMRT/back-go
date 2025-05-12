@@ -15,30 +15,31 @@ type DiscoveryListWorkspacesUseCaseDeps struct {
 	WorkspaceMemberRepository repository2.WorkspaceMemberRepository
 }
 
-type DiscoveryListWorkspacesUseCase struct {
+type DiscoverListWorkspacesUseCase struct {
 	deps DiscoveryListWorkspacesUseCaseDeps
 }
 
-func NewDiscoveryListWorkspacesUseCase(deps DiscoveryListWorkspacesUseCaseDeps) *DiscoveryListWorkspacesUseCase {
-	return &DiscoveryListWorkspacesUseCase{deps: deps}
+func NewDiscoverListWorkspacesUseCase(deps DiscoveryListWorkspacesUseCaseDeps) *DiscoverListWorkspacesUseCase {
+	return &DiscoverListWorkspacesUseCase{deps: deps}
 }
 
-func (u *DiscoveryListWorkspacesUseCase) Execute(ctx context.Context) ([]*DiscoveryWorkspace, error) {
+func (u *DiscoverListWorkspacesUseCase) Execute(ctx context.Context) ([]*DiscoverWorkspace, error) {
 	publicWorkspaces, err := u.deps.WorkspaceRepository.ListPublics(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	discoverWorkspaces := make([]*DiscoveryWorkspace, len(publicWorkspaces))
+	discoverWorkspaces := make([]*DiscoverWorkspace, len(publicWorkspaces))
 	for i, workspace := range publicWorkspaces {
 		workspaceMembersCount, err := u.deps.WorkspaceMemberRepository.CountMembers(ctx, workspace.Id)
 		if err != nil {
 			return nil, err
 		}
 
-		discoverWorkspaces[i] = &DiscoveryWorkspace{
+		discoverWorkspaces[i] = &DiscoverWorkspace{
 			Id:           workspace.Id,
 			Name:         workspace.Name,
+			Topic:        workspace.Topic,
 			OwnerId:      entity2.WorkspaceMemberId(workspace.OwnerId),
 			MembersCount: workspaceMembersCount,
 		}
@@ -47,9 +48,10 @@ func (u *DiscoveryListWorkspacesUseCase) Execute(ctx context.Context) ([]*Discov
 	return discoverWorkspaces, nil
 }
 
-type DiscoveryWorkspace struct {
+type DiscoverWorkspace struct {
 	Id           entity.WorkspaceId
 	Name         string
+	Topic        string
 	OwnerId      entity2.WorkspaceMemberId
 	MembersCount uint
 }

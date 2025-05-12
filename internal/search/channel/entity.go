@@ -19,6 +19,8 @@ type SearchChannel struct {
 	Name        string
 	Topic       string
 	Kind        SearchChannelKind
+	IsPrivate   bool
+	Members     []string
 	WorkspaceId workspace_entity.WorkspaceId
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

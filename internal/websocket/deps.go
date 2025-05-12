@@ -12,6 +12,7 @@ import (
 	toggle_channel_message_reaction "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/toggle_reaction"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_workpace_member"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/is_user_in_workspace"
 	uberdig "go.uber.org/dig"
 )
 
@@ -30,4 +31,5 @@ type WebSocketDeps struct {
 	RedisClient                         *redis.Client
 	GetBackIdentifierUseCase            *usecase.GetBackIdentifierUseCase
 	EventBus                            *event.EventBus
+	IsUserInWorkspaceUseCase            *is_user_in_workspace.IsUserInWorkspaceUseCase
 }

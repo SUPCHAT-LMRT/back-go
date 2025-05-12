@@ -32,6 +32,9 @@ func (h *CreateChannelHandler) Handle(c *gin.Context) {
 		Name:        req.Name,
 		Topic:       req.Topic,
 		WorkspaceId: entity.WorkspaceId(workspaceId),
+		Kind:        channel_entity.ChannelKindText,
+		IsPrivate:   req.IsPrivate,
+		Members:     req.Members,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -42,6 +45,8 @@ func (h *CreateChannelHandler) Handle(c *gin.Context) {
 }
 
 type CreateChannelRequest struct {
-	Name  string `json:"name" binding:"required,min=1,max=100"`
-	Topic string `json:"topic"`
+	Name      string   `json:"name" binding:"required,min=1,max=100"`
+	Topic     string   `json:"topic"`
+	IsPrivate bool     `json:"isPrivate"`
+	Members   []string `json:"members"`
 }
