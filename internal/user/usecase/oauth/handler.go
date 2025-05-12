@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/markbates/goth/gothic"
 	uberdig "go.uber.org/dig"
 	"net/http"
@@ -58,9 +59,11 @@ func (h *RegisterOAuthHandler) Callback(c *gin.Context) {
 		return
 	}
 
-	if inviteToken == "" {
+	// Check if the state is a uuid (if so, it's an invite token)
+	_, err = uuid.Parse(inviteToken)
+	if err != nil {
 		// If no invite token is provided, redirect to the home page
-		response, err := h.deps.LoginOAuthUseCase.Execute(c, inviteToken)
+		response, err := h.deps.LoginOAuthUseCase.Execute(c, oauthUser.UserID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -75,7 +78,7 @@ func (h *RegisterOAuthHandler) Callback(c *gin.Context) {
 	}
 
 	// If an invite token is provided, redirect to the login page
-	err = h.deps.RegisterOAuthUseCase.Execute(c, inviteToken, provider, oauthUser.UserID, oauthUser.Email)
+	err = h.deps.RegisterOAuthUseCase.Execute(c, provider, oauthUser.UserID, oauthUser.Email, inviteToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -29,14 +29,13 @@ type MongoUserRepository struct {
 }
 
 type MongoUser struct {
-	Id         bson.ObjectID `bson:"_id"`
-	FirstName  string        `bson:"first_name"`
-	LastName   string        `bson:"last_name"`
-	Email      string        `bson:"email"`
-	OauthEmail string        `bson:"oauth_email"`
-	Password   string        `bson:"password"`
-	CreatedAt  time.Time     `bson:"created_at"`
-	UpdatedAt  time.Time     `bson:"updated_at"`
+	Id        bson.ObjectID `bson:"_id"`
+	FirstName string        `bson:"first_name"`
+	LastName  string        `bson:"last_name"`
+	Email     string        `bson:"email"`
+	Password  string        `bson:"password"`
+	CreatedAt time.Time     `bson:"created_at"`
+	UpdatedAt time.Time     `bson:"updated_at"`
 }
 
 func NewMongoUserRepository(deps MongoUserRepositoryDeps) repository.UserRepository {

@@ -10,6 +10,8 @@ import (
 	"github.com/markbates/goth/providers/google"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_email"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/oauth/repository"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/register"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/token"
 	uberdig "go.uber.org/dig"
@@ -29,8 +31,9 @@ func init() {
 
 type LoginOAuthUseCaseDeps struct {
 	uberdig.In
-	GetUserByEmailUseCase *get_by_email.GetUserByEmailUseCase
-	TokenStrategy         token.TokenStrategy
+	GetUserByIdUseCase        *get_by_id.GetUserByIdUseCase
+	OauthConnectionRepository repository.OauthConnectionRepository
+	TokenStrategy             token.TokenStrategy
 }
 
 type LoginOAuthUseCase struct {
@@ -42,9 +45,14 @@ func NewLoginOAuthUseCase(deps LoginOAuthUseCaseDeps) *LoginOAuthUseCase {
 }
 
 // Execute handles the OAuth registration process, create a new user if it doesn't exist and generate tokens
-func (u LoginOAuthUseCase) Execute(ctx context.Context, email string) (*OAuthResult, error) {
+func (u LoginOAuthUseCase) Execute(ctx context.Context, oauthUserId string) (*OAuthResult, error) {
 	// Vérifier si l'utilisateur existe déjà
-	user, err := u.deps.GetUserByEmailUseCase.Execute(ctx, email)
+	oauthConnection, err := u.deps.OauthConnectionRepository.GetOauthConnectionByUserId(ctx, oauthUserId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get oauth connection: %w", err)
+	}
+
+	user, err := u.deps.GetUserByIdUseCase.Execute(ctx, oauthConnection.UserId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
