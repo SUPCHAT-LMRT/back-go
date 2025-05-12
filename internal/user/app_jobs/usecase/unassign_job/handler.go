@@ -2,6 +2,7 @@ package unassign_job
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"net/http"
 )
@@ -25,7 +26,7 @@ func (h *UnassignJobHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	err := h.useCase.Execute(c.Request.Context(), request.JobId, user_entity.UserId(request.UserId))
+	err := h.useCase.Execute(c.Request.Context(), entity.JobId(request.JobId), user_entity.UserId(request.UserId))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

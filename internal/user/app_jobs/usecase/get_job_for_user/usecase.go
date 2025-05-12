@@ -28,7 +28,7 @@ func (u *GetJobForUserUseCase) Execute(ctx context.Context, userId string) ([]*e
 	}
 
 	// Créer un map pour identifier les jobs assignés
-	assignedJobs := make(map[entity.JobsId]bool)
+	assignedJobs := make(map[entity.JobId]bool)
 	for _, job := range userJobs {
 		assignedJobs[job.Id] = true
 	}

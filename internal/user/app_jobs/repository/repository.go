@@ -8,13 +8,13 @@ import (
 
 type JobRepository interface {
 	FindByName(ctx context.Context, name string) (*entity.Job, error)
-	FindById(ctx context.Context, jobId string) (*entity.Job, error)
+	FindById(ctx context.Context, jobId entity.JobId) (*entity.Job, error)
 	Create(ctx context.Context, job *entity.Job) error
-	Delete(ctx context.Context, jobId string) error
+	Delete(ctx context.Context, jobId entity.JobId) error
 	Update(ctx context.Context, job *entity.Job) error
 	FindAll(ctx context.Context) ([]*entity.Job, error)
-	AssignToUser(ctx context.Context, jobId string, userId user_entity.UserId) error
-	UnassignFromUser(ctx context.Context, jobId string, userId user_entity.UserId) error
-	EnsureAdminRoleExists(ctx context.Context) error
+	AssignToUser(ctx context.Context, jobId entity.JobId, userId user_entity.UserId) error
+	UnassignFromUser(ctx context.Context, jobId entity.JobId, userId user_entity.UserId) error
+	EnsureAdminRoleExists(ctx context.Context) (*entity.Job, error)
 	FindByUserId(ctx context.Context, userId string) ([]*entity.Job, error)
 }

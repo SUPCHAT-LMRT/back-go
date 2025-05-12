@@ -14,9 +14,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
 	oauth_entity "github.com/supchat-lmrt/back-go/internal/user/usecase/oauth/entity"
 	user_oauth_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/oauth/repository"
-	"go.mongodb.org/mongo-driver/v2/bson"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 var (
@@ -72,10 +70,6 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, token string, opts ..
 	}
 
 	user := r.EntityUser(options.Password, inviteLinkData)
-	user.Id = entity.UserId(bson.NewObjectID().Hex())
-	user.CreatedAt = time.Now()
-	user.UpdatedAt = user.CreatedAt
-
 	err = r.deps.Repository.Create(ctx, user)
 	if err != nil {
 		return fmt.Errorf("error adding user: %w", err)

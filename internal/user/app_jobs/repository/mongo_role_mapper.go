@@ -27,7 +27,7 @@ func (m MongoJobMapper) MapFromEntity(job *entity.Job) (*MongoJob, error) {
 
 func (m *MongoJobMapper) MapToEntity(mongoJob *MongoJob) (*entity.Job, error) {
 	return &entity.Job{
-		Id:          entity.JobsId(mongoJob.Id.Hex()),
+		Id:          entity.JobId(mongoJob.Id.Hex()),
 		Name:        mongoJob.Name,
 		Permissions: mongoJob.Permissions,
 	}, nil

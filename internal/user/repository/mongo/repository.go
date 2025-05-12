@@ -43,6 +43,9 @@ func NewMongoUserRepository(deps MongoUserRepositoryDeps) repository.UserReposit
 }
 
 func (r MongoUserRepository) Create(ctx context.Context, user *entity.User) error {
+	user.Id = entity.UserId(bson.NewObjectID().Hex())
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = user.CreatedAt
 	mongoEntity, err := r.deps.UserMapper.MapFromEntity(user)
 	if err != nil {
 		return err

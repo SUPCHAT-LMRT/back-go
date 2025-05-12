@@ -3,6 +3,7 @@ package delete_job
 import (
 	"context"
 	"fmt"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/repository"
 )
 
@@ -14,7 +15,7 @@ func NewDeleteJobUseCase(repo repository.JobRepository) *DeleteJobUseCase {
 	return &DeleteJobUseCase{repo: repo}
 }
 
-func (uc *DeleteJobUseCase) Execute(ctx context.Context, jobId string) error {
+func (uc *DeleteJobUseCase) Execute(ctx context.Context, jobId entity.JobId) error {
 	// Vérifier si le job existe
 	job, err := uc.repo.FindById(ctx, jobId)
 	if err != nil {
