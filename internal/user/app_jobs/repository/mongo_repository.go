@@ -26,11 +26,10 @@ type MongoJobRepository struct {
 }
 
 type MongoJob struct {
-	Id                 bson.ObjectID `bson:"_id"`
-	Name               string        `bson:"name"`
-	AssignedUsers      []string      `bson:"assigned_users"`
-	Permissions        uint64        `bson:"permissions"`
-	OrganizationalOnly bool          `bson:"organizational_only"`
+	Id            bson.ObjectID `bson:"_id"`
+	Name          string        `bson:"name"`
+	AssignedUsers []string      `bson:"assigned_users"`
+	Permissions   uint64        `bson:"permissions"`
 }
 
 func NewMongoJobRepository(deps MongoJobRepositoryDeps) JobRepository {
@@ -81,11 +80,10 @@ func (r *MongoJobRepository) Create(ctx context.Context, job *entity.Job) error 
 	job.Id = entity.JobsId(objectID.Hex())
 
 	mongoJob := &MongoJob{
-		Id:                 objectID,
-		Name:               job.Name,
-		Permissions:        job.Permissions,
-		OrganizationalOnly: job.OrganizationalOnly,
-		AssignedUsers:      []string{},
+		Id:            objectID,
+		Name:          job.Name,
+		Permissions:   job.Permissions,
+		AssignedUsers: []string{},
 	}
 
 	_, err := r.deps.Client.Client.Database(databaseName).
@@ -122,9 +120,8 @@ func (r *MongoJobRepository) Update(ctx context.Context, job *entity.Job) error 
 
 	update := bson.M{
 		"$set": bson.M{
-			"name":                job.Name,
-			"permissions":         job.Permissions,
-			"organizational_only": job.OrganizationalOnly,
+			"name":        job.Name,
+			"permissions": job.Permissions,
 		},
 	}
 
@@ -229,7 +226,7 @@ func (r *MongoJobRepository) EnsureAdminRoleExists(ctx context.Context) error {
 	// Créez le rôle Admin avec les permissions PermissionAdmin
 	adminRole := &entity.Job{
 		Name:        adminRoleName,
-		Permissions: entity.PermissionAdmin,
+		Permissions: entity.CREATE_INVITATION | entity.DELETE_INVITATION | entity.ASSIGN_JOB | entity.UNASSIGN_JOB | entity.DELETE_JOB | entity.UPDATE_JOB | entity.UPDATE_JOB_PERMISSIONS,
 	}
 
 	if err := r.Create(ctx, adminRole); err != nil {

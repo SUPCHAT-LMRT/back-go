@@ -39,7 +39,7 @@ type UserRole struct {
 	WorkspaceId WorkspaceId
 }
 
-// Vérifie si un rôle possède une permission spécifique
+// Vérifie si un rôle possède une permissions spécifique
 func (r Role) HasPermission(permission uint64) bool {
 	return r.Permissions&permission != 0
 }

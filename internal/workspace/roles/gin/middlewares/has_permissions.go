@@ -37,7 +37,7 @@ func (h *HasPermissionsMiddleware) Execute(permissions uint64) gin.HandlerFunc {
 		if !hasPermission {
 			c.JSON(403, gin.H{
 				"error":        "Forbidden",
-				"displayError": "Vous n'avez pas la permission.",
+				"displayError": "Vous n'avez pas la permissions.",
 			})
 			c.Abort()
 			return

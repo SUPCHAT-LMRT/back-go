@@ -26,9 +26,8 @@ func (uc *CreateJobUseCase) Execute(ctx context.Context, name string) (*entity.J
 	}
 
 	job := &entity.Job{
-		Name:               name,
-		Permissions:        0, // Pas de permissions fonctionnelles
-		OrganizationalOnly: true,
+		Name:        name,
+		Permissions: 0, // Pas de permissions fonctionnelles
 	}
 
 	err = uc.repo.Create(ctx, job)

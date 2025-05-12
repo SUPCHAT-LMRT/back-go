@@ -1,8 +1,13 @@
 package entity
 
 const (
-	PermissionManager uint64 = 1 << iota // Générer un lien d’invitation
-	PermissionAdmin                      // Gérer les utilisateurs (ajout/suppression, etc.)
+	CREATE_INVITATION      uint64 = 1 << iota // Générer un lien d’invitation
+	DELETE_INVITATION                         // Supprimer un lien d’invitation
+	ASSIGN_JOB                                // Assigner un job à un utilisateur
+	UNASSIGN_JOB                              // Désassigner un job d’un utilisateur
+	DELETE_JOB                                // Supprimer un job
+	UPDATE_JOB                                // Mettre à jour un job
+	UPDATE_JOB_PERMISSIONS                    // Mettre à jour les permissions d’un job
 )
 
 type (
@@ -10,11 +15,10 @@ type (
 )
 
 type Job struct {
-	Id                 JobsId
-	Name               string
-	Permissions        uint64
-	OrganizationalOnly bool // True si le rôle n’a aucune permission fonctionnelle
-	IsAssigned         bool // True si le rôle est assigné à un utilisateur
+	Id          JobsId
+	Name        string
+	Permissions uint64
+	IsAssigned  bool
 }
 
 func (r Job) HasPermission(permission uint64) bool {

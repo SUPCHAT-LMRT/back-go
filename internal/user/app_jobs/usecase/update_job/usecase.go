@@ -25,11 +25,6 @@ func (uc *UpdateJobUseCase) Execute(ctx context.Context, jobId string, name stri
 		return nil, fmt.Errorf("job with ID '%s' not found", jobId)
 	}
 
-	// Vérifier si le job est organizational_only
-	if !job.OrganizationalOnly {
-		return nil, fmt.Errorf("only organizational jobs can be updated")
-	}
-
 	// Mettre à jour uniquement le champ Name
 	job.Name = name
 
