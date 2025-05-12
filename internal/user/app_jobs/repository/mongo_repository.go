@@ -226,7 +226,7 @@ func (r *MongoJobRepository) EnsureAdminRoleExists(ctx context.Context) error {
 	// Créez le rôle Admin avec les permissions PermissionAdmin
 	adminRole := &entity.Job{
 		Name:        adminRoleName,
-		Permissions: entity.CREATE_INVITATION | entity.DELETE_INVITATION | entity.ASSIGN_JOB | entity.UNASSIGN_JOB | entity.DELETE_JOB | entity.UPDATE_JOB | entity.UPDATE_JOB_PERMISSIONS,
+		Permissions: entity.CREATE_INVITATION | entity.DELETE_INVITATION | entity.ASSIGN_JOB | entity.UNASSIGN_JOB | entity.DELETE_JOB | entity.UPDATE_JOB | entity.UPDATE_JOB_PERMISSIONS | entity.VIEW_ADMINISTRATION_PANEL,
 	}
 
 	if err := r.Create(ctx, adminRole); err != nil {
@@ -247,18 +247,31 @@ func (r *MongoJobRepository) FindByUserId(ctx context.Context, userId string) ([
 	}
 	defer cursor.Close(ctx)
 
-	var mongoJobs []MongoJob
-	if err := cursor.All(ctx, &mongoJobs); err != nil {
-		return nil, fmt.Errorf("error decoding jobs: %w", err)
-	}
-
 	var jobs []*entity.Job
-	for _, mongoJob := range mongoJobs {
+	for cursor.Next(ctx) {
+		var mongoJob MongoJob
+		if err := cursor.Decode(&mongoJob); err != nil {
+			return nil, fmt.Errorf("error decoding job: %w", err)
+		}
+
+		isAssigned := false
+		for _, assignedUser := range mongoJob.AssignedUsers {
+			if assignedUser == userId {
+				isAssigned = true
+				break
+			}
+		}
+
 		job, err := r.deps.JobMapper.MapToEntity(&mongoJob)
 		if err != nil {
 			return nil, fmt.Errorf("error mapping job: %w", err)
 		}
+		job.IsAssigned = isAssigned
 		jobs = append(jobs, job)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, fmt.Errorf("cursor error: %w", err)
 	}
 
 	return jobs, nil

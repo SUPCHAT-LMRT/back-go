@@ -2,7 +2,6 @@ package permissions
 
 import (
 	"context"
-	"fmt"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/repository"
@@ -23,8 +22,6 @@ func (u *CheckPermissionUseCase) Execute(ctx context.Context, workspaceMemberId 
 	}
 
 	for _, role := range roles {
-		fmt.Println(role.IsAssigned)
-		fmt.Println(role.HasPermission(permission))
 		if role.IsAssigned && role.HasPermission(permission) {
 			return true, nil
 		}

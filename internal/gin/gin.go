@@ -9,6 +9,8 @@ import (
 	list_group_chat_messages "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/add_member"
 	"github.com/supchat-lmrt/back-go/internal/search/usecase/search"
+	entity2 "github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
+	has_job "github.com/supchat-lmrt/back-go/internal/user/app_jobs/gin/middlewares"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/assign_job"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/create_job"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/delete_job"
@@ -27,6 +29,7 @@ import (
 	user_invite_link_generate "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/generate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_list_invite_link"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/list_all_users"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/logout"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/oauth"
@@ -94,7 +97,7 @@ type GinRouterDeps struct {
 	AuthMiddleware                  *middlewares.AuthMiddleware
 	UserInWorkspaceMiddleware       *workspace_middlewares.UserInWorkspaceMiddleware
 	HasMembersPermissionsMiddleware *middlewares2.HasPermissionsMiddleware
-	//HasJobPermissionsMiddleware     *has_job.HasJobPermissionsMiddleware
+	HasJobPermissionsMiddleware     *has_job.HasJobPermissionsMiddleware
 
 	// Handlers
 	// Workspace
@@ -143,6 +146,7 @@ type GinRouterDeps struct {
 	UpdateUserAvatarHandler                  *update_user_avatar.UpdateUserAvatarHandler
 	GetPublicProfileHandler                  *public_profile.GetPublicProfileHandler
 	DeleteUserHandler                        *delete_user.DeleteUserHandler
+	GetListUsersHandler                      *list_all_users.ListUserHandler
 	// User forgot password
 	RequestForgotPasswordHandler  *request_forgot_password.RequestForgotPasswordHandler
 	ValidateForgotPasswordHandler *validate_forgot_password.ValidateForgotPasswordHandler
@@ -188,7 +192,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	authMiddleware := d.deps.AuthMiddleware.Execute
 	userInWorkspaceMiddleware := d.deps.UserInWorkspaceMiddleware.Execute
 	hasPermissionsMiddleware := d.deps.HasMembersPermissionsMiddleware.Execute
-	//jobPermissionsMiddleware := d.deps.HasJobPermissionsMiddleware.Execute
+	jobPermissionsMiddleware := d.deps.HasJobPermissionsMiddleware.Execute
 
 	apiGroup := d.Router.Group("/api")
 	apiGroup.GET("/ws", authMiddleware, d.deps.WebsocketHandler.Handle)
@@ -199,6 +203,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		accountGroup.PUT("/personal-informations", authMiddleware, d.deps.UpdateAccountPersonalInformationsHandler.Handle)
 		accountGroup.PATCH("/avatar", authMiddleware, d.deps.UpdateUserAvatarHandler.Handle)
 		accountGroup.PATCH("/status", authMiddleware, d.deps.SaveStatusHandler.Handle)
+		accountGroup.GET("/", authMiddleware, d.deps.GetListUsersHandler.Handle)
 
 		authGroup := accountGroup.Group("/auth")
 		{
@@ -226,8 +231,9 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 
 		inviteLinkGroup := accountGroup.Group("/invite-link")
 		{
-			// Todo permits only the admin to create_role an invite link
+			inviteLinkGroup.Use(authMiddleware, userInWorkspaceMiddleware, jobPermissionsMiddleware(entity2.VIEW_ADMINISTRATION_PANEL|entity2.CREATE_INVITATION))
 			inviteLinkGroup.POST("", d.deps.CreateInviteLinkHandler.Handle)
+			inviteLinkGroup.Use(authMiddleware, userInWorkspaceMiddleware, jobPermissionsMiddleware(entity2.DELETE_INVITATION))
 			inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkDataHandler.Handle)
 			inviteLinkGroup.GET("", d.deps.GetListInviteLinkHandler.Handle)
 			inviteLinkGroup.DELETE("/:token", d.deps.DeleteInviteLinkHandler.Handle)
@@ -254,6 +260,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	// job app
 	jobAppGroup := apiGroup.Group("/job")
 	{
+		jobAppGroup.Use(authMiddleware, jobPermissionsMiddleware(entity2.CREATE_INVITATION|entity2.DELETE_INVITATION|entity2.ASSIGN_JOB|entity2.UNASSIGN_JOB|entity2.DELETE_JOB|entity2.UPDATE_JOB|entity2.UPDATE_JOB_PERMISSIONS|entity2.VIEW_ADMINISTRATION_PANEL))
 		jobAppGroup.POST("", d.deps.CreateJobHandler.Handle)
 		jobAppGroup.DELETE("/:id", d.deps.DeleteJobHandler.Handle)
 		jobAppGroup.PUT("/:id", d.deps.UpdateJobHandler.Handle)

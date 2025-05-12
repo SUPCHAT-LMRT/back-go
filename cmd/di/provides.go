@@ -31,6 +31,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/delete_job"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/get_job_for_user"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/list_jobs"
+	permissions2 "github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/permissions"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/unassign_job"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/update_job"
 	user_chat_direct_repository "github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
@@ -63,6 +64,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/generate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_list_invite_link"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/list_all_users"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/logout"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/oauth"
@@ -298,9 +300,11 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_user_avatar.NewS3UpdateUserAvatarStrategy),
 		dig.NewProvider(public_profile.NewGetPublicUserProfileUseCase),
 		dig.NewProvider(delete_user.NewDeleteUserUseCase),
+		dig.NewProvider(list_all_users.NewListUserUseCase),
 		// User handlers
 		dig.NewProvider(update_user_avatar.NewUpdateUserAvatarHandler),
 		dig.NewProvider(public_profile.NewGetPublicProfileHandler),
+		dig.NewProvider(list_all_users.NewListUserHandler),
 		// User forgot password repository
 		dig.NewProvider(forgot_password_repository.NewRedisForgotPasswordRepository),
 		// User forgot password service
@@ -443,6 +447,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(assign_job.NewAssignJobUseCase),
 		dig.NewProvider(unassign_job.NewUnassignJobUseCase),
 		dig.NewProvider(get_job_for_user.NewGetJobForUserUseCase),
+		dig.NewProvider(permissions2.NewCheckPermissionJobUseCase),
 		// Jobs handlers
 		dig.NewProvider(create_job.NewCreateJobHandler),
 		dig.NewProvider(delete_job.NewDeleteJobHandler),
