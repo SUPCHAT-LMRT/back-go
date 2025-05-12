@@ -24,6 +24,15 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/search/message"
 	"github.com/supchat-lmrt/back-go/internal/search/usecase/search"
 	"github.com/supchat-lmrt/back-go/internal/search/user"
+	has_job "github.com/supchat-lmrt/back-go/internal/user/app_jobs/gin/middlewares"
+	app_jobs "github.com/supchat-lmrt/back-go/internal/user/app_jobs/repository"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/assign_job"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/create_job"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/delete_job"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/get_job_for_user"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/list_jobs"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/unassign_job"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/update_job"
 	user_chat_direct_repository "github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/is_first_message"
 	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
@@ -38,6 +47,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/get_status"
 	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/save_status"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/delete_user"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists_by_email"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists_by_oauthemail"
 	forgot_password_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/repository"
@@ -52,6 +62,7 @@ import (
 	delete2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/delete"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/generate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_list_invite_link"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/logout"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/oauth"
@@ -286,6 +297,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_user_avatar.NewUpdateUserAvatarUseCase),
 		dig.NewProvider(update_user_avatar.NewS3UpdateUserAvatarStrategy),
 		dig.NewProvider(public_profile.NewGetPublicUserProfileUseCase),
+		dig.NewProvider(delete_user.NewDeleteUserUseCase),
 		// User handlers
 		dig.NewProvider(update_user_avatar.NewUpdateUserAvatarHandler),
 		dig.NewProvider(public_profile.NewGetPublicProfileHandler),
@@ -322,9 +334,12 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(generate.NewInviteLinkUseCase),
 		dig.NewProvider(get_data_token_invite.NewGetInviteLinkDataUseCase),
 		dig.NewProvider(delete2.NewDeleteInviteLinkUseCase),
+		dig.NewProvider(get_list_invite_link.NewGetListInviteLinkUseCase),
 		// User invite link handlers
 		dig.NewProvider(generate.NewCreateInviteLinkHandler),
 		dig.NewProvider(get_data_token_invite.NewGetInviteLinkDataHandler),
+		dig.NewProvider(get_list_invite_link.NewGetListInviteLinkHandler),
+		dig.NewProvider(delete2.NewDeleteInviteLinkHandler),
 		// User handlers
 		dig.NewProvider(get_my_account.NewGetMyUserAccountHandler),
 		dig.NewProvider(login.NewLoginHandler),
@@ -332,6 +347,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(register.NewRegisterHandler),
 		dig.NewProvider(logout.NewLogoutHandler),
 		dig.NewProvider(update_user.NewUpdateAccountPersonalInformationsHandler),
+		dig.NewProvider(delete_user.NewDeleteUserHandler),
 		// User misc
 		dig.NewProvider(token.NewJwtTokenStrategy(os.Getenv("JWT_SECRET"))),
 		dig.NewProvider(crypt.NewBcryptStrategy),
@@ -413,6 +429,28 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(message.NewMeilisearchSearchMessageSyncManager),
 		dig.NewProvider(channel.NewMeilisearchSearchChannelSyncManager),
 		dig.NewProvider(user.NewMeilisearchSearchUserSyncManager),
+		// Jobs
+		// Jobs repository
+		dig.NewProvider(app_jobs.NewMongoJobRepository),
+		dig.NewProvider(app_jobs.NewMongoJobMapper),
+		// Jobs middlewares
+		dig.NewProvider(has_job.NewHasJobPermissionsMiddleware),
+		// Jobs usecases
+		dig.NewProvider(create_job.NewCreateJobUseCase),
+		dig.NewProvider(delete_job.NewDeleteJobUseCase),
+		dig.NewProvider(update_job.NewUpdateJobUseCase),
+		dig.NewProvider(list_jobs.NewListJobsUseCase),
+		dig.NewProvider(assign_job.NewAssignJobUseCase),
+		dig.NewProvider(unassign_job.NewUnassignJobUseCase),
+		dig.NewProvider(get_job_for_user.NewGetJobForUserUseCase),
+		// Jobs handlers
+		dig.NewProvider(create_job.NewCreateJobHandler),
+		dig.NewProvider(delete_job.NewDeleteJobHandler),
+		dig.NewProvider(update_job.NewUpdateJobHandler),
+		dig.NewProvider(list_jobs.NewListJobsHandler),
+		dig.NewProvider(assign_job.NewAssignJobHandler),
+		dig.NewProvider(unassign_job.NewUnassignJobHandler),
+		dig.NewProvider(get_job_for_user.NewGetJobForUserHandler),
 	}
 
 	for _, provider := range providers {

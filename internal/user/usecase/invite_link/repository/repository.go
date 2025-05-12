@@ -20,4 +20,5 @@ type InviteLinkRepository interface {
 	GetInviteLinkData(ctx context.Context, token string) (*entity.InviteLink, error)
 	GetInviteLinkDataByEmail(ctx context.Context, email string) (*entity.InviteLink, error)
 	DeleteInviteLink(ctx context.Context, token string) error
+	GetAllInviteLinks(ctx context.Context) ([]*entity.InviteLink, error)
 }

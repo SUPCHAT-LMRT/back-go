@@ -10,6 +10,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/search/channel"
 	"github.com/supchat-lmrt/back-go/internal/search/message"
 	"github.com/supchat-lmrt/back-go/internal/search/user"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/repository"
 	"github.com/supchat-lmrt/back-go/internal/websocket"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
@@ -71,6 +72,15 @@ func main() {
 		}
 
 		logg.Info().Str("collection", "workspace_message_sent_ts").Msg("Time-Series Collection created!")
+	})
+
+	// Ensure the Admin role exists
+	invokeFatal(logg, diContainer, func(jobRepo repository.JobRepository) {
+		err := jobRepo.EnsureAdminRoleExists(appContext)
+		if err != nil {
+			logg.Fatal().Err(err).Msg("Unable to ensure Admin role exists")
+		}
+		logg.Info().Msg("Admin role ensured!")
 	})
 
 	// Create the Meilisearch indexes if they don't exist

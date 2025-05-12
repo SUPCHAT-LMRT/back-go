@@ -1,0 +1,268 @@
+package repository
+
+import (
+	"context"
+	"fmt"
+	"github.com/supchat-lmrt/back-go/internal/mongo"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	uberdig "go.uber.org/dig"
+)
+
+var (
+	databaseName   = "supchat"
+	collectionName = "user_jobs"
+)
+
+type MongoJobRepositoryDeps struct {
+	uberdig.In
+	Client    *mongo.Client
+	JobMapper *MongoJobMapper
+}
+
+type MongoJobRepository struct {
+	deps MongoJobRepositoryDeps
+}
+
+type MongoJob struct {
+	Id                 bson.ObjectID `bson:"_id"`
+	Name               string        `bson:"name"`
+	AssignedUsers      []string      `bson:"assigned_users"`
+	Permissions        uint64        `bson:"permissions"`
+	OrganizationalOnly bool          `bson:"organizational_only"`
+}
+
+func NewMongoJobRepository(deps MongoJobRepositoryDeps) JobRepository {
+	return &MongoJobRepository{deps: deps}
+}
+
+func (r *MongoJobRepository) FindByName(ctx context.Context, name string) (*entity.Job, error) {
+	filter := bson.M{"name": name}
+
+	var mongoJob MongoJob
+	err := r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, filter).
+		Decode(&mongoJob)
+	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("error finding job by name: %w", err)
+	}
+
+	return r.deps.JobMapper.MapToEntity(&mongoJob)
+}
+
+func (r *MongoJobRepository) FindById(ctx context.Context, jobId string) (*entity.Job, error) {
+	objectID, err := bson.ObjectIDFromHex(jobId)
+	if err != nil {
+		return nil, fmt.Errorf("invalid job ID: %w", err)
+	}
+
+	var mongoJob MongoJob
+	err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, bson.M{"_id": objectID}).
+		Decode(&mongoJob)
+	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("error finding job: %w", err)
+	}
+
+	return r.deps.JobMapper.MapToEntity(&mongoJob)
+}
+
+func (r *MongoJobRepository) Create(ctx context.Context, job *entity.Job) error {
+	objectID := bson.NewObjectID()
+	job.Id = entity.JobsId(objectID.Hex())
+
+	mongoJob := &MongoJob{
+		Id:                 objectID,
+		Name:               job.Name,
+		Permissions:        job.Permissions,
+		OrganizationalOnly: job.OrganizationalOnly,
+		AssignedUsers:      []string{},
+	}
+
+	_, err := r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		InsertOne(ctx, mongoJob)
+	if err != nil {
+		return fmt.Errorf("error creating job: %w", err)
+	}
+
+	return nil
+}
+
+func (r *MongoJobRepository) Delete(ctx context.Context, jobId string) error {
+	objectID, err := bson.ObjectIDFromHex(jobId)
+	if err != nil {
+		return fmt.Errorf("invalid job ID: %w", err)
+	}
+
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		DeleteOne(ctx, bson.M{"_id": objectID})
+	if err != nil {
+		return fmt.Errorf("error deleting job: %w", err)
+	}
+
+	return nil
+}
+
+func (r *MongoJobRepository) Update(ctx context.Context, job *entity.Job) error {
+	objectID, err := bson.ObjectIDFromHex(string(job.Id))
+	if err != nil {
+		return fmt.Errorf("invalid job ID: %w", err)
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"name":                job.Name,
+			"permissions":         job.Permissions,
+			"organizational_only": job.OrganizationalOnly,
+		},
+	}
+
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, bson.M{"_id": objectID}, update)
+	if err != nil {
+		return fmt.Errorf("error updating job: %w", err)
+	}
+
+	return nil
+}
+
+func (r *MongoJobRepository) FindAll(ctx context.Context) ([]*entity.Job, error) {
+	cursor, err := r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		Find(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("error finding jobs: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var mongoJobs []MongoJob
+	if err := cursor.All(ctx, &mongoJobs); err != nil {
+		return nil, fmt.Errorf("error decoding jobs: %w", err)
+	}
+
+	var jobs []*entity.Job
+	for _, mongoJob := range mongoJobs {
+		job, err := r.deps.JobMapper.MapToEntity(&mongoJob)
+		if err != nil {
+			return nil, fmt.Errorf("error mapping job: %w", err)
+		}
+		jobs = append(jobs, job)
+	}
+
+	return jobs, nil
+}
+
+func (r *MongoJobRepository) AssignToUser(ctx context.Context, jobId string, userId user_entity.UserId) error {
+	objectID, err := bson.ObjectIDFromHex(jobId)
+	if err != nil {
+		return fmt.Errorf("invalid job ID: %w", err)
+	}
+
+	update := bson.M{
+		"$set": bson.M{},
+		"$addToSet": bson.M{
+			"assigned_users": userId,
+		},
+	}
+
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, bson.M{"_id": objectID}, update)
+	if err != nil {
+		return fmt.Errorf("error assigning job: %w", err)
+	}
+
+	return nil
+}
+
+func (r *MongoJobRepository) UnassignFromUser(ctx context.Context, jobId string, userId user_entity.UserId) error {
+	objectID, err := bson.ObjectIDFromHex(jobId)
+	if err != nil {
+		return fmt.Errorf("invalid job ID: %w", err)
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"is_assigned": false,
+		},
+		"$pull": bson.M{
+			"assigned_users": userId,
+		},
+	}
+
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, bson.M{"_id": objectID}, update)
+	if err != nil {
+		return fmt.Errorf("error unassigning job: %w", err)
+	}
+
+	return nil
+}
+
+func (r *MongoJobRepository) EnsureAdminRoleExists(ctx context.Context) error {
+	const adminRoleName = "Admin"
+
+	// Vérifiez si le rôle Admin existe déjà
+	existingRole, err := r.FindByName(ctx, adminRoleName)
+	if err != nil {
+		return fmt.Errorf("erreur lors de la vérification du rôle Admin : %w", err)
+	}
+
+	if existingRole != nil {
+		// Le rôle Admin existe déjà
+		return nil
+	}
+
+	// Créez le rôle Admin avec les permissions PermissionAdmin
+	adminRole := &entity.Job{
+		Name:        adminRoleName,
+		Permissions: entity.PermissionAdmin,
+	}
+
+	if err := r.Create(ctx, adminRole); err != nil {
+		return fmt.Errorf("erreur lors de la création du rôle Admin : %w", err)
+	}
+
+	return nil
+}
+
+func (r *MongoJobRepository) FindByUserId(ctx context.Context, userId string) ([]*entity.Job, error) {
+	filter := bson.M{"assigned_users": userId}
+
+	cursor, err := r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		Find(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("error finding jobs for user: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var mongoJobs []MongoJob
+	if err := cursor.All(ctx, &mongoJobs); err != nil {
+		return nil, fmt.Errorf("error decoding jobs: %w", err)
+	}
+
+	var jobs []*entity.Job
+	for _, mongoJob := range mongoJobs {
+		job, err := r.deps.JobMapper.MapToEntity(&mongoJob)
+		if err != nil {
+			return nil, fmt.Errorf("error mapping job: %w", err)
+		}
+		jobs = append(jobs, job)
+	}
+
+	return jobs, nil
+}

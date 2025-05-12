@@ -158,7 +158,12 @@ func (r MongoUserRepository) Update(ctx context.Context, user *entity.User) erro
 }
 
 func (r MongoUserRepository) Delete(ctx context.Context, userId entity.UserId) error {
-	_, err := r.deps.Client.Client.Database(databaseName).Collection(collectionName).DeleteOne(ctx, bson.M{"_id": userId})
+	objectId, err := bson.ObjectIDFromHex(userId.String())
+	if err != nil {
+		return err
+	}
+
+	_, err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).DeleteOne(ctx, bson.M{"_id": objectId})
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
 			return repository.UserNotFoundErr

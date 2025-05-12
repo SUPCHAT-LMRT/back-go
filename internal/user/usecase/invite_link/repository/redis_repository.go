@@ -113,3 +113,31 @@ func (m RedisInviteLinkRepository) DeleteInviteLink(ctx context.Context, token s
 
 	return nil
 }
+
+func (m RedisInviteLinkRepository) GetAllInviteLinks(ctx context.Context) ([]*entity.InviteLink, error) {
+	keys, err := m.client.Client.Keys(ctx, "invite_link_workspace:*").Result()
+	if err != nil {
+		return nil, err
+	}
+
+	var inviteLinks []*entity.InviteLink
+	for _, key := range keys {
+		data, err := m.client.Client.HGetAll(ctx, key).Result()
+		if err != nil {
+			return nil, err
+		}
+
+		if len(data) == 0 {
+			continue
+		}
+
+		inviteLink, err := m.mapper.MapToEntity(data)
+		if err != nil {
+			return nil, err
+		}
+
+		inviteLinks = append(inviteLinks, inviteLink)
+	}
+
+	return inviteLinks, nil
+}

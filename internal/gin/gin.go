@@ -9,14 +9,24 @@ import (
 	list_group_chat_messages "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/add_member"
 	"github.com/supchat-lmrt/back-go/internal/search/usecase/search"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/assign_job"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/create_job"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/delete_job"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/get_job_for_user"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/list_jobs"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/unassign_job"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/update_job"
 	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/user/gin/middlewares"
 	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/save_status"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/delete_user"
 	request_forgot_password "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/request"
 	validate_forgot_password "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/validate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_my_account"
+	delete2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/delete"
 	user_invite_link_generate "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/generate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_list_invite_link"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/logout"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/oauth"
@@ -84,6 +94,8 @@ type GinRouterDeps struct {
 	AuthMiddleware                  *middlewares.AuthMiddleware
 	UserInWorkspaceMiddleware       *workspace_middlewares.UserInWorkspaceMiddleware
 	HasMembersPermissionsMiddleware *middlewares2.HasPermissionsMiddleware
+	//HasJobPermissionsMiddleware     *has_job.HasJobPermissionsMiddleware
+
 	// Handlers
 	// Workspace
 	ListWorkspaceHandler              *list_workspaces.ListWorkspaceHandler
@@ -130,6 +142,7 @@ type GinRouterDeps struct {
 	UpdateAccountPersonalInformationsHandler *update_user.UpdateAccountPersonalInformationsHandler
 	UpdateUserAvatarHandler                  *update_user_avatar.UpdateUserAvatarHandler
 	GetPublicProfileHandler                  *public_profile.GetPublicProfileHandler
+	DeleteUserHandler                        *delete_user.DeleteUserHandler
 	// User forgot password
 	RequestForgotPasswordHandler  *request_forgot_password.RequestForgotPasswordHandler
 	ValidateForgotPasswordHandler *validate_forgot_password.ValidateForgotPasswordHandler
@@ -140,6 +153,8 @@ type GinRouterDeps struct {
 	CreateInviteLinkHandler    *user_invite_link_generate.CreateInviteLinkHandler
 	GetInviteLinkDataHandler   *get_data_token_invite.GetInviteLinkDataHandler
 	JoinWorkspaceInviteHandler *join_workspace_invite.JoinWorkspaceInviteHandler
+	GetListInviteLinkHandler   *get_list_invite_link.GetListInviteLinkHandler
+	DeleteInviteLinkHandler    *delete2.DeleteInviteLinkHandler
 	// User OAuth connection
 	RegisterOAuthHandler *oauth.RegisterOAuthHandler
 	// User status
@@ -154,6 +169,14 @@ type GinRouterDeps struct {
 	ListGroupChatMessagesHandler *list_group_chat_messages.ListGroupChatMessagesHandler
 	// Search
 	SearchTermHandler *search.SearchTermHandler
+	// Job
+	CreateJobHandler     *create_job.CreateJobHandler
+	DeleteJobHandler     *delete_job.DeleteJobHandler
+	UpdateJobHandler     *update_job.UpdateJobHandler
+	ListJobsHandler      *list_jobs.ListJobsHandler
+	AssignJobHandler     *assign_job.AssignJobHandler
+	UnassignJobHandler   *unassign_job.UnassignJobHandler
+	GetJobForUserHandler *get_job_for_user.GetJobForUserHandler
 }
 
 func NewGinRouter(deps GinRouterDeps) GinRouter {
@@ -165,6 +188,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	authMiddleware := d.deps.AuthMiddleware.Execute
 	userInWorkspaceMiddleware := d.deps.UserInWorkspaceMiddleware.Execute
 	hasPermissionsMiddleware := d.deps.HasMembersPermissionsMiddleware.Execute
+	//jobPermissionsMiddleware := d.deps.HasJobPermissionsMiddleware.Execute
 
 	apiGroup := d.Router.Group("/api")
 	apiGroup.GET("/ws", authMiddleware, d.deps.WebsocketHandler.Handle)
@@ -182,6 +206,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			authGroup.POST("/register", d.deps.RegisterHandler.Handle)
 			authGroup.GET("/oauth/:provider", d.deps.RegisterOAuthHandler.Provider)
 			authGroup.GET("/oauth/:provider/callback", d.deps.RegisterOAuthHandler.Callback)
+			authGroup.DELETE("/delete/:userId", authMiddleware, d.deps.DeleteUserHandler.Handle)
 
 			authGroup.POST("/token/access/renew", d.deps.RefreshTokenHandler.Handle)
 			authGroup.POST("/logout", authMiddleware, d.deps.LogoutHandler.Handle)
@@ -204,7 +229,8 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			// Todo permits only the admin to create_role an invite link
 			inviteLinkGroup.POST("", d.deps.CreateInviteLinkHandler.Handle)
 			inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkDataHandler.Handle)
-
+			inviteLinkGroup.GET("", d.deps.GetListInviteLinkHandler.Handle)
+			inviteLinkGroup.DELETE("/:token", d.deps.DeleteInviteLinkHandler.Handle)
 		}
 
 		accountGroup.GET("/:user_id/profile", d.deps.GetPublicProfileHandler.Handle)
@@ -223,6 +249,18 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	{
 		groupGroup.POST("/members", authMiddleware, d.deps.AddMemberToGroupHandler.Handle)
 		groupGroup.GET("/:group_id/messages", authMiddleware, d.deps.ListGroupChatMessagesHandler.Handle)
+	}
+
+	// job app
+	jobAppGroup := apiGroup.Group("/job")
+	{
+		jobAppGroup.POST("", d.deps.CreateJobHandler.Handle)
+		jobAppGroup.DELETE("/:id", d.deps.DeleteJobHandler.Handle)
+		jobAppGroup.PUT("/:id", d.deps.UpdateJobHandler.Handle)
+		jobAppGroup.GET("", d.deps.ListJobsHandler.Handle)
+		jobAppGroup.POST("/assign", d.deps.AssignJobHandler.Handle)
+		jobAppGroup.POST("/unassign", d.deps.UnassignJobHandler.Handle)
+		jobAppGroup.GET("/user/:user_id", d.deps.GetJobForUserHandler.Handle)
 	}
 
 	workspacesGroup := apiGroup.Group("/workspaces")
