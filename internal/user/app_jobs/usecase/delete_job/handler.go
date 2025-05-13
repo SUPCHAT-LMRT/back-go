@@ -2,6 +2,7 @@ package delete_job
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
 	"net/http"
 )
 
@@ -20,7 +21,7 @@ func (h *DeleteJobHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	err := h.useCase.Execute(c.Request.Context(), jobId)
+	err := h.useCase.Execute(c.Request.Context(), entity.JobId(jobId))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -50,14 +50,12 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/crypt"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/delete_user"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists_by_email"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/exists_by_oauthemail"
 	forgot_password_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/repository"
 	forgot_password_service "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/service"
 	forgot_password_request_usecase "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/request"
 	forgot_password_validate_usecase "github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/usecase/validate"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_email"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_oauthemail"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_my_account"
 	repository2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/repository"
 	delete2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/delete"
@@ -68,6 +66,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/login"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/logout"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/oauth"
+	user_oauth_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/oauth/repository"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/public_profile"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/register"
 	reset_password_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/reset_password/repository"
@@ -288,10 +287,8 @@ func NewDi() *uberdig.Container {
 		// User usecases
 		dig.NewProvider(get_by_id.NewGetUserByIdUseCase),
 		dig.NewProvider(get_by_email.NewGetUserByEmailUseCase),
-		dig.NewProvider(get_by_oauthemail.NewGetUserByOauthEmailUseCase),
 		dig.NewProvider(login.NewLoginUserUseCase),
 		dig.NewProvider(exists_by_email.NewExistsUserByEmailUseCase),
-		dig.NewProvider(exists_by_oauthemail.NewExistsUserByOauthEmailUseCase),
 		dig.NewProvider(register.NewRegisterUserUseCase),
 		dig.NewProvider(token.NewRefreshAccessTokenUseCase),
 		dig.NewProvider(update_password.NewChangePasswordUseCase),
@@ -356,6 +353,9 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(token.NewJwtTokenStrategy(os.Getenv("JWT_SECRET"))),
 		dig.NewProvider(crypt.NewBcryptStrategy),
 		dig.NewProvider(middlewares.NewAuthMiddleware),
+		// User Oauth repositories
+		dig.NewProvider(user_oauth_repository.NewMongoOauthConnectionRepository),
+		dig.NewProvider(user_oauth_repository.NewMongoOauthConnectionMapper),
 		// User chat direct
 		// User chat direct repository
 		dig.NewProvider(user_chat_direct_repository.NewMongoChatDirectRepository),

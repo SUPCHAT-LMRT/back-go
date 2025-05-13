@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/oauth/entity"
@@ -17,6 +18,7 @@ var (
 type MongoOauthConnectionRepositoryDeps struct {
 	uberdig.In
 	Client *mongo.Client
+	Mapper mapper.Mapper[*MongoOauthConnection, *entity.OauthConnection]
 }
 type MongoOauthConnectionRepository struct {
 	deps MongoOauthConnectionRepositoryDeps
@@ -24,7 +26,7 @@ type MongoOauthConnectionRepository struct {
 
 type MongoOauthConnection struct {
 	Id          bson.ObjectID `bson:"_id"`
-	UserId      string        `bson:"user_id"`
+	UserId      bson.ObjectID `bson:"user_id"`
 	Provider    string        `bson:"provider"`
 	OauthEmail  string        `bson:"oauth_email"`
 	OauthUserId string        `bson:"oauth_user_id"`
@@ -38,13 +40,34 @@ func (m MongoOauthConnectionRepository) CreateOauthConnection(ctx context.Contex
 	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
 
 	connection.Id = entity.OauthConnectionId(bson.NewObjectID().Hex())
+	mongoConnection, err := m.deps.Mapper.MapFromEntity(connection)
+	if err != nil {
+		return err
+	}
 
-	_, err := collection.InsertOne(ctx, connection)
+	_, err = collection.InsertOne(ctx, mongoConnection)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (m MongoOauthConnectionRepository) GetOauthConnectionByUserId(ctx context.Context, userId string) (*entity.OauthConnection, error) {
+	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
+	filter := bson.M{"oauth_user_id": userId}
+	var mongoConnection MongoOauthConnection
+	err := collection.FindOne(ctx, filter).Decode(&mongoConnection)
+	if err != nil {
+		return nil, err
+	}
+
+	connection, err := m.deps.Mapper.MapToEntity(&mongoConnection)
+	if err != nil {
+		return nil, err
+	}
+
+	return connection, nil
 }
 
 func (m MongoOauthConnectionRepository) ListOauthConnectionsByUser(ctx context.Context, userId user_entity.UserId) ([]*entity.OauthConnection, error) {
@@ -58,11 +81,17 @@ func (m MongoOauthConnectionRepository) ListOauthConnectionsByUser(ctx context.C
 
 	var connections []*entity.OauthConnection
 	for cursor.Next(ctx) {
-		var connection entity.OauthConnection
-		if err = cursor.Decode(&connection); err != nil {
+		var mongoConnection MongoOauthConnection
+		if err = cursor.Decode(&mongoConnection); err != nil {
 			return nil, err
 		}
-		connections = append(connections, &connection)
+
+		connection, err := m.deps.Mapper.MapToEntity(&mongoConnection)
+		if err != nil {
+			return nil, err
+		}
+
+		connections = append(connections, connection)
 	}
 
 	return connections, nil

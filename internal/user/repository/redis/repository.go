@@ -19,9 +19,6 @@ var (
 	buildUserEmailBindingRedisKey = func(userEmail string) string {
 		return "user_email:" + userEmail
 	}
-	buildUserOauthEmailBindingRedisKey = func(oauthEmail string) string {
-		return "user_oauth_email:" + oauthEmail
-	}
 )
 
 type RedisUserRepositoryDeps struct {
@@ -59,12 +56,6 @@ func (r RedisUserRepository) Create(ctx context.Context, user *entity.User) erro
 	if err != nil {
 		return err
 	}
-	if user.OauthEmail != "" {
-		err = r.deps.Client.Client.Set(ctx, buildUserOauthEmailBindingRedisKey(user.OauthEmail), user.Id.String(), userRedisExpiration).Err()
-		if err != nil {
-			return err
-		}
-	}
 
 	return nil
 }
@@ -85,15 +76,6 @@ func (r RedisUserRepository) GetById(ctx context.Context, userId entity.UserId) 
 
 func (r RedisUserRepository) GetByEmail(ctx context.Context, userEmail string, options ...repository.GetUserOptionFunc) (user *entity.User, err error) {
 	userIdStr, err := r.deps.Client.Client.Get(ctx, buildUserEmailBindingRedisKey(userEmail)).Result()
-	if err != nil {
-		return nil, err
-	}
-
-	return r.GetById(ctx, entity.UserId(userIdStr))
-}
-
-func (r RedisUserRepository) GetByOauthEmail(ctx context.Context, oauthEmail string) (user *entity.User, err error) {
-	userIdStr, err := r.deps.Client.Client.Get(ctx, buildUserOauthEmailBindingRedisKey(oauthEmail)).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -147,11 +129,6 @@ func (r RedisUserRepository) Delete(ctx context.Context, userId entity.UserId) e
 	}
 
 	err = r.deps.Client.Client.Del(ctx, buildUserRedisKey(userId)).Err()
-	if err != nil {
-		return err
-	}
-
-	err = r.deps.Client.Client.Del(ctx, buildUserOauthEmailBindingRedisKey(user.OauthEmail)).Err()
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package update_job
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
 	"net/http"
 )
 
@@ -29,7 +30,7 @@ func (h *UpdateJobHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	job, err := h.useCase.Execute(c.Request.Context(), jobId, request.Name)
+	job, err := h.useCase.Execute(c.Request.Context(), entity.JobId(jobId), request.Name)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

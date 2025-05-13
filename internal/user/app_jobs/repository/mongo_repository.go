@@ -54,8 +54,8 @@ func (r *MongoJobRepository) FindByName(ctx context.Context, name string) (*enti
 	return r.deps.JobMapper.MapToEntity(&mongoJob)
 }
 
-func (r *MongoJobRepository) FindById(ctx context.Context, jobId string) (*entity.Job, error) {
-	objectID, err := bson.ObjectIDFromHex(jobId)
+func (r *MongoJobRepository) FindById(ctx context.Context, jobId entity.JobId) (*entity.Job, error) {
+	objectID, err := bson.ObjectIDFromHex(jobId.String())
 	if err != nil {
 		return nil, fmt.Errorf("invalid job ID: %w", err)
 	}
@@ -77,7 +77,7 @@ func (r *MongoJobRepository) FindById(ctx context.Context, jobId string) (*entit
 
 func (r *MongoJobRepository) Create(ctx context.Context, job *entity.Job) error {
 	objectID := bson.NewObjectID()
-	job.Id = entity.JobsId(objectID.Hex())
+	job.Id = entity.JobId(objectID.Hex())
 
 	mongoJob := &MongoJob{
 		Id:            objectID,
@@ -96,8 +96,8 @@ func (r *MongoJobRepository) Create(ctx context.Context, job *entity.Job) error 
 	return nil
 }
 
-func (r *MongoJobRepository) Delete(ctx context.Context, jobId string) error {
-	objectID, err := bson.ObjectIDFromHex(jobId)
+func (r *MongoJobRepository) Delete(ctx context.Context, jobId entity.JobId) error {
+	objectID, err := bson.ObjectIDFromHex(jobId.String())
 	if err != nil {
 		return fmt.Errorf("invalid job ID: %w", err)
 	}
@@ -161,8 +161,8 @@ func (r *MongoJobRepository) FindAll(ctx context.Context) ([]*entity.Job, error)
 	return jobs, nil
 }
 
-func (r *MongoJobRepository) AssignToUser(ctx context.Context, jobId string, userId user_entity.UserId) error {
-	objectID, err := bson.ObjectIDFromHex(jobId)
+func (r *MongoJobRepository) AssignToUser(ctx context.Context, jobId entity.JobId, userId user_entity.UserId) error {
+	objectID, err := bson.ObjectIDFromHex(jobId.String())
 	if err != nil {
 		return fmt.Errorf("invalid job ID: %w", err)
 	}
@@ -184,8 +184,8 @@ func (r *MongoJobRepository) AssignToUser(ctx context.Context, jobId string, use
 	return nil
 }
 
-func (r *MongoJobRepository) UnassignFromUser(ctx context.Context, jobId string, userId user_entity.UserId) error {
-	objectID, err := bson.ObjectIDFromHex(jobId)
+func (r *MongoJobRepository) UnassignFromUser(ctx context.Context, jobId entity.JobId, userId user_entity.UserId) error {
+	objectID, err := bson.ObjectIDFromHex(jobId.String())
 	if err != nil {
 		return fmt.Errorf("invalid job ID: %w", err)
 	}
@@ -209,18 +209,18 @@ func (r *MongoJobRepository) UnassignFromUser(ctx context.Context, jobId string,
 	return nil
 }
 
-func (r *MongoJobRepository) EnsureAdminRoleExists(ctx context.Context) error {
+func (r *MongoJobRepository) EnsureAdminRoleExists(ctx context.Context) (*entity.Job, error) {
 	const adminRoleName = "Admin"
 
 	// Vérifiez si le rôle Admin existe déjà
 	existingRole, err := r.FindByName(ctx, adminRoleName)
 	if err != nil {
-		return fmt.Errorf("erreur lors de la vérification du rôle Admin : %w", err)
+		return nil, fmt.Errorf("erreur lors de la vérification du rôle Admin: %w", err)
 	}
 
 	if existingRole != nil {
 		// Le rôle Admin existe déjà
-		return nil
+		return nil, nil
 	}
 
 	// Créez le rôle Admin avec les permissions PermissionAdmin
@@ -229,11 +229,11 @@ func (r *MongoJobRepository) EnsureAdminRoleExists(ctx context.Context) error {
 		Permissions: entity.CREATE_INVITATION | entity.DELETE_INVITATION | entity.ASSIGN_JOB | entity.UNASSIGN_JOB | entity.DELETE_JOB | entity.UPDATE_JOB | entity.UPDATE_JOB_PERMISSIONS | entity.VIEW_ADMINISTRATION_PANEL,
 	}
 
-	if err := r.Create(ctx, adminRole); err != nil {
-		return fmt.Errorf("erreur lors de la création du rôle Admin : %w", err)
+	if err = r.Create(ctx, adminRole); err != nil {
+		return nil, fmt.Errorf("erreur lors de la création du rôle Admin: %w", err)
 	}
 
-	return nil
+	return adminRole, nil
 }
 
 func (r *MongoJobRepository) FindByUserId(ctx context.Context, userId string) ([]*entity.Job, error) {

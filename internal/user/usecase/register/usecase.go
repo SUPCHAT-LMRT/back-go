@@ -12,9 +12,9 @@ import (
 	entity2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/entity"
 	delete2 "github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/delete"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/usecase/get_data_token_invite"
-	"go.mongodb.org/mongo-driver/v2/bson"
+	oauth_entity "github.com/supchat-lmrt/back-go/internal/user/usecase/oauth/entity"
+	user_oauth_repository "github.com/supchat-lmrt/back-go/internal/user/usecase/oauth/repository"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 var (
@@ -23,13 +23,14 @@ var (
 
 type RegisterUserDeps struct {
 	uberdig.In
-	ExistsUserUseCase        *exists_by_email.ExistsUserByEmailUseCase
-	CryptStrategy            crypt.CryptStrategy
-	Repository               repository.UserRepository
-	Observers                []RegisterUserObserver `group:"register_user_observers"`
-	DeleteInviteLinkUseCase  *delete2.DeleteInviteLinkUseCase
-	GetInviteLinkDataUseCase *get_data_token_invite.GetInviteLinkDataUseCase
-	SearchUserSyncManager    user_search.SearchUserSyncManager
+	ExistsUserUseCase         *exists_by_email.ExistsUserByEmailUseCase
+	CryptStrategy             crypt.CryptStrategy
+	Repository                repository.UserRepository
+	Observers                 []RegisterUserObserver `group:"register_user_observers"`
+	DeleteInviteLinkUseCase   *delete2.DeleteInviteLinkUseCase
+	GetInviteLinkDataUseCase  *get_data_token_invite.GetInviteLinkDataUseCase
+	SearchUserSyncManager     user_search.SearchUserSyncManager
+	OauthConnectionRepository user_oauth_repository.OauthConnectionRepository
 }
 
 type RegisterUserUseCase struct {
@@ -69,10 +70,6 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, token string, opts ..
 	}
 
 	user := r.EntityUser(options.Password, inviteLinkData)
-	user.Id = entity.UserId(bson.NewObjectID().Hex())
-	user.CreatedAt = time.Now()
-	user.UpdatedAt = user.CreatedAt
-
 	err = r.deps.Repository.Create(ctx, user)
 	if err != nil {
 		return fmt.Errorf("error adding user: %w", err)
@@ -97,6 +94,15 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, token string, opts ..
 
 	if options.Mode == RegisterModeOauth {
 		// Handle Oauth binding between user and provider
+		err = r.deps.OauthConnectionRepository.CreateOauthConnection(ctx, &oauth_entity.OauthConnection{
+			UserId:      user.Id,
+			Provider:    options.Oauth.Provider,
+			OauthEmail:  options.Oauth.Email,
+			OauthUserId: options.Oauth.UserId,
+		})
+		if err != nil {
+			return fmt.Errorf("error creating oauth connection: %w", err)
+		}
 	}
 
 	for _, observer := range r.deps.Observers {

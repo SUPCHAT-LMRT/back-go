@@ -12,10 +12,10 @@ import (
 
 var (
 	buildInviteLinkRedisKey = func(token string) string {
-		return "invite_link_workspace:" + token
+		return "app_invite_link:" + token
 	}
 	buildInviteLinkEmailBindingRedisKey = func(email string) string {
-		return "invite_link_workspace_email:" + email
+		return "app_invite_link_email:" + email
 	}
 )
 
@@ -29,7 +29,6 @@ func NewRedisInviteLinkRepository(mapper mapper.Mapper[map[string]string, *entit
 }
 
 func (m RedisInviteLinkRepository) GenerateInviteLink(ctx context.Context, link *entity.InviteLink) error {
-
 	link.ExpiresAt = time.Now().Add(RedisInviteLinkExpiredTime)
 
 	databaseInviteLink, err := m.mapper.MapFromEntity(link)
@@ -101,12 +100,19 @@ func (m RedisInviteLinkRepository) GetInviteLinkDataByEmail(ctx context.Context,
 }
 
 func (m RedisInviteLinkRepository) DeleteInviteLink(ctx context.Context, token string) error {
-	_, err := m.client.Client.Del(ctx, buildInviteLinkRedisKey(token)).Result()
+	inviteLinkData, err := m.GetInviteLinkData(ctx, token)
+	if err != nil {
+		if errors.Is(err, InviteLinkNotFoundErr) {
+			return nil // No need to delete if it doesn't exist
+		}
+	}
+
+	_, err = m.client.Client.Del(ctx, buildInviteLinkRedisKey(token)).Result()
 	if err != nil {
 		return err
 	}
 
-	_, err = m.client.Client.Del(ctx, buildInviteLinkEmailBindingRedisKey(token)).Result()
+	_, err = m.client.Client.Del(ctx, buildInviteLinkEmailBindingRedisKey(inviteLinkData.Email)).Result()
 	if err != nil {
 		return err
 	}

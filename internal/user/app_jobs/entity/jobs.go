@@ -11,12 +11,10 @@ const (
 	VIEW_ADMINISTRATION_PANEL                    // Voir le panneau d’administration
 )
 
-type (
-	JobsId string
-)
+type JobId string
 
 type Job struct {
-	Id          JobsId
+	Id          JobId
 	Name        string
 	Permissions uint64
 	IsAssigned  bool
@@ -26,6 +24,6 @@ func (r Job) HasPermission(permission uint64) bool {
 	return r.Permissions&permission != 0
 }
 
-func (id JobsId) String() string {
+func (id JobId) String() string {
 	return string(id)
 }
