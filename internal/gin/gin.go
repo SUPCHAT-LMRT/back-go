@@ -203,7 +203,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		accountGroup.PUT("/personal-informations", authMiddleware, d.deps.UpdateAccountPersonalInformationsHandler.Handle)
 		accountGroup.PATCH("/avatar", authMiddleware, d.deps.UpdateUserAvatarHandler.Handle)
 		accountGroup.PATCH("/status", authMiddleware, d.deps.SaveStatusHandler.Handle)
-		accountGroup.GET("/", authMiddleware, d.deps.GetListUsersHandler.Handle)
+		accountGroup.GET("/users", authMiddleware, d.deps.GetListUsersHandler.Handle)
 
 		authGroup := accountGroup.Group("/auth")
 		{
