@@ -18,6 +18,7 @@ type WorkspaceMemberRepository interface {
 	CountMembers(ctx context.Context, workspaceId entity.WorkspaceId) (uint, error)
 	GetMemberByUserId(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (*entity2.WorkspaceMember, error)
 	IsMemberExists(ctx context.Context, workspaceId entity.WorkspaceId, memberId entity2.WorkspaceMemberId) (bool, error)
+	IsMemberByUserIdExists(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (bool, error)
 	AddMember(ctx context.Context, workspaceId entity.WorkspaceId, member *entity2.WorkspaceMember) error
 	RemoveMember(ctx context.Context, workspaceId entity.WorkspaceId, userId entity2.WorkspaceMemberId) error
 }
