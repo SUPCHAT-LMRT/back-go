@@ -185,6 +185,28 @@ func (m MongoWorkspaceMemberRepository) IsMemberExists(ctx context.Context, work
 	return count > 0, nil
 }
 
+func (m MongoWorkspaceMemberRepository) IsMemberByUserIdExists(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (bool, error) {
+	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId.String())
+	if err != nil {
+		return false, err
+	}
+
+	userObjectId, err := bson.ObjectIDFromHex(userId.String())
+	if err != nil {
+		return false, err
+	}
+
+	count, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).CountDocuments(ctx, bson.M{
+		"workspace_id": workspaceObjectId,
+		"user_id":      userObjectId,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
 func (m MongoWorkspaceMemberRepository) RemoveMember(ctx context.Context, workspaceId entity.WorkspaceId, memberId entity2.WorkspaceMemberId) error {
 	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId.String())
 	if err != nil {
