@@ -26,7 +26,24 @@ func (h *GetJobForUserHandler) Handle(c *gin.Context) {
 		return
 	}
 
+	var jobResponses []JobResponse
+	for _, job := range jobs {
+		jobResponses = append(jobResponses, JobResponse{
+			Id:          string(job.Id),
+			Name:        job.Name,
+			Permissions: int(job.Permissions),
+			IsAssigned:  job.IsAssigned,
+		})
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"jobs": jobs,
+		"jobs": jobResponses,
 	})
+}
+
+type JobResponse struct {
+	Id          string `json:"id"`
+	Name        string `json:"name"`
+	Permissions int    `json:"permissions"`
+	IsAssigned  bool   `json:"is_assigned"`
 }
