@@ -39,6 +39,7 @@ import (
 	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
 	list_recent_chats_direct "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_recent_direct_chats"
 	save_direct_message "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/save_message"
+	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/send_message_notification"
 	toggle_chat_direct_reaction "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/toggle_reaction"
 	"github.com/supchat-lmrt/back-go/internal/user/gin/middlewares"
 	mongo2 "github.com/supchat-lmrt/back-go/internal/user/repository/mongo"
@@ -392,6 +393,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(websocket.NewSaveChannelMessageObserver, uberdig.Group("send_channel_message_observers")),
 		dig.NewProvider(websocket.NewSaveDirectMessageObserver, uberdig.Group("send_direct_message_observers")),
 		dig.NewProvider(save_direct_message.NewSyncRecentChatObserver, uberdig.Group("save_direct_chat_message_observers")),
+		dig.NewProvider(save_direct_message.NewSendNotificationObserver, uberdig.Group("save_direct_chat_message_observers")),
 		// Ws handlers
 		dig.NewProvider(websocket.NewWebsocketHandler),
 		// Chat
@@ -456,6 +458,9 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(assign_job.NewAssignJobHandler),
 		dig.NewProvider(unassign_job.NewUnassignJobHandler),
 		dig.NewProvider(get_job_for_user.NewGetJobForUserHandler),
+		dig.NewProvider(send_message_notification.NewEmailChannel, uberdig.Group("send_message_notification_channel")),
+		dig.NewProvider(send_message_notification.NewPushChannel, uberdig.Group("send_message_notification_channel")),
+		dig.NewProvider(send_message_notification.NewSendMessageNotificationUseCase),
 	}
 
 	for _, provider := range providers {

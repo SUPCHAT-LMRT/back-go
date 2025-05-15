@@ -21,3 +21,10 @@ type ChatDirect struct {
 func (id ChatDirectId) String() string {
 	return string(id)
 }
+
+func (c ChatDirect) GetReceiverId() user_entity.UserId {
+	if c.User1Id == c.SenderId {
+		return c.User2Id
+	}
+	return c.User1Id
+}
