@@ -16,6 +16,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/delete_job"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/get_job_for_user"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/list_jobs"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/permissions"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/unassign_job"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/update_job"
 	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
@@ -174,13 +175,14 @@ type GinRouterDeps struct {
 	// Search
 	SearchTermHandler *search.SearchTermHandler
 	// Job
-	CreateJobHandler     *create_job.CreateJobHandler
-	DeleteJobHandler     *delete_job.DeleteJobHandler
-	UpdateJobHandler     *update_job.UpdateJobHandler
-	ListJobsHandler      *list_jobs.ListJobsHandler
-	AssignJobHandler     *assign_job.AssignJobHandler
-	UnassignJobHandler   *unassign_job.UnassignJobHandler
-	GetJobForUserHandler *get_job_for_user.GetJobForUserHandler
+	CreateJobHandler            *create_job.CreateJobHandler
+	DeleteJobHandler            *delete_job.DeleteJobHandler
+	UpdateJobHandler            *update_job.UpdateJobHandler
+	ListJobsHandler             *list_jobs.ListJobsHandler
+	AssignJobHandler            *assign_job.AssignJobHandler
+	UnassignJobHandler          *unassign_job.UnassignJobHandler
+	GetJobForUserHandler        *get_job_for_user.GetJobForUserHandler
+	CheckUserPermissionsHandler *permissions.CheckUserPermissionsHandler
 }
 
 func NewGinRouter(deps GinRouterDeps) GinRouter {
@@ -200,7 +202,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	accountGroup := apiGroup.Group("/account")
 	{
 		accountGroup.GET("/me", authMiddleware, d.deps.GetMyAccountHandler.Handle)
-		accountGroup.PUT("/personal-informations", authMiddleware, d.deps.UpdateAccountPersonalInformationsHandler.Handle)
+		accountGroup.PUT("/:user_id", authMiddleware, d.deps.UpdateAccountPersonalInformationsHandler.Handle)
 		accountGroup.PATCH("/avatar", authMiddleware, d.deps.UpdateUserAvatarHandler.Handle)
 		accountGroup.PATCH("/status", authMiddleware, d.deps.SaveStatusHandler.Handle)
 		accountGroup.GET("/users", authMiddleware, d.deps.GetListUsersHandler.Handle)
@@ -260,7 +262,9 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	// job app
 	jobAppGroup := apiGroup.Group("/job")
 	{
-		jobAppGroup.Use(authMiddleware, jobPermissionsMiddleware(entity2.CREATE_INVITATION|entity2.DELETE_INVITATION|entity2.ASSIGN_JOB|entity2.UNASSIGN_JOB|entity2.DELETE_JOB|entity2.UPDATE_JOB|entity2.UPDATE_JOB_PERMISSIONS|entity2.VIEW_ADMINISTRATION_PANEL))
+		jobAppGroup.Use(authMiddleware)
+		jobAppGroup.POST("/check-permissions/:user_id", d.deps.CheckUserPermissionsHandler.Handle)
+		jobAppGroup.Use(jobPermissionsMiddleware(entity2.CREATE_INVITATION | entity2.DELETE_INVITATION | entity2.ASSIGN_JOB | entity2.UNASSIGN_JOB | entity2.DELETE_JOB | entity2.UPDATE_JOB | entity2.UPDATE_JOB_PERMISSIONS | entity2.VIEW_ADMINISTRATION_PANEL))
 		jobAppGroup.POST("", d.deps.CreateJobHandler.Handle)
 		jobAppGroup.DELETE("/:id", d.deps.DeleteJobHandler.Handle)
 		jobAppGroup.PUT("/:id", d.deps.UpdateJobHandler.Handle)

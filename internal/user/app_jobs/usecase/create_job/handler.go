@@ -34,5 +34,15 @@ func (h *CreateJobHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, job)
+	response := createJobResponse{
+		ID:   string(job.Id),
+		Name: job.Name,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+type createJobResponse struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }

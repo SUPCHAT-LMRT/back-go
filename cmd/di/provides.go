@@ -456,6 +456,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(assign_job.NewAssignJobHandler),
 		dig.NewProvider(unassign_job.NewUnassignJobHandler),
 		dig.NewProvider(get_job_for_user.NewGetJobForUserHandler),
+		dig.NewProvider(permissions2.NewCheckUserPermissionsHandler),
 	}
 
 	for _, provider := range providers {
