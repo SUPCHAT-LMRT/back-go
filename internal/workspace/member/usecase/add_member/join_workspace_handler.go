@@ -1,10 +1,13 @@
 package add_member
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
+	repository2 "github.com/supchat-lmrt/back-go/internal/workspace/member/repository"
+	"github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace"
 	uberdig "go.uber.org/dig"
 	"net/http"
@@ -30,12 +33,16 @@ func (h *AddMemberHandler) Handle(c *gin.Context) {
 
 	workspace, err := h.deps.GetWorkspaceUseCase.Execute(c, entity.WorkspaceId(workspaceId))
 	if err != nil {
+		if errors.Is(err, repository.WorkspaceNotFoundErr) {
+			c.JSON(http.StatusNotFound, gin.H{"displayError": "Cet espace de travail n'existe pas"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	if workspace.Type == entity.WorkspaceTypePrivate {
-		c.JSON(http.StatusForbidden, gin.H{"error": "You cannot join this workspace"})
+		c.JSON(http.StatusForbidden, gin.H{"displayError": "Cet espace de travail est privé"})
 		return
 	}
 
@@ -44,6 +51,10 @@ func (h *AddMemberHandler) Handle(c *gin.Context) {
 		UserId:      user.Id,
 	})
 	if err != nil {
+		if errors.Is(err, repository2.WorkspaceMemberExistsErr) {
+			c.JSON(http.StatusConflict, gin.H{"displayError": "Vous êtes déjà membre de cet espace de travail"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
