@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/repository"
 	permissions2 "github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/permissions"
@@ -30,10 +29,6 @@ func (h *HasJobPermissionsMiddleware) Execute(requiredPermission uint64) gin.Han
 			c.Abort()
 			return
 		}
-
-		fmt.Println("User ID:", user.Id.String())
-		fmt.Println("Required Permission:", requiredPermission)
-		fmt.Println("Has Permission:", hasPermission)
 
 		if !hasPermission {
 			c.JSON(403, gin.H{"error": "Forbidden"})

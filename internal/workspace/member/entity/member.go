@@ -11,7 +11,6 @@ type WorkspaceMember struct {
 	Id          WorkspaceMemberId
 	WorkspaceId entity2.WorkspaceId
 	UserId      entity.UserId
-	Pseudo      string
 }
 
 func (id WorkspaceMemberId) String() string {

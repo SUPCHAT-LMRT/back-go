@@ -50,6 +50,7 @@ func (u SaveDirectMessageUseCase) Execute(ctx context.Context, msg *chat_direct_
 		return err
 	}
 
+	// donc en gros pour faire gros, j'appelle mon usecase SendNotificationUseCase ici
 	for _, observer := range u.deps.Observers {
 		observer.NotifyMessageSaved(msg)
 	}

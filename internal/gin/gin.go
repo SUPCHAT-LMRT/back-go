@@ -51,6 +51,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_private_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/reoder_channels"
 	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
+	add_workspace_member "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/add_member"
 	workspace_invite_link_generate "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/generate"
 	get_data_token_invite2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/join_workspace_invite"
@@ -111,6 +112,7 @@ type GinRouterDeps struct {
 	UpdateWorkspaceTypeHandler        *update_type_workspace.UpdateTypeWorkspaceHandler
 	GetWorkspaceHandler               *get_workspace.GetWorkspaceHandler
 	DiscoverListWorkspaceHandler      *discovery_list_workspaces.DiscoverListWorkspaceHandler
+	AddMemberHandler                  *add_workspace_member.AddMemberHandler
 	GetWorkspaceDetailsHandler        *get_workspace_details.GetWorkspaceDetailsHandler
 	GetMinutelyMessageSentHandler     *get_minutely.GetMinutelyMessageSentHandler
 	CreateInviteLinkWorkspaceHandler  *workspace_invite_link_generate.CreateInviteLinkHandler
@@ -279,7 +281,11 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		workspacesGroup.Use(authMiddleware)
 		workspacesGroup.GET("", d.deps.ListWorkspaceHandler.Handle)
 		workspacesGroup.POST("", d.deps.CreateWorkspaceHandler.Handle)
-		workspacesGroup.GET("/discover", d.deps.DiscoverListWorkspaceHandler.Handle)
+		discoverGroup := workspacesGroup.Group("discover")
+		{
+			discoverGroup.GET("", d.deps.DiscoverListWorkspaceHandler.Handle)
+			discoverGroup.GET(":workspace_id/join", authMiddleware, d.deps.AddMemberHandler.Handle)
+		}
 
 		specificWorkspaceGroup := workspacesGroup.Group("/:workspace_id")
 		{

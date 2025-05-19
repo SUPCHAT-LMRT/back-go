@@ -72,12 +72,9 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 						return nil, err
 					}
 
-					if workspaceMember.Pseudo == "" {
-						user, err := u.deps.GetUserByIdUseCase.Execute(ctx, result.AuthorId)
-						if err != nil {
-							return nil, err
-						}
-						workspaceMember.Pseudo = user.FullName()
+					user, err := u.deps.GetUserByIdUseCase.Execute(ctx, result.AuthorId)
+					if err != nil {
+						return nil, err
 					}
 
 					results = append(results, &SearchResult{
@@ -86,7 +83,7 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 							Id:         result.Id,
 							Content:    result.Content,
 							AuthorId:   result.AuthorId,
-							AuthorName: workspaceMember.Pseudo,
+							AuthorName: user.FullName(),
 							Href:       fmt.Sprintf("/workspaces/%s/channels/%s?aroundMessageId=%s", workspaceMember.WorkspaceId, data.ChannelId, result.Id),
 						},
 					})
