@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
@@ -33,7 +34,6 @@ type MongoWorkspaceMember struct {
 	Id          bson.ObjectID `bson:"_id"`
 	WorkspaceId bson.ObjectID `bson:"workspace_id"`
 	UserId      bson.ObjectID `bson:"user_id"`
-	Pseudo      string        `bson:"pseudo"`
 }
 
 func NewMongoWorkspaceMemberRepository(deps MongoWorkspaceMemberRepositoryDeps) WorkspaceMemberRepository {
@@ -100,7 +100,7 @@ func (m MongoWorkspaceMemberRepository) AddMember(ctx context.Context, workspace
 
 	err = m.unsafeAddMember(ctx, member)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to add member: %w", err)
 	}
 
 	return nil
@@ -177,6 +177,28 @@ func (m MongoWorkspaceMemberRepository) IsMemberExists(ctx context.Context, work
 	count, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).CountDocuments(ctx, bson.M{
 		"workspace_id": workspaceObjectId,
 		"_id":          memberObjectId,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (m MongoWorkspaceMemberRepository) IsMemberByUserIdExists(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (bool, error) {
+	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId.String())
+	if err != nil {
+		return false, err
+	}
+
+	userObjectId, err := bson.ObjectIDFromHex(userId.String())
+	if err != nil {
+		return false, err
+	}
+
+	count, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).CountDocuments(ctx, bson.M{
+		"workspace_id": workspaceObjectId,
+		"user_id":      userObjectId,
 	})
 	if err != nil {
 		return false, err

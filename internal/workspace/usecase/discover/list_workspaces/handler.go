@@ -35,11 +35,12 @@ func (h DiscoverListWorkspaceHandler) Handle(c *gin.Context) {
 		}
 
 		result[i] = gin.H{
-			"id":           workspace.Id,
-			"name":         workspace.Name,
-			"topic":        workspace.Topic,
-			"ownerName":    ownerUser.FullName(),
-			"membersCount": workspace.MembersCount,
+			"id":                 workspace.Id,
+			"name":               workspace.Name,
+			"topic":              workspace.Topic,
+			"ownerName":          ownerUser.FullName(),
+			"membersCount":       workspace.MembersCount,
+			"onlineMembersCount": workspace.OnlineMembersCount,
 		}
 	}
 

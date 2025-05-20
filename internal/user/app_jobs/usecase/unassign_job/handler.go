@@ -17,8 +17,8 @@ func NewUnassignJobHandler(useCase *UnassignJobUseCase) *UnassignJobHandler {
 
 func (h *UnassignJobHandler) Handle(c *gin.Context) {
 	var request struct {
-		JobId  string `json:"job_id" binding:"required"`
-		UserId string `json:"user_id" binding:"required"`
+		JobId  string `json:"jobId" binding:"required"`
+		UserId string `json:"userId" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {

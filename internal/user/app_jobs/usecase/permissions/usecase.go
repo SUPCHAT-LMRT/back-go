@@ -2,7 +2,6 @@ package permissions
 
 import (
 	"context"
-	"fmt"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/repository"
 )
 
@@ -21,10 +20,6 @@ func (u *CheckPermissionJobUseCase) Execute(ctx context.Context, userId string, 
 	}
 
 	for _, job := range jobs {
-		fmt.Println("job", job)
-		fmt.Println("userId", userId)
-		fmt.Println("permission", permission)
-		fmt.Println("job.IsAssigned", job.IsAssigned)
 		if job.IsAssigned && job.HasPermission(permission) {
 			return true, nil
 		}

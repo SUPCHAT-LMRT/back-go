@@ -202,6 +202,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesObserver, uberdig.Group("update_info_workspaces_observers")),
 		dig.NewProvider(update_icon.NewUpdateWorkspaceIconObserver, uberdig.Group("update_icon_workspace_observers")),
 		dig.NewProvider(update_type_workspace.NewNotifyUpdateTypeWorkspaceObserver, uberdig.Group("update_type_workspace_observers")),
+		dig.NewProvider(update_banner.NewUpdateWorkspaceBannerObserver, uberdig.Group("save_banner_workspace_observers")),
 		// Workspace mappers
 		dig.NewProvider(repository3.NewRedisInviteLinkMapper),
 		// Workspace channels
@@ -275,6 +276,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(has_permissions.NewHasPermissionsMiddleware),
 		// Workspace member usecases
 		dig.NewProvider(add_member2.NewAddMemberUseCase),
+		dig.NewProvider(add_member2.NewAddMemberHandler),
 		dig.NewProvider(delete3.NewDeleteInviteLinkWorkspaceUseCase),
 		// Workspace member handlers
 		dig.NewProvider(join_workspace_invite.NewJoinWorkspaceInviteUseCase),
@@ -456,6 +458,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(assign_job.NewAssignJobHandler),
 		dig.NewProvider(unassign_job.NewUnassignJobHandler),
 		dig.NewProvider(get_job_for_user.NewGetJobForUserHandler),
+		dig.NewProvider(permissions2.NewCheckUserPermissionsHandler),
 	}
 
 	for _, provider := range providers {

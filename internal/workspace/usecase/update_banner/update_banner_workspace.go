@@ -1,4 +1,4 @@
-package update_icon
+package update_banner
 
 import (
 	"github.com/supchat-lmrt/back-go/internal/event"
@@ -17,7 +17,7 @@ type UpdateWorkspaceIconObserver struct {
 	deps UpdateWorkspaceIconDeps
 }
 
-func NewUpdateWorkspaceIconObserver(deps UpdateWorkspaceIconDeps) SaveIconWorkspaceObserver {
+func NewUpdateWorkspaceBannerObserver(deps UpdateWorkspaceIconDeps) SaveBannerWorkspaceObserver {
 	return &UpdateWorkspaceIconObserver{deps: deps}
 }
 

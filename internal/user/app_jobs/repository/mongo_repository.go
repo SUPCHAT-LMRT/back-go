@@ -209,7 +209,7 @@ func (r *MongoJobRepository) UnassignFromUser(ctx context.Context, jobId entity.
 	return nil
 }
 
-func (r *MongoJobRepository) EnsureAdminRoleExists(ctx context.Context) (*entity.Job, error) {
+func (r *MongoJobRepository) EnsureAdminJobExists(ctx context.Context) (*entity.Job, error) {
 	const adminRoleName = "Admin"
 
 	// Vérifiez si le rôle Admin existe déjà
@@ -231,6 +231,33 @@ func (r *MongoJobRepository) EnsureAdminRoleExists(ctx context.Context) (*entity
 
 	if err = r.Create(ctx, adminRole); err != nil {
 		return nil, fmt.Errorf("erreur lors de la création du rôle Admin: %w", err)
+	}
+
+	return adminRole, nil
+}
+
+func (r *MongoJobRepository) EnsureManagerJobExists(ctx context.Context) (*entity.Job, error) {
+	const ManagerRoleName = "Manager"
+
+	// Vérifiez si le rôle Admin existe déjà
+	existingRole, err := r.FindByName(ctx, ManagerRoleName)
+	if err != nil {
+		return nil, fmt.Errorf("erreur lors de la vérification du rôle Admin: %w", err)
+	}
+
+	if existingRole != nil {
+		// Le rôle Admin existe déjà
+		return nil, nil
+	}
+
+	// Créez le rôle Admin avec les permissions PermissionAdmin
+	adminRole := &entity.Job{
+		Name:        ManagerRoleName,
+		Permissions: entity.CREATE_INVITATION | entity.VIEW_ADMINISTRATION_PANEL,
+	}
+
+	if err = r.Create(ctx, adminRole); err != nil {
+		return nil, fmt.Errorf("erreur lors de la création du rôle Manageur: %w", err)
 	}
 
 	return adminRole, nil
@@ -275,4 +302,35 @@ func (r *MongoJobRepository) FindByUserId(ctx context.Context, userId string) ([
 	}
 
 	return jobs, nil
+}
+
+func (r *MongoJobRepository) UserHasPermission(ctx context.Context, userId string, permission uint64) (bool, error) {
+	filter := bson.M{"assigned_users": userId}
+
+	cursor, err := r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		Find(ctx, filter)
+	if err != nil {
+		return false, fmt.Errorf("error finding jobs for user: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var mongoJob MongoJob
+		if err := cursor.Decode(&mongoJob); err != nil {
+			return false, fmt.Errorf("error decoding job: %w", err)
+		}
+
+		for _, assignedUser := range mongoJob.AssignedUsers {
+			if assignedUser == userId && (mongoJob.Permissions&permission) != 0 {
+				return true, nil
+			}
+		}
+	}
+
+	if err := cursor.Err(); err != nil {
+		return false, fmt.Errorf("cursor error: %w", err)
+	}
+
+	return false, nil
 }

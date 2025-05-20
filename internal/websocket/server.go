@@ -256,7 +256,6 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 				workspaceId,
 				client.UserId,
 			)
-
 			if err != nil {
 				logg.Error().Err(err).
 					Str("userId", client.UserId.String()).
