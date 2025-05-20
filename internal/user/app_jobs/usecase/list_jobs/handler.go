@@ -16,7 +16,7 @@ func NewListJobsHandler(useCase *ListJobsUseCase) *ListJobsHandler {
 }
 
 func (h *ListJobsHandler) Handle(c *gin.Context) {
-	jobs, err := h.useCase.Execute(c.Request.Context())
+	jobs, err := h.useCase.Execute(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list jobs"})
 		return
@@ -29,10 +29,10 @@ func (h *ListJobsHandler) Handle(c *gin.Context) {
 		if jobs[j].Name == "Admin" {
 			return false
 		}
-		if jobs[i].Name == "Manageur" {
+		if jobs[i].Name == "Manager" {
 			return true
 		}
-		if jobs[j].Name == "Manageur" {
+		if jobs[j].Name == "Manager" {
 			return false
 		}
 		return jobs[i].Name < jobs[j].Name

@@ -237,7 +237,7 @@ func (r *MongoJobRepository) EnsureAdminJobExists(ctx context.Context) (*entity.
 }
 
 func (r *MongoJobRepository) EnsureManagerJobExists(ctx context.Context) (*entity.Job, error) {
-	const ManagerRoleName = "Manageur"
+	const ManagerRoleName = "Manager"
 
 	// Vérifiez si le rôle Admin existe déjà
 	existingRole, err := r.FindByName(ctx, ManagerRoleName)

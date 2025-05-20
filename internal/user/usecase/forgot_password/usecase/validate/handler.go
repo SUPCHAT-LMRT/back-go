@@ -57,6 +57,6 @@ func (h *ValidateForgotPasswordHandler) Handle(c *gin.Context) {
 
 type ValidateForgotPasswordRequest struct {
 	Token                   uuid.UUID `json:"token" binding:"required,uuid"`
-	NewPassword             string    `json:"newPassword" binding:"required,min=8"`
+	NewPassword             string    `json:"newPassword" binding:"required"`
 	NewPasswordConfirmation string    `json:"newPasswordConfirmation" binding:"required,eqfield=NewPassword"`
 }
