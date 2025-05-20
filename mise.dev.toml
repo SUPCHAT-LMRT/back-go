@@ -2,6 +2,7 @@
 MONGO_URI = "mongodb://localhost:27017/supchat?authSource=admin&directConnection=true&serverSelectionTimeoutMS=2000"
 REDIS_URI = "redis://:password@localhost:6379"
 FRONT_ACCOUNT_VALIDATE_URL = "http://localhost:5173/validate-account/{token}"
+FRONT_ACCOUNT_FORGOT_PASSWORD_URL = "http://localhost:5173/forgot-password/{token}"
 FRONT_ACCOUNT_RESET_PASSWORD_URL = "http://localhost:5173/reset-password/{token}"
 FRONT_ACCOUNT_REGISTER_URL = "http://localhost:5173/register/{token}"
 FRONT_ACCOUNT_LOGIN_URL = "http://localhost:5173/login"
