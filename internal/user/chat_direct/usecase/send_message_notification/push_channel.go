@@ -21,8 +21,8 @@ func NewPushChannel(deps EmailChannelDeps) Channel {
 
 func (c *PushChannel) SendNotification(ctx context.Context, req SendMessageNotificationRequest) error {
 	// get receiver notification preferences
-	if !receiver.NotificationPreferences.Push {
-		return nil
-	}
+	//if !receiver.NotificationPreferences.Push {
+	//	return nil
+	//}
 	return nil
 }
