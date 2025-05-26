@@ -15,6 +15,7 @@ type UpdateWorkspaceBannerUseCaseDeps struct {
 	uberdig.In
 	Strategy   UpdateWorkspaceBannerStrategy
 	Repository repository.WorkspaceRepository
+	Observers  []SaveBannerWorkspaceObserver `group:"save_banner_workspace_observers"`
 }
 
 type UpdateWorkspaceBannerUseCase struct {
@@ -32,15 +33,21 @@ func (u *UpdateWorkspaceBannerUseCase) Execute(
 	workspaceId entity.WorkspaceId,
 	image UpdateImage,
 ) error {
-	exists, err := u.deps.Repository.ExistsById(ctx, workspaceId)
+	workspace, err := u.deps.Repository.GetById(ctx, workspaceId)
 	if err != nil {
 		return err
 	}
-	if !exists {
-		return WorkspaceNotFoundErr
+
+	err = u.deps.Strategy.Handle(ctx, workspaceId, image.ImageReader, image.ContentType)
+	if err != nil {
+		return err
 	}
 
-	return u.deps.Strategy.Handle(ctx, workspaceId, image.ImageReader, image.ContentType)
+	for _, observer := range u.deps.Observers {
+		observer.NotifyUpdateBannerWorkspace(workspace)
+	}
+
+	return nil
 }
 
 type UpdateImage struct {

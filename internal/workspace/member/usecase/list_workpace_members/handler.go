@@ -61,20 +61,15 @@ func (h *ListWorkspaceMembersHandler) Handle(c *gin.Context) {
 
 	result := make([]MemberResponse, len(members))
 	for i, member := range members {
-		username := member.Pseudo
-		if username == "" {
-			user, err := h.deps.GetUserByIdUseCase.Execute(c, member.UserId)
-			if err != nil {
-				continue
-			}
-
-			username = user.FullName()
+		user, err := h.deps.GetUserByIdUseCase.Execute(c, member.UserId)
+		if err != nil {
+			continue
 		}
 
 		result[i] = MemberResponse{
 			Id:     string(member.Id),
 			UserId: string(member.UserId),
-			Pseudo: username,
+			Pseudo: user.FullName(),
 		}
 	}
 

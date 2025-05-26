@@ -2,8 +2,8 @@ package get_list_invite_link
 
 import (
 	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"time"
 )
 
 type GetListInviteLinkHandler struct {
@@ -21,5 +21,20 @@ func (h *GetListInviteLinkHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, inviteLinks)
+	var responseInviteLinks []ResponseInviteLink
+	for _, inviteLink := range inviteLinks {
+		responseInviteLinks = append(responseInviteLinks, ResponseInviteLink{
+			Token:          inviteLink.Token,
+			Email:          inviteLink.Email,
+			ExpirationDate: inviteLink.ExpiresAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, responseInviteLinks)
+}
+
+type ResponseInviteLink struct {
+	Token          string    `json:"token"`
+	Email          string    `json:"email"`
+	ExpirationDate time.Time `json:"expiresAt"`
 }

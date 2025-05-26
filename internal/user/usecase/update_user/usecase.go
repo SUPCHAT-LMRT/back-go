@@ -41,3 +41,7 @@ func (u *UpdateUserUseCase) Execute(ctx context.Context, user *user_entity.User)
 
 	return err
 }
+
+func (u *UpdateUserUseCase) GetUserById(ctx context.Context, userId user_entity.UserId) (*user_entity.User, error) {
+	return u.repository.GetById(ctx, userId)
+}

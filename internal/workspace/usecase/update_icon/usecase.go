@@ -51,7 +51,7 @@ func (u *UpdateWorkspaceIconUseCase) Execute(
 	}
 
 	for _, observer := range u.deps.Observers {
-		observer.NotifyUpdateIconWorkspace(workspace)
+		observer.NotifyUpdateBannerWorkspace(workspace)
 	}
 
 	return nil

@@ -38,7 +38,6 @@ func (m MongoWorkspaceMemberMapper) MapFromEntity(
 		Id:          memberObjectId,
 		WorkspaceId: workspaceObjectId,
 		UserId:      userObjectId,
-		Pseudo:      entity.Pseudo,
 	}, nil
 }
 
@@ -49,6 +48,5 @@ func (m MongoWorkspaceMemberMapper) MapToEntity(
 		Id:          entity.WorkspaceMemberId(databaseWorkspace.Id.Hex()),
 		WorkspaceId: workspace_entity.WorkspaceId(databaseWorkspace.WorkspaceId.Hex()),
 		UserId:      user_entity.UserId(databaseWorkspace.UserId.Hex()),
-		Pseudo:      databaseWorkspace.Pseudo,
 	}, nil
 }

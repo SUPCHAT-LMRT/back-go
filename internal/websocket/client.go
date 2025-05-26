@@ -605,16 +605,11 @@ func (c *Client) toOutboundSendChannelMessageSender(
 		return nil, err
 	}
 
-	username := workspaceMember.Pseudo
-	if username == "" {
-		username = user.FullName()
-	}
-
 	return &outbound.OutboundSendMessageToChannelSender{
 		UserId:            user.Id,
 		Pseudo:            user.FullName(),
 		WorkspaceMemberId: workspaceMember.Id,
-		WorkspacePseudo:   username,
+		WorkspacePseudo:   user.FullName(),
 	}, nil
 }
 
@@ -638,19 +633,9 @@ func (c *Client) toOutboundChannelMessageReactionMember(
 		return nil, err
 	}
 
-	username := workspaceMember.Pseudo
-	// If the user is not in the workspace, we will use the user pseudo (fallback)
-	if username == "" {
-		user, err := c.wsServer.Deps.GetUserByIdUseCase.Execute(context.Background(), c.UserId)
-		if err != nil {
-			return nil, err
-		}
-		username = user.FullName()
-	}
-
 	return &outbound.OutboundChannelMessageReactionMember{
 		UserId:   c.UserId.String(),
-		Username: username,
+		Username: user.FullName(),
 	}, nil
 }
 

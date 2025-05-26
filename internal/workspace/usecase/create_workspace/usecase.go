@@ -2,8 +2,6 @@ package create_workspace
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/add_member"
@@ -70,15 +68,6 @@ func (u *CreateWorkspaceUseCase) Execute(
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(
-		"ownerRole.Id",
-		ownerRole.Id,
-		"ownerMember.Id",
-		ownerMember.Id,
-		"workspace.Id",
-		workspace.Id,
-	)
 
 	err = u.assignRoleUseCase.Execute(
 		ctx,

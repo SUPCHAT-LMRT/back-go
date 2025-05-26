@@ -1,7 +1,7 @@
-package update_icon
+package update_banner
 
 import workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 
-type SaveIconWorkspaceObserver interface {
+type SaveBannerWorkspaceObserver interface {
 	NotifyUpdateBannerWorkspace(workspace *workspace_entity.Workspace)
 }

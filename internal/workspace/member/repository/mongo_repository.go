@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
@@ -34,7 +33,6 @@ type MongoWorkspaceMember struct {
 	Id          bson.ObjectID `bson:"_id"`
 	WorkspaceId bson.ObjectID `bson:"workspace_id"`
 	UserId      bson.ObjectID `bson:"user_id"`
-	Pseudo      string        `bson:"pseudo"`
 }
 
 func NewMongoWorkspaceMemberRepository(
@@ -115,7 +113,7 @@ func (m MongoWorkspaceMemberRepository) AddMember(
 
 	err = m.unsafeAddMember(ctx, member)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to add member: %w", err)
 	}
 
 	return nil

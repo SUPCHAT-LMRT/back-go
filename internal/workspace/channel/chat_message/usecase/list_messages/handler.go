@@ -87,23 +87,10 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 					continue
 				}
 
-				if memberReacted.Pseudo == "" {
-					userReacted, err := h.deps.GetUserByIdUseCase.Execute(c, userId)
-					if err != nil {
-						continue
-					}
-
-					reactionUsers[k] = ChannelMessageReactionUserResponse{
-						Id:   userId.String(),
-						Name: userReacted.FullName(),
-					}
-					continue
-				}
-
-				reactionUsers[k] = ChannelMessageReactionUserResponse{
-					Id:   userId.String(),
-					Name: memberReacted.Pseudo,
-				}
+        reactionUsers[k] = ChannelMessageReactionUserResponse{
+          Id:   userId.String(),
+          Name: userReacted.FullName(),
+        }
 			}
 
 			reactions[j] = ChannelMessageReactionResponse{
@@ -130,20 +117,15 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 			continue
 		}
 
-		username := member.Pseudo
-		if username == "" {
-			user, err := h.deps.GetUserByIdUseCase.Execute(c, message.AuthorId)
-			if err != nil {
-				continue
-			}
-
-			username = user.FullName()
+		user, err := h.deps.GetUserByIdUseCase.Execute(c, message.AuthorId)
+		if err != nil {
+			continue
 		}
 
 		response[i].Author = ChannelMessageAuthorResponse{
 			UserId:            message.AuthorId.String(),
 			WorkspaceMemberId: member.Id.String(),
-			WorkspacePseudo:   username,
+			WorkspacePseudo:   user.FullName(),
 		}
 	}
 
