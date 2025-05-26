@@ -10,7 +10,7 @@ import (
 
 type GetWorkspaceUseCaseDeps struct {
 	uberdig.In
-	repository repository.WorkspaceRepository
+	Repository repository.WorkspaceRepository
 }
 type GetWorkspaceUseCase struct {
 	deps GetWorkspaceUseCaseDeps
@@ -24,5 +24,5 @@ func (u GetWorkspaceUseCase) Execute(
 	ctx context.Context,
 	workspaceId entity.WorkspaceId,
 ) (*entity.Workspace, error) {
-	return u.deps.repository.GetById(ctx, workspaceId)
+	return u.deps.Repository.GetById(ctx, workspaceId)
 }
