@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
@@ -15,7 +16,9 @@ func NewMongoWorkspaceMemberMapper() mapper.Mapper[*MongoWorkspaceMember, *entit
 	return &MongoWorkspaceMemberMapper{}
 }
 
-func (m MongoWorkspaceMemberMapper) MapFromEntity(entity *entity.WorkspaceMember) (*MongoWorkspaceMember, error) {
+func (m MongoWorkspaceMemberMapper) MapFromEntity(
+	entity *entity.WorkspaceMember,
+) (*MongoWorkspaceMember, error) {
 	memberObjectId, err := bson.ObjectIDFromHex(entity.Id.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert workspace member id to object id: %w", err)
@@ -38,7 +41,9 @@ func (m MongoWorkspaceMemberMapper) MapFromEntity(entity *entity.WorkspaceMember
 	}, nil
 }
 
-func (m MongoWorkspaceMemberMapper) MapToEntity(databaseWorkspace *MongoWorkspaceMember) (*entity.WorkspaceMember, error) {
+func (m MongoWorkspaceMemberMapper) MapToEntity(
+	databaseWorkspace *MongoWorkspaceMember,
+) (*entity.WorkspaceMember, error) {
 	return &entity.WorkspaceMember{
 		Id:          entity.WorkspaceMemberId(databaseWorkspace.Id.Hex()),
 		WorkspaceId: workspace_entity.WorkspaceId(databaseWorkspace.WorkspaceId.Hex()),

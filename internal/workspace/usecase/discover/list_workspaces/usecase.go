@@ -22,7 +22,9 @@ type DiscoverListWorkspacesUseCase struct {
 	deps DiscoveryListWorkspacesUseCaseDeps
 }
 
-func NewDiscoverListWorkspacesUseCase(deps DiscoveryListWorkspacesUseCaseDeps) *DiscoverListWorkspacesUseCase {
+func NewDiscoverListWorkspacesUseCase(
+	deps DiscoveryListWorkspacesUseCaseDeps,
+) *DiscoverListWorkspacesUseCase {
 	return &DiscoverListWorkspacesUseCase{deps: deps}
 }
 

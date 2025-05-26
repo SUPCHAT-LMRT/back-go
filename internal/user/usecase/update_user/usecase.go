@@ -3,6 +3,7 @@ package update_user
 import (
 	"context"
 	"fmt"
+
 	user_search "github.com/supchat-lmrt/back-go/internal/search/user"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
@@ -13,7 +14,10 @@ type UpdateUserUseCase struct {
 	searchUserSyncManager user_search.SearchUserSyncManager
 }
 
-func NewUpdateUserUseCase(repository repository.UserRepository, searchUserSyncManager user_search.SearchUserSyncManager) *UpdateUserUseCase {
+func NewUpdateUserUseCase(
+	repository repository.UserRepository,
+	searchUserSyncManager user_search.SearchUserSyncManager,
+) *UpdateUserUseCase {
 	return &UpdateUserUseCase{repository: repository, searchUserSyncManager: searchUserSyncManager}
 }
 

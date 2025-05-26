@@ -1,8 +1,9 @@
 package validator
 
 import (
-	"github.com/go-playground/validator/v10"
 	"regexp"
+
+	"github.com/go-playground/validator/v10"
 )
 
 func IsISO8601Date(fl validator.FieldLevel) bool {

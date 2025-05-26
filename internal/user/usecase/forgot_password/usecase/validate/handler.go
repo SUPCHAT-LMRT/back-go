@@ -2,18 +2,23 @@ package validate
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"io"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type ValidateForgotPasswordHandler struct {
 	validateForgotPasswordUseCase *ValidateForgotPasswordUseCase
 }
 
-func NewValidateForgotPasswordHandler(validateForgotPasswordUseCase *ValidateForgotPasswordUseCase) *ValidateForgotPasswordHandler {
-	return &ValidateForgotPasswordHandler{validateForgotPasswordUseCase: validateForgotPasswordUseCase}
+func NewValidateForgotPasswordHandler(
+	validateForgotPasswordUseCase *ValidateForgotPasswordUseCase,
+) *ValidateForgotPasswordHandler {
+	return &ValidateForgotPasswordHandler{
+		validateForgotPasswordUseCase: validateForgotPasswordUseCase,
+	}
 }
 
 func (h *ValidateForgotPasswordHandler) Handle(c *gin.Context) {

@@ -1,9 +1,10 @@
 package delete_channels
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
-	"net/http"
 )
 
 type DeleteChannelHandler struct {

@@ -3,6 +3,7 @@ module github.com/supchat-lmrt/back-go
 go 1.24.0
 
 require (
+	firebase.google.com/go/v4 v4.15.2
 	github.com/aws/aws-sdk-go-v2 v1.34.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.55
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.75.0
@@ -23,7 +24,8 @@ require (
 	github.com/rs/zerolog v1.33.0
 	go.mongodb.org/mongo-driver/v2 v2.0.0
 	go.uber.org/dig v1.18.0
-	golang.org/x/crypto v0.32.0
+	golang.org/x/crypto v0.38.0
+	google.golang.org/api v0.234.0
 )
 
 require (
@@ -105,6 +107,7 @@ require (
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/spiffe/go-spiffe/v2 v2.5.0 // indirect
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect

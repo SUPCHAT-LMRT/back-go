@@ -43,7 +43,7 @@ func (h CreateRoleHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	var response = gin.H{
+	response := gin.H{
 		"id":          role.Id,
 		"name":        role.Name,
 		"workspaceId": role.WorkspaceId,
@@ -54,6 +54,6 @@ func (h CreateRoleHandler) Handle(c *gin.Context) {
 }
 
 type CreateRoleRequest struct {
-	Name  string `json:"name" binding:"required,min=1,max=100"`
+	Name  string `json:"name"  binding:"required,min=1,max=100"`
 	Color string `json:"color" binding:"required,min=1,max=100"`
 }

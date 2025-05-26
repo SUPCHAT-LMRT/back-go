@@ -1,9 +1,10 @@
 package request
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	user_repository "github.com/supchat-lmrt/back-go/internal/user/repository"
-	"net/http"
 )
 
 type RequestForgotPasswordHandler struct {
@@ -11,7 +12,10 @@ type RequestForgotPasswordHandler struct {
 	requestForgotPasswordUseCase *RequestForgotPasswordUseCase
 }
 
-func NewRequestForgotPasswordHandler(userRepository user_repository.UserRepository, requestForgotPasswordUseCase *RequestForgotPasswordUseCase) *RequestForgotPasswordHandler {
+func NewRequestForgotPasswordHandler(
+	userRepository user_repository.UserRepository,
+	requestForgotPasswordUseCase *RequestForgotPasswordUseCase,
+) *RequestForgotPasswordHandler {
 	return &RequestForgotPasswordHandler{
 		userRepository:               userRepository,
 		requestForgotPasswordUseCase: requestForgotPasswordUseCase,
@@ -46,5 +50,4 @@ func (h *RequestForgotPasswordHandler) Handle(c *gin.Context) {
 		})
 		return
 	}
-
 }

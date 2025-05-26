@@ -13,6 +13,8 @@ func NewLogRequestResetPasswordObserver(logger logger.Logger) ResetPasswordReque
 	return &LogRequestResetPasswordObserver{logger: logger}
 }
 
-func (o *LogRequestResetPasswordObserver) NotifyRequestResetPasswordCreated(request entity.ResetPasswordRequest) {
+func (o *LogRequestResetPasswordObserver) NotifyRequestResetPasswordCreated(
+	request entity.ResetPasswordRequest,
+) {
 	o.logger.Info().Any("request", request).Msg("Reset password request sent")
 }

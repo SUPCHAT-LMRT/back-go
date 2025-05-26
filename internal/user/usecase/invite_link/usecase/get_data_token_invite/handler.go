@@ -1,8 +1,9 @@
 package get_data_token_invite
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type GetInviteLinkDataHandler struct {

@@ -13,7 +13,9 @@ func NewMongoOauthConnectionMapper() mapper.Mapper[*MongoOauthConnection, *entit
 	return &MongoOauthConnectionMapper{}
 }
 
-func (m MongoOauthConnectionMapper) MapFromEntity(entity *entity.OauthConnection) (*MongoOauthConnection, error) {
+func (m MongoOauthConnectionMapper) MapFromEntity(
+	entity *entity.OauthConnection,
+) (*MongoOauthConnection, error) {
 	oauthConnectionId, err := bson.ObjectIDFromHex(entity.Id.String())
 	if err != nil {
 		return nil, err
@@ -33,7 +35,9 @@ func (m MongoOauthConnectionMapper) MapFromEntity(entity *entity.OauthConnection
 	}, nil
 }
 
-func (m MongoOauthConnectionMapper) MapToEntity(databaseUser *MongoOauthConnection) (*entity.OauthConnection, error) {
+func (m MongoOauthConnectionMapper) MapToEntity(
+	databaseUser *MongoOauthConnection,
+) (*entity.OauthConnection, error) {
 	return &entity.OauthConnection{
 		Id:          entity.OauthConnectionId(databaseUser.Id.Hex()),
 		UserId:      user_entity.UserId(databaseUser.UserId.Hex()),

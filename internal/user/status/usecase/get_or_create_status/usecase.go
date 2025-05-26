@@ -3,6 +3,7 @@ package get_or_create_status
 import (
 	"context"
 	"fmt"
+
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	user_status_entity "github.com/supchat-lmrt/back-go/internal/user/status/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/get_status"
@@ -24,7 +25,11 @@ func NewGetOrCreateStatusUseCase(
 	}
 }
 
-func (g *GetOrCreateStatusUseCase) Execute(ctx context.Context, userId user_entity.UserId, defaultStatus user_status_entity.Status) (user_status_entity.Status, error) {
+func (g *GetOrCreateStatusUseCase) Execute(
+	ctx context.Context,
+	userId user_entity.UserId,
+	defaultStatus user_status_entity.Status,
+) (user_status_entity.Status, error) {
 	userStatus, err := g.getStatusUseCase.Execute(ctx, userId)
 	if err != nil {
 		newStatus := defaultStatus

@@ -2,6 +2,7 @@ package save_message
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/event"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
@@ -26,7 +27,11 @@ func NewSyncRecentChatObserver(deps SyncRecentChatObserverDeps) MessageSavedObse
 
 func (o SyncRecentChatObserver) NotifyMessageSaved(msg *entity.ChatDirect) {
 	// Check if the message is the first message between the two users
-	isFirst, err := o.deps.IsFirstMessageUseCase.Execute(context.Background(), msg.User1Id, msg.User2Id)
+	isFirst, err := o.deps.IsFirstMessageUseCase.Execute(
+		context.Background(),
+		msg.User1Id,
+		msg.User2Id,
+	)
 	if err != nil {
 		return
 	}

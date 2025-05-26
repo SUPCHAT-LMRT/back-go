@@ -1,12 +1,13 @@
 package get_my_account
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	user_status_entity "github.com/supchat-lmrt/back-go/internal/user/status/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/get_or_create_status"
 	uberdig "go.uber.org/dig"
-	"net/http"
 )
 
 type GetMyUserAccountHandlerDeps struct {
@@ -33,16 +34,26 @@ type UserResponse struct {
 func (g *GetMyUserAccountHandler) Handle(c *gin.Context) {
 	user := c.MustGet("user").(*entity.User)
 
-	userStatus, err := g.deps.GetOrCreateStatusUseCase.Execute(c, user.Id, user_status_entity.StatusOnline)
+	userStatus, err := g.deps.GetOrCreateStatusUseCase.Execute(
+		c,
+		user.Id,
+		user_status_entity.StatusOnline,
+	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "message": "Failed to save status"})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error(), "message": "Failed to save status"},
+		)
 		return
 	}
 
 	c.JSON(http.StatusOK, g.Response(user, userStatus))
 }
 
-func (g GetMyUserAccountHandler) Response(user *entity.User, status user_status_entity.Status) *UserResponse {
+func (g GetMyUserAccountHandler) Response(
+	user *entity.User,
+	status user_status_entity.Status,
+) *UserResponse {
 	return &UserResponse{
 		ID:        user.Id.String(),
 		FirstName: user.FirstName,

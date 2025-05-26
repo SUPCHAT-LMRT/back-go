@@ -8,9 +8,17 @@ import (
 )
 
 type SendChannelMessageObserver interface {
-	OnSendMessage(message *inbound.InboundSendMessageToChannel, messageId entity.ChannelMessageId, userId user_entity.UserId)
+	OnSendMessage(
+		message *inbound.InboundSendMessageToChannel,
+		messageId entity.ChannelMessageId,
+		userId user_entity.UserId,
+	)
 }
 
 type SendDirectMessageObserver interface {
-	OnSendMessage(message *inbound.InboundSendDirectMessage, messageId chat_direct_entity.ChatDirectId, userId user_entity.UserId)
+	OnSendMessage(
+		message *inbound.InboundSendDirectMessage,
+		messageId chat_direct_entity.ChatDirectId,
+		userId user_entity.UserId,
+	)
 }

@@ -8,6 +8,6 @@ import (
 func IsUserStatus(fl validator.FieldLevel) bool {
 	status := fl.Field().String()
 	parsedStatus := entity.ParseStatus(status)
-	
+
 	return parsedStatus != entity.StatusUnknown
 }

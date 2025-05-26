@@ -6,7 +6,9 @@ type DessassignRoleFromUserHandler struct {
 	useCase *DessassignRoleFromUserUsecase
 }
 
-func NewDessassignRoleFromUserHandler(useCase *DessassignRoleFromUserUsecase) *DessassignRoleFromUserHandler {
+func NewDessassignRoleFromUserHandler(
+	useCase *DessassignRoleFromUserUsecase,
+) *DessassignRoleFromUserHandler {
 	return &DessassignRoleFromUserHandler{useCase: useCase}
 }
 
@@ -27,7 +29,7 @@ func (h DessassignRoleFromUserHandler) Handle(c *gin.Context) {
 }
 
 type DessassignRoleFromUserRequest struct {
-	RoleId      string `json:"role_id" binding:"required,min=1,max=100"`
-	UserId      string `json:"user_id" binding:"required,min=1,max=100"`
+	RoleId      string `json:"role_id"      binding:"required,min=1,max=100"`
+	UserId      string `json:"user_id"      binding:"required,min=1,max=100"`
 	WorkspaceId string `json:"workspace_id" binding:"required,min=1,max=100"`
 }

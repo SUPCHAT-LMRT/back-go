@@ -1,12 +1,12 @@
 package logout
 
 import (
-	"github.com/gin-gonic/gin"
 	"os"
+
+	"github.com/gin-gonic/gin"
 )
 
-type LogoutHandler struct {
-}
+type LogoutHandler struct{}
 
 func NewLogoutHandler() *LogoutHandler {
 	return &LogoutHandler{}

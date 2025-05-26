@@ -2,6 +2,7 @@ package get_by_id
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
 )
@@ -15,6 +16,9 @@ func NewGetUserByIdUseCase(userRepository repository.UserRepository) *GetUserByI
 }
 
 // TODO impl cache handling
-func (u *GetUserByIdUseCase) Execute(ctx context.Context, userId entity.UserId) (*entity.User, error) {
+func (u *GetUserByIdUseCase) Execute(
+	ctx context.Context,
+	userId entity.UserId,
+) (*entity.User, error) {
 	return u.userRepository.GetById(ctx, userId)
 }

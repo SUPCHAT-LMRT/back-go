@@ -1,6 +1,8 @@
 package gin
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -79,7 +81,6 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_info_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_type_workspace"
 	uberdig "go.uber.org/dig"
-	"os"
 )
 
 type GinRouter interface {
@@ -204,6 +205,11 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	accountGroup := apiGroup.Group("/account")
 	{
 		accountGroup.GET("/me", authMiddleware, d.deps.GetMyAccountHandler.Handle)
+		accountGroup.PUT(
+			"/personal-informations",
+			authMiddleware,
+			d.deps.UpdateAccountPersonalInformationsHandler.Handle,
+		)
 		accountGroup.PUT("/:user_id", authMiddleware, d.deps.UpdateAccountPersonalInformationsHandler.Handle)
 		accountGroup.PATCH("/avatar", authMiddleware, d.deps.UpdateUserAvatarHandler.Handle)
 		accountGroup.PATCH("/status", authMiddleware, d.deps.SaveStatusHandler.Handle)
@@ -229,15 +235,19 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 
 		resetPasswordGroup := accountGroup.Group("/reset-password")
 		{
-			resetPasswordGroup.POST("/request", authMiddleware, d.deps.RequestResetPasswordHandler.Handle)
+			resetPasswordGroup.POST(
+				"/request",
+				authMiddleware,
+				d.deps.RequestResetPasswordHandler.Handle,
+			)
 			resetPasswordGroup.POST("/validate", d.deps.ValidateResetPasswordHandler.Handle)
 		}
 
 		inviteLinkGroup := accountGroup.Group("/invite-link")
 		{
-			//inviteLinkGroup.Use(authMiddleware, userInWorkspaceMiddleware, jobPermissionsMiddleware(entity2.VIEW_ADMINISTRATION_PANEL|entity2.CREATE_INVITATION))
+			// inviteLinkGroup.Use(authMiddleware, userInWorkspaceMiddleware, jobPermissionsMiddleware(entity2.VIEW_ADMINISTRATION_PANEL|entity2.CREATE_INVITATION))
 			inviteLinkGroup.POST("", d.deps.CreateInviteLinkHandler.Handle)
-			//inviteLinkGroup.Use(authMiddleware, userInWorkspaceMiddleware, jobPermissionsMiddleware(entity2.DELETE_INVITATION))
+			// inviteLinkGroup.Use(authMiddleware, userInWorkspaceMiddleware, jobPermissionsMiddleware(entity2.DELETE_INVITATION))
 			inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkDataHandler.Handle)
 			inviteLinkGroup.GET("", d.deps.GetListInviteLinkHandler.Handle)
 			inviteLinkGroup.DELETE("/:token", d.deps.DeleteInviteLinkHandler.Handle)
@@ -258,15 +268,23 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	groupGroup := apiGroup.Group("/groups")
 	{
 		groupGroup.POST("/members", authMiddleware, d.deps.AddMemberToGroupHandler.Handle)
-		groupGroup.GET("/:group_id/messages", authMiddleware, d.deps.ListGroupChatMessagesHandler.Handle)
+		groupGroup.GET(
+			"/:group_id/messages",
+			authMiddleware,
+			d.deps.ListGroupChatMessagesHandler.Handle,
+		)
 	}
 
 	// job app
 	jobAppGroup := apiGroup.Group("/job")
 	{
-		jobAppGroup.Use(authMiddleware)
+		jobAppGroup.Use(
+			authMiddleware,
+			jobPermissionsMiddleware(
+				entity2.CREATE_INVITATION|entity2.DELETE_INVITATION|entity2.ASSIGN_JOB|entity2.UNASSIGN_JOB|entity2.DELETE_JOB|entity2.UPDATE_JOB|entity2.UPDATE_JOB_PERMISSIONS|entity2.VIEW_ADMINISTRATION_PANEL,
+			),
+		)
 		jobAppGroup.POST("/check-permissions/:user_id", d.deps.CheckUserPermissionsHandler.Handle)
-		jobAppGroup.Use(jobPermissionsMiddleware(entity2.CREATE_INVITATION | entity2.DELETE_INVITATION | entity2.ASSIGN_JOB | entity2.UNASSIGN_JOB | entity2.DELETE_JOB | entity2.UPDATE_JOB | entity2.UPDATE_JOB_PERMISSIONS | entity2.VIEW_ADMINISTRATION_PANEL))
 		jobAppGroup.POST("", d.deps.CreateJobHandler.Handle)
 		jobAppGroup.DELETE("/:id", d.deps.DeleteJobHandler.Handle)
 		jobAppGroup.PUT("/:id", d.deps.UpdateJobHandler.Handle)
@@ -291,19 +309,35 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		{
 			specificWorkspaceGroup.Use(userInWorkspaceMiddleware)
 			specificWorkspaceGroup.PUT("/icon", d.deps.UpdateWorkspaceIconHandler.Handle)
-			specificWorkspaceGroup.PUT("/banner", hasPermissionsMiddleware(entity.PermissionManageWorkspaceSettings), d.deps.UpdateWorkspaceBannerHandler.Handle)
+			specificWorkspaceGroup.PUT(
+				"/banner",
+				hasPermissionsMiddleware(entity.PermissionManageWorkspaceSettings),
+				d.deps.UpdateWorkspaceBannerHandler.Handle,
+			)
 			specificWorkspaceGroup.GET("/members", d.deps.ListWorkspaceMembersHandler.Handle)
 			specificWorkspaceGroup.GET("/details", d.deps.GetWorkspaceDetailsHandler.Handle)
-			specificWorkspaceGroup.GET("/time-series/messages", d.deps.GetMinutelyMessageSentHandler.Handle)
+			specificWorkspaceGroup.GET(
+				"/time-series/messages",
+				d.deps.GetMinutelyMessageSentHandler.Handle,
+			)
 			specificWorkspaceGroup.PUT("", d.deps.UpdateWorkspaceInfosHandler.Handle)
 			specificWorkspaceGroup.PUT("/type", d.deps.UpdateWorkspaceTypeHandler.Handle)
 			specificWorkspaceGroup.GET("", d.deps.GetWorkspaceHandler.Handle)
-			specificWorkspaceGroup.DELETE("/members/:user_id", hasPermissionsMiddleware(entity.PermissionKickMembers), d.deps.KickMemberHandler.Handle)
+			specificWorkspaceGroup.DELETE(
+				"/members/:user_id",
+				hasPermissionsMiddleware(entity.PermissionKickMembers),
+				d.deps.KickMemberHandler.Handle,
+			)
 			specificWorkspaceGroup.GET("/members/:user_id", d.deps.GetMemberIdHandler.Handle)
 
 			permissionsGroup := specificWorkspaceGroup.Group("/permissions")
 			{
-				permissionsGroup.POST("/check", authMiddleware, userInWorkspaceMiddleware, d.deps.CheckPermissionsHandler.Handle)
+				permissionsGroup.POST(
+					"/check",
+					authMiddleware,
+					userInWorkspaceMiddleware,
+					d.deps.CheckPermissionsHandler.Handle,
+				)
 			}
 
 			channelGroup := specificWorkspaceGroup.Group("/channels")
@@ -337,8 +371,16 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	inviteLinkGroup := apiGroup.Group("/workspace-invite-link")
 	{
 		inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkWorkspaceDataHandler.Handle)
-		inviteLinkGroup.POST("/:token/join", authMiddleware, d.deps.JoinWorkspaceInviteHandler.Handle)
-		inviteLinkGroup.Use(authMiddleware, userInWorkspaceMiddleware, hasPermissionsMiddleware(entity.PermissionInviteMembers))
+		inviteLinkGroup.POST(
+			"/:token/join",
+			authMiddleware,
+			d.deps.JoinWorkspaceInviteHandler.Handle,
+		)
+		inviteLinkGroup.Use(
+			authMiddleware,
+			userInWorkspaceMiddleware,
+			hasPermissionsMiddleware(entity.PermissionInviteMembers),
+		)
 		inviteLinkGroup.POST("create/:workspace_id", d.deps.CreateInviteLinkWorkspaceHandler.Handle)
 		// TODO : add middleware to check if the user can manage the invite link (delete, list)
 	}
@@ -350,7 +392,10 @@ func (d *DefaultGinRouter) AddCorsHeaders() {
 	d.Router.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", os.Getenv("CORS_ORIGIN"))
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		c.Header(
+			"Access-Control-Allow-Headers",
+			"Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization",
+		)
 		c.Header("Access-Control-Allow-Credentials", "true")
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)

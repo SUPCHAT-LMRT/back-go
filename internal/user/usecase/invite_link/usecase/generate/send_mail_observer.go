@@ -13,13 +13,22 @@ type SendMailGenerateInviteLinkObserver struct {
 	sendMailUseCase *sendmail.SendMailUseCase
 }
 
-func NewSendMailGenerateInviteLinkObserver(logger logger.Logger, sendMailUseCase *sendmail.SendMailUseCase) GenerateInviteLinkObserver {
+func NewSendMailGenerateInviteLinkObserver(
+	logger logger.Logger,
+	sendMailUseCase *sendmail.SendMailUseCase,
+) GenerateInviteLinkObserver {
 	return &SendMailGenerateInviteLinkObserver{logger: logger, sendMailUseCase: sendMailUseCase}
 }
 
-func (o *SendMailGenerateInviteLinkObserver) NotifyInviteLinkGenerated(inviteLink *entity.InviteLink, link string) {
+func (o *SendMailGenerateInviteLinkObserver) NotifyInviteLinkGenerated(
+	inviteLink *entity.InviteLink,
+	link string,
+) {
 	outros := o.sendMailUseCase.Outros()
-	outros = append(outros, "Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer ce message.")
+	outros = append(
+		outros,
+		"Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer ce message.",
+	)
 
 	email := hermes.Email{
 		Body: hermes.Body{

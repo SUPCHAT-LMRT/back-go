@@ -49,7 +49,7 @@ type LogEntry interface {
 	Dur(key string, value time.Duration) LogEntry
 
 	// Any adds any field to the log entry.
-	Any(key string, value interface{}) LogEntry
+	Any(key string, value any) LogEntry
 
 	// Err adds an error field to the log entry.
 	Err(err error) LogEntry
@@ -57,7 +57,7 @@ type LogEntry interface {
 	// Msg sends the log entry with the given message.
 	Msg(msg string)
 	// Msgf sends the log entry with the given message.
-	Msgf(format string, v ...interface{})
+	Msgf(format string, v ...any)
 
 	// Send sends the log entry.
 	Send()

@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
+	"os"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	transport "github.com/aws/smithy-go/endpoints"
-	"net/url"
-	"os"
 )
 
 type S3Client struct {
@@ -33,20 +34,27 @@ func NewS3Client() (*S3Client, error) {
 	s3Client := s3.New(s3.Options{
 		EndpointResolverV2: endpointResolver,
 		BaseEndpoint:       aws.String(parsedUrl.String()),
-		Credentials:        credentials.NewStaticCredentialsProvider(os.Getenv("S3_ACCESS_KEY"), os.Getenv("S3_SECRET_KEY"), ""),
-		Region:             "eu-west-1",
+		Credentials: credentials.NewStaticCredentialsProvider(
+			os.Getenv("S3_ACCESS_KEY"),
+			os.Getenv("S3_SECRET_KEY"),
+			"",
+		),
+		Region: "eu-west-1",
 	})
 
 	return &S3Client{Client: s3Client}, nil
 }
 
-func (s *S3Client) CreateBucketIfNotExist(ctx context.Context, bucketName string) (bucketsCreated bool, err error) {
-	_, err = s.Client.CreateBucket(ctx, &s3.CreateBucketInput{
+func (s *S3Client) CreateBucketIfNotExist(
+	ctx context.Context,
+	bucketName string,
+) (bucketsCreated bool, err error) {
+	_, _ = s.Client.CreateBucket(ctx, &s3.CreateBucketInput{
 		Bucket: &bucketName,
 	})
 
 	// Make the bucket objects publicly accessible
-	_, err = s.Client.PutBucketPolicy(ctx, &s3.PutBucketPolicyInput{
+	_, _ = s.Client.PutBucketPolicy(ctx, &s3.PutBucketPolicyInput{
 		Bucket: &bucketName,
 		Policy: aws.String(fmt.Sprintf(`{
     "Version": "2012-10-17",
@@ -81,7 +89,10 @@ func (s *S3Client) CreateBucketIfNotExist(ctx context.Context, bucketName string
 // pathResolver is a custom endpoint resolver for the S3 client. It appends the bucket name to the endpoint URL. (for minio)
 type pathResolver struct{}
 
-func (r *pathResolver) ResolveEndpoint(_ context.Context, params s3.EndpointParameters) (transport.Endpoint, error) {
+func (r *pathResolver) ResolveEndpoint(
+	_ context.Context,
+	params s3.EndpointParameters,
+) (transport.Endpoint, error) {
 	parsedEndpoint, err := url.Parse(*params.Endpoint)
 	if err != nil {
 		return transport.Endpoint{}, fmt.Errorf("failed to parse endpoint URL: %w", err)

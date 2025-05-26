@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 )
 

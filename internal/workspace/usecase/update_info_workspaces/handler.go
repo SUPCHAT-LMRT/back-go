@@ -1,16 +1,19 @@
 package update_info_workspaces
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
-	"net/http"
 )
 
 type UpdateInfoWorkspacesHandler struct {
 	useCase *UpdateInfoWorkspacesUseCase
 }
 
-func NewUpdateInfoWorkspacesHandler(useCase *UpdateInfoWorkspacesUseCase) *UpdateInfoWorkspacesHandler {
+func NewUpdateInfoWorkspacesHandler(
+	useCase *UpdateInfoWorkspacesUseCase,
+) *UpdateInfoWorkspacesHandler {
 	return &UpdateInfoWorkspacesHandler{useCase: useCase}
 }
 

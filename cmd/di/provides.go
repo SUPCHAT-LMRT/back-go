@@ -2,6 +2,11 @@ package di
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"reflect"
+	"runtime"
+
 	"github.com/supchat-lmrt/back-go/internal/back_identifier/usecase"
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/usecase/list_recent_chats"
 	"github.com/supchat-lmrt/back-go/internal/dig"
@@ -39,6 +44,7 @@ import (
 	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
 	list_recent_chats_direct "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_recent_direct_chats"
 	save_direct_message "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/save_message"
+	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/send_message_notification"
 	toggle_chat_direct_reaction "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/toggle_reaction"
 	"github.com/supchat-lmrt/back-go/internal/user/gin/middlewares"
 	mongo2 "github.com/supchat-lmrt/back-go/internal/user/repository/mongo"
@@ -131,10 +137,6 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_info_workspaces"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/update_type_workspace"
 	uberdig "go.uber.org/dig"
-	"log"
-	"os"
-	"reflect"
-	"runtime"
 )
 
 func NewDi() *uberdig.Container {
@@ -153,7 +155,15 @@ func NewDi() *uberdig.Container {
 		// Meilisearch
 		dig.NewProvider(meilisearch.NewClient),
 		// Mailer
-		dig.NewProvider(mail.NewMailer(os.Getenv("SMTP_HOST"), os.Getenv("SMTP_TLS") == "true", utils.MustAtoi(os.Getenv("SMTP_PORT")), os.Getenv("SMTP_USERNAME"), os.Getenv("SMTP_PASSWORD"))),
+		dig.NewProvider(
+			mail.NewMailer(
+				os.Getenv("SMTP_HOST"),
+				os.Getenv("SMTP_TLS") == "true",
+				utils.MustAtoi(os.Getenv("SMTP_PORT")),
+				os.Getenv("SMTP_USERNAME"),
+				os.Getenv("SMTP_PASSWORD"),
+			),
+		),
 		// Identifier workspace
 		dig.NewProvider(usecase.NewGetBackIdentifierUseCase),
 		dig.NewProvider(usecase.NewHostnameBackIdentifierStrategy),
@@ -176,7 +186,10 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(update_banner.NewS3UpdateWorkspaceBannerStrategy),
 		dig.NewProvider(list_workpace_members2.NewListWorkspaceMembersUseCase),
 		dig.NewProvider(generate3.NewInviteLinkUseCase),
-		dig.NewProvider(generate.NewSendMailGenerateInviteLinkObserver, uberdig.Group("generate_invite_link_observers")),
+		dig.NewProvider(
+			generate.NewSendMailGenerateInviteLinkObserver,
+			uberdig.Group("generate_invite_link_observers"),
+		),
 		dig.NewProvider(get_workspace.NewGetWorkspaceUseCase),
 		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkDataUseCase),
 		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesUseCase),
@@ -199,10 +212,22 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(kick_member.NewKickMemberHandler),
 		dig.NewProvider(get_member_id.NewGetMemberIdHandler),
 		// Workspace observers
-		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesObserver, uberdig.Group("update_info_workspaces_observers")),
-		dig.NewProvider(update_icon.NewUpdateWorkspaceIconObserver, uberdig.Group("update_icon_workspace_observers")),
-		dig.NewProvider(update_type_workspace.NewNotifyUpdateTypeWorkspaceObserver, uberdig.Group("update_type_workspace_observers")),
-		dig.NewProvider(update_banner.NewUpdateWorkspaceBannerObserver, uberdig.Group("save_banner_workspace_observers")),
+		dig.NewProvider(
+			update_info_workspaces.NewUpdateInfoWorkspacesObserver,
+			uberdig.Group("update_info_workspaces_observers"),
+		),
+		dig.NewProvider(
+			update_icon.NewUpdateWorkspaceIconObserver,
+			uberdig.Group("update_icon_workspace_observers"),
+		),
+		dig.NewProvider(
+			update_type_workspace.NewNotifyUpdateTypeWorkspaceObserver,
+			uberdig.Group("update_type_workspace_observers"),
+		),
+		dig.NewProvider(
+      update_banner.NewUpdateWorkspaceBannerObserver, 
+      uberdig.Group("save_banner_workspace_observers"),
+    ),
 		// Workspace mappers
 		dig.NewProvider(repository3.NewRedisInviteLinkMapper),
 		// Workspace channels
@@ -241,9 +266,18 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(get_roles_for_member.NewGetRolesForMemberUsecase),
 		dig.NewProvider(permissions.NewCheckPermissionUseCase),
 		// Workspaces channels observers
-		dig.NewProvider(create_channel.NewCreateChannelObserver, uberdig.Group("create_channel_observers")),
-		dig.NewProvider(reoder_channels.NewUserStatusUpdateObserver, uberdig.Group("reorder_channels_observers")),
-		dig.NewProvider(delete_channels.NewDeleteChannelsObserver, uberdig.Group("delete_channels_observers")),
+		dig.NewProvider(
+			create_channel.NewCreateChannelObserver,
+			uberdig.Group("create_channel_observers"),
+		),
+		dig.NewProvider(
+			reoder_channels.NewUserStatusUpdateObserver,
+			uberdig.Group("reorder_channels_observers"),
+		),
+		dig.NewProvider(
+			delete_channels.NewDeleteChannelsObserver,
+			uberdig.Group("delete_channels_observers"),
+		),
 		// Workspace channels handlers
 		dig.NewProvider(list_channels.NewListChannelsHandler),
 		dig.NewProvider(list_private_channels.NewGetPrivateChannelsHandler),
@@ -266,7 +300,9 @@ func NewDi() *uberdig.Container {
 		// Workspace time series
 		// Workspace time series message sent
 		// Workspace time series message sent repository
-		dig.NewProvider(time_series_message_sent_repository.NewMongoMessageSentTimeSeriesWorkspaceRepository),
+		dig.NewProvider(
+			time_series_message_sent_repository.NewMongoMessageSentTimeSeriesWorkspaceRepository,
+		),
 		// Workspace time series message sent usecases
 		dig.NewProvider(get_minutely.NewGetMinutelyMessageSentUseCase),
 		// Workspace time series message sent handlers
@@ -312,8 +348,14 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(forgot_password_request_usecase.NewRequestForgotPasswordUseCase),
 		dig.NewProvider(forgot_password_validate_usecase.NewValidateForgotPasswordUseCase),
 		// User forgot password observers
-		dig.NewProvider(forgot_password_request_usecase.NewLogRequestForgotPasswordObserver, uberdig.Group("forgot_password_request_observers")),
-		dig.NewProvider(forgot_password_request_usecase.NewSendMailRequestForgotPasswordObserver, uberdig.Group("forgot_password_request_observers")),
+		dig.NewProvider(
+			forgot_password_request_usecase.NewLogRequestForgotPasswordObserver,
+			uberdig.Group("forgot_password_request_observers"),
+		),
+		dig.NewProvider(
+			forgot_password_request_usecase.NewSendMailRequestForgotPasswordObserver,
+			uberdig.Group("forgot_password_request_observers"),
+		),
 		// User forgot password handlers
 		dig.NewProvider(forgot_password_request_usecase.NewRequestForgotPasswordHandler),
 		dig.NewProvider(forgot_password_validate_usecase.NewValidateForgotPasswordHandler),
@@ -325,8 +367,14 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(reset_password_request_usecase.NewRequestResetPasswordUseCase),
 		dig.NewProvider(reset_password_validate_usecase.NewValidateResetPasswordUseCase),
 		// User reset password observers
-		dig.NewProvider(reset_password_request_usecase.NewLogRequestResetPasswordObserver, uberdig.Group("reset_password_request_observers")),
-		dig.NewProvider(reset_password_request_usecase.NewSendMailRequestResetPasswordObserver, uberdig.Group("reset_password_request_observers")),
+		dig.NewProvider(
+			reset_password_request_usecase.NewLogRequestResetPasswordObserver,
+			uberdig.Group("reset_password_request_observers"),
+		),
+		dig.NewProvider(
+			reset_password_request_usecase.NewSendMailRequestResetPasswordObserver,
+			uberdig.Group("reset_password_request_observers"),
+		),
 		// User reset password handlers
 		dig.NewProvider(reset_password_request_usecase.NewRequestResetPasswordHandler),
 		dig.NewProvider(reset_password_validate_usecase.NewValidateResetPasswordHandler),
@@ -379,7 +427,10 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(user_status_repository.NewMongoUserStatusRepository),
 		// User status usecases
 		dig.NewProvider(save_status.NewSaveStatusUseCase),
-		dig.NewProvider(save_status.NewUserStatusUpdateObserver, uberdig.Group("save_user_status_observers")),
+		dig.NewProvider(
+			save_status.NewUserStatusUpdateObserver,
+			uberdig.Group("save_user_status_observers"),
+		),
 		dig.NewProvider(get_status.NewGetStatusUseCase),
 		dig.NewProvider(get_or_create_status.NewGetOrCreateStatusUseCase),
 		dig.NewProvider(get_public_status.NewGetPublicStatusUseCase),
@@ -391,9 +442,22 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(event.NewEventBus),
 		// Ws
 		dig.NewProvider(websocket.NewWsServer),
-		dig.NewProvider(websocket.NewSaveChannelMessageObserver, uberdig.Group("send_channel_message_observers")),
-		dig.NewProvider(websocket.NewSaveDirectMessageObserver, uberdig.Group("send_direct_message_observers")),
-		dig.NewProvider(save_direct_message.NewSyncRecentChatObserver, uberdig.Group("save_direct_chat_message_observers")),
+		dig.NewProvider(
+			websocket.NewSaveChannelMessageObserver,
+			uberdig.Group("send_channel_message_observers"),
+		),
+		dig.NewProvider(
+			websocket.NewSaveDirectMessageObserver,
+			uberdig.Group("send_direct_message_observers"),
+		),
+		dig.NewProvider(
+			save_direct_message.NewSyncRecentChatObserver,
+			uberdig.Group("save_direct_chat_message_observers"),
+		),
+		dig.NewProvider(
+			save_direct_message.NewSendNotificationObserver,
+			uberdig.Group("save_direct_chat_message_observers"),
+		),
 		// Ws handlers
 		dig.NewProvider(websocket.NewWebsocketHandler),
 		// Chat
@@ -458,6 +522,15 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(assign_job.NewAssignJobHandler),
 		dig.NewProvider(unassign_job.NewUnassignJobHandler),
 		dig.NewProvider(get_job_for_user.NewGetJobForUserHandler),
+		dig.NewProvider(
+			send_message_notification.NewEmailChannel,
+			uberdig.Group("send_message_notification_channel"),
+		),
+		dig.NewProvider(
+			send_message_notification.NewPushChannel,
+			uberdig.Group("send_message_notification_channel"),
+		),
+		dig.NewProvider(send_message_notification.NewSendMessageNotificationUseCase),
 		dig.NewProvider(permissions2.NewCheckUserPermissionsHandler),
 	}
 
@@ -472,7 +545,9 @@ func NewDi() *uberdig.Container {
 		if firstReturn.Kind() == reflect.Ptr {
 			firstReturn = firstReturn.Elem()
 		}
-		fnDetails := runtime.FuncForPC(reflect.ValueOf(provider.Constructor).Pointer()) // Retrieve function details
+		fnDetails := runtime.FuncForPC(
+			reflect.ValueOf(provider.Constructor).Pointer(),
+		) // Retrieve function details
 		fmt.Printf("[Dig] PROVIDE %20s <= %s\n", firstReturn.Name(), fnDetails.Name())
 	}
 	fmt.Printf("[Dig] %d providers provided\n", len(providers))

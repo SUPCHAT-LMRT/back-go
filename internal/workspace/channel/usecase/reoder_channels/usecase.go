@@ -3,6 +3,7 @@ package reoder_channels
 import (
 	"context"
 	"errors"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
@@ -29,8 +30,10 @@ func NewReorderChannelsUseCase(deps ReorderChannelsUseCaseDeps) *ReorderChannels
 	return &ReorderChannelsUseCase{deps: deps}
 }
 
-func (uc *ReorderChannelsUseCase) ExecuteBulk(ctx context.Context, inputs []ReorderChannelsInput) error {
-
+func (uc *ReorderChannelsUseCase) ExecuteBulk(
+	ctx context.Context,
+	inputs []ReorderChannelsInput,
+) error {
 	if len(inputs) == 0 {
 		return errors.New("no channels to reorder")
 	}

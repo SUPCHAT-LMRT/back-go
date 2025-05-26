@@ -1,10 +1,11 @@
 package zerolog
 
 import (
-	"github.com/rs/zerolog"
-	"github.com/supchat-lmrt/back-go/internal/logger"
 	"os"
 	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/supchat-lmrt/back-go/internal/logger"
 )
 
 // ZerologLogger is a wrapper around zerolog.Logger that implements the Logger interface.
@@ -125,7 +126,7 @@ func (z *ZerologLogEntry) Dur(key string, value time.Duration) logger.LogEntry {
 }
 
 // Any adds any field to the log entry.
-func (z *ZerologLogEntry) Any(key string, value interface{}) logger.LogEntry {
+func (z *ZerologLogEntry) Any(key string, value any) logger.LogEntry {
 	if z.ctx != nil {
 		ctx := z.ctx.Interface(key, value)
 		z.ctx = &ctx
@@ -152,7 +153,7 @@ func (z *ZerologLogEntry) Msg(msg string) {
 	}
 }
 
-func (z *ZerologLogEntry) Msgf(format string, v ...interface{}) {
+func (z *ZerologLogEntry) Msgf(format string, v ...any) {
 	if z.event != nil {
 		z.event.Msgf(format, v...)
 	}

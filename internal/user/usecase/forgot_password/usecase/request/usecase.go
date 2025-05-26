@@ -2,6 +2,7 @@ package request
 
 import (
 	"context"
+
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/forgot_password/service"
@@ -22,7 +23,10 @@ func NewRequestForgotPasswordUseCase(deps RequestForgotPasswordDeps) *RequestFor
 	return &RequestForgotPasswordUseCase{deps: deps}
 }
 
-func (u *RequestForgotPasswordUseCase) Execute(ctx context.Context, userId user_entity.UserId) (*entity.ForgotPasswordRequest, error) {
+func (u *RequestForgotPasswordUseCase) Execute(
+	ctx context.Context,
+	userId user_entity.UserId,
+) (*entity.ForgotPasswordRequest, error) {
 	forgotPasswordRequest, err := u.deps.Service.CreateForgotPasswordRequest(ctx, userId)
 	if err != nil {
 		return nil, err

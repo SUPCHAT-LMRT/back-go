@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	user_repository "github.com/supchat-lmrt/back-go/internal/user/repository"
@@ -10,8 +11,14 @@ import (
 )
 
 type ResetPasswordService interface {
-	CreateResetPasswordRequest(ctx context.Context, userId user_entity.UserId) (*entity.ResetPasswordRequest, error)
-	DeleteResetPasswordRequest(ctx context.Context, validationToken uuid.UUID) (*user_entity.User, error)
+	CreateResetPasswordRequest(
+		ctx context.Context,
+		userId user_entity.UserId,
+	) (*entity.ResetPasswordRequest, error)
+	DeleteResetPasswordRequest(
+		ctx context.Context,
+		validationToken uuid.UUID,
+	) (*user_entity.User, error)
 }
 
 type DefaultValidationRequestService struct {
@@ -19,14 +26,20 @@ type DefaultValidationRequestService struct {
 	userRepository          user_repository.UserRepository
 }
 
-func NewDefaultResetPasswordService(resetPasswordRepository repository.ResetPasswordRepository, userRepository user_repository.UserRepository) ResetPasswordService {
+func NewDefaultResetPasswordService(
+	resetPasswordRepository repository.ResetPasswordRepository,
+	userRepository user_repository.UserRepository,
+) ResetPasswordService {
 	return &DefaultValidationRequestService{
 		resetPasswordRepository: resetPasswordRepository,
 		userRepository:          userRepository,
 	}
 }
 
-func (s *DefaultValidationRequestService) CreateResetPasswordRequest(ctx context.Context, userId user_entity.UserId) (*entity.ResetPasswordRequest, error) {
+func (s *DefaultValidationRequestService) CreateResetPasswordRequest(
+	ctx context.Context,
+	userId user_entity.UserId,
+) (*entity.ResetPasswordRequest, error) {
 	validationRequestData, err := s.resetPasswordRepository.CreateResetPasswordRequest(ctx, userId)
 	if err != nil {
 		return nil, err
@@ -43,7 +56,10 @@ func (s *DefaultValidationRequestService) CreateResetPasswordRequest(ctx context
 	}, nil
 }
 
-func (s *DefaultValidationRequestService) DeleteResetPasswordRequest(ctx context.Context, validationToken uuid.UUID) (*user_entity.User, error) {
+func (s *DefaultValidationRequestService) DeleteResetPasswordRequest(
+	ctx context.Context,
+	validationToken uuid.UUID,
+) (*user_entity.User, error) {
 	userId, err := s.resetPasswordRepository.DeleteResetPasswordRequest(ctx, validationToken)
 	if err != nil {
 		return nil, err

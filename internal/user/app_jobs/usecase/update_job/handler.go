@@ -1,9 +1,10 @@
 package update_job
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
-	"net/http"
 )
 
 type UpdateJobHandler struct {
