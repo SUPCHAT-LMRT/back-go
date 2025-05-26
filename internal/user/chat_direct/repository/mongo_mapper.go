@@ -43,6 +43,7 @@ func (m ChatDirectMapper) MapToEntity(
 	}, nil
 }
 
+//nolint:revive
 func (m ChatDirectMapper) MapFromEntity(
 	entity *chat_direct_entity.ChatDirect,
 ) (*MongoChatDirect, error) {

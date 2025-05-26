@@ -24,7 +24,7 @@ func (h *JoinWorkspaceInviteHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	user := c.MustGet("user").(*user_entity.User)
+	user := c.MustGet("user").(*user_entity.User) //nolint:revive
 
 	err := h.useCase.Execute(c, token, user)
 	if err != nil {

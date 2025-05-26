@@ -23,6 +23,7 @@ import (
 	uberdig "go.uber.org/dig"
 )
 
+//nolint:revive
 func main() {
 	diContainer := uberdig.New()
 	providers := []dig.Provider{
@@ -117,10 +118,10 @@ func main() {
 					}
 				}
 
-				fmt.Println("Inserted messages", len(messages))
+				logg.Info().Int("messages_count", len(messages)).Msg("Inserted messages")
 			}
 
-			fmt.Println("Inserted workspace", workspaceId)
+			logg.Info().Str("workspace_id", workspaceId.String()).Msg("Inserted workspace")
 		}
 	})
 

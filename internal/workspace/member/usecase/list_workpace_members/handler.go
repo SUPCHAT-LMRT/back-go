@@ -1,12 +1,14 @@
 package list_workpace_members
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	uberdig "go.uber.org/dig"
 )
 
@@ -59,9 +61,19 @@ func (h *ListWorkspaceMembersHandler) Handle(c *gin.Context) {
 		return
 	}
 
+	c.JSON(http.StatusOK, gin.H{
+		"members": h.mapToMemberResponse(c, members),
+		"total":   totalMembers,
+	})
+}
+
+func (h *ListWorkspaceMembersHandler) mapToMemberResponse(
+	ctx context.Context,
+	members []*workspace_entity.WorkspaceMember,
+) []MemberResponse {
 	result := make([]MemberResponse, len(members))
 	for i, member := range members {
-		user, err := h.deps.GetUserByIdUseCase.Execute(c, member.UserId)
+		user, err := h.deps.GetUserByIdUseCase.Execute(ctx, member.UserId)
 		if err != nil {
 			continue
 		}
@@ -73,10 +85,7 @@ func (h *ListWorkspaceMembersHandler) Handle(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"members": result,
-		"total":   totalMembers,
-	})
+	return result
 }
 
 type MemberResponse struct {

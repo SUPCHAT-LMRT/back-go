@@ -32,7 +32,7 @@ type UserResponse struct {
 }
 
 func (g *GetMyUserAccountHandler) Handle(c *gin.Context) {
-	user := c.MustGet("user").(*entity.User)
+	user := c.MustGet("user").(*entity.User) //nolint:revive
 
 	userStatus, err := g.deps.GetOrCreateStatusUseCase.Execute(
 		c,

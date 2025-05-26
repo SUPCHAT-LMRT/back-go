@@ -20,7 +20,7 @@ func NewCheckPermissionsHandler(
 }
 
 func (h *CheckPermissionsHandler) Handle(c *gin.Context) {
-	workspaceMember := c.MustGet("workspace_member").(*workspace_entity.WorkspaceMember)
+	workspaceMember := c.MustGet("workspace_member").(*workspace_entity.WorkspaceMember) //nolint:revive
 	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "workspace_id is required"})

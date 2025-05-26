@@ -38,9 +38,9 @@ func (d DirectRoomData) String() string {
 	// so the ids are ordered
 	if d.UserId.IsAfter(d.OtherUserId) {
 		return fmt.Sprintf("direct-%s_%s", d.UserId.String(), d.OtherUserId.String())
-	} else {
-		return fmt.Sprintf("direct-%s_%s", d.OtherUserId.String(), d.UserId.String())
 	}
+
+	return fmt.Sprintf("direct-%s_%s", d.OtherUserId.String(), d.UserId.String())
 }
 
 // NewRoom creates a new Room

@@ -14,9 +14,9 @@ type GetMinutelyMessageSentUseCase struct {
 }
 
 func NewGetMinutelyMessageSentUseCase(
-	repository repository.MessageSentTimeSeriesWorkspaceRepository,
+	messageSentTimeSeriesWorkspaceRepository repository.MessageSentTimeSeriesWorkspaceRepository,
 ) *GetMinutelyMessageSentUseCase {
-	return &GetMinutelyMessageSentUseCase{repository: repository}
+	return &GetMinutelyMessageSentUseCase{repository: messageSentTimeSeriesWorkspaceRepository}
 }
 
 func (u *GetMinutelyMessageSentUseCase) Execute(

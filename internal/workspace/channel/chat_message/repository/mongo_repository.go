@@ -83,6 +83,7 @@ func (m MongoChannelMessageRepository) Create(
 	return nil
 }
 
+//nolint:revive
 func (m MongoChannelMessageRepository) ListByChannelId(
 	ctx context.Context,
 	channelId channel_entity.ChannelId,
@@ -190,9 +191,9 @@ func (m MongoChannelMessageRepository) ListByChannelId(
 
 	filter := bson.M{"channel_id": channelObjectId}
 
-	if params.Before != (time.Time{}) {
+	if !params.Before.Equal(time.Time{}) {
 		filter["created_at"] = bson.M{"$lt": params.Before}
-	} else if params.After != (time.Time{}) {
+	} else if !params.After.Equal(time.Time{}) {
 		filter["created_at"] = bson.M{"$gt": params.After}
 	}
 
@@ -218,6 +219,8 @@ func (m MongoChannelMessageRepository) ListByChannelId(
 }
 
 // ToggleReaction toggles the reaction of a user to a message. (If the user has already reacted, it will remove the reaction, otherwise it will add the reaction.)
+//
+//nolint:revive
 func (m MongoChannelMessageRepository) ToggleReaction(
 	ctx context.Context,
 	messageId entity.ChannelMessageId,

@@ -1,6 +1,7 @@
 package token
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -15,13 +16,13 @@ const (
 )
 
 var (
-	ErrUnableToSignAccessToken      = fmt.Errorf("unable to sign access token")
-	ErrUnableToSignRefreshToken     = fmt.Errorf("unable to sign refresh token")
-	ErrUnableToValidateAccessToken  = fmt.Errorf("unable to validate access token")
-	ErrAccessTokenExpired           = fmt.Errorf("access token expired")
-	ErrUnableToValidateRefreshToken = fmt.Errorf("unable to validate refresh token")
-	ErrRefreshTokenExpired          = fmt.Errorf("refresh token expired")
-	ErrInvalidTokenType             = fmt.Errorf("invalid token type")
+	ErrUnableToSignAccessToken      = errors.New("unable to sign access token")
+	ErrUnableToSignRefreshToken     = errors.New("unable to sign refresh token")
+	ErrUnableToValidateAccessToken  = errors.New("unable to validate access token")
+	ErrAccessTokenExpired           = errors.New("access token expired")
+	ErrUnableToValidateRefreshToken = errors.New("unable to validate refresh token")
+	ErrRefreshTokenExpired          = errors.New("refresh token expired")
+	ErrInvalidTokenType             = errors.New("invalid token type")
 )
 
 type JwtTokenStrategy struct {
@@ -34,7 +35,8 @@ func NewJwtTokenStrategy(secret string) func() TokenStrategy {
 	}
 }
 
-func (j *JwtTokenStrategy) GenerateAccessToken(claims map[string]any) (string, error) {
+func (j *JwtTokenStrategy) GenerateAccessToken(givenClaims map[string]any) (string, error) {
+	claims := givenClaims
 	if claims == nil {
 		claims = make(map[string]any)
 	}
@@ -50,9 +52,10 @@ func (j *JwtTokenStrategy) GenerateAccessToken(claims map[string]any) (string, e
 }
 
 func (j *JwtTokenStrategy) GenerateRefreshToken(
-	claims map[string]any,
+	givenClaims map[string]any,
 	longLived bool,
 ) (string, error) {
+	claims := givenClaims
 	if claims == nil {
 		claims = make(map[string]any)
 	}

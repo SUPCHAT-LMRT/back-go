@@ -34,6 +34,7 @@ func NewListDirectMessagesHandler(deps ListDirectMessagesHandlerDeps) *ListDirec
 	return &ListDirectMessagesHandler{deps: deps}
 }
 
+//nolint:revive
 func (h *ListDirectMessagesHandler) Handle(c *gin.Context) {
 	authenticatedUser := c.MustGet("user").(*user_entity.User)
 
@@ -67,7 +68,6 @@ func (h *ListDirectMessagesHandler) Handle(c *gin.Context) {
 
 	response := make([]DirectMessageResponse, len(directMessages))
 	for i, message := range directMessages {
-
 		reactions := make([]DirectMessageReactionResponse, len(message.Reactions))
 		for j, reaction := range message.Reactions {
 			reactionUsers := make([]DirectMessageReactionUserResponse, len(reaction.UserIds))

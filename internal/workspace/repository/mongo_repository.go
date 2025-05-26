@@ -168,6 +168,7 @@ func (m MongoWorkspaceRepository) ListPublics(ctx context.Context) ([]*entity.Wo
 	return workspaces, nil
 }
 
+//nolint:revive
 func (m MongoWorkspaceRepository) ListByUserId(
 	ctx context.Context,
 	userId user_entity.UserId,

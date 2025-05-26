@@ -31,7 +31,7 @@ func (h *AddMemberToGroupHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	inviter := c.MustGet("user").(*user_entity.User)
+	inviter := c.MustGet("user").(*user_entity.User) //nolint:revive
 
 	if inviter.Id == req.InviteeUserId {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "You can't add yourself to the group"})

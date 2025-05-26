@@ -17,11 +17,11 @@ type OutboundChannelMessageReactionMember struct {
 	Username string `json:"username"`
 }
 
-func (o OutboundChannelMessageReactionAdded) GetActionName() messages.Action {
+func (o *OutboundChannelMessageReactionAdded) GetActionName() messages.Action {
 	return messages.OutboundChannelMessageReactionAddedAction
 }
 
-func (o OutboundChannelMessageReactionAdded) Encode() ([]byte, error) {
+func (o *OutboundChannelMessageReactionAdded) Encode() ([]byte, error) {
 	o.DefaultMessage = messages.NewDefaultMessage(o.GetActionName())
 	return json.Marshal(o)
 }
@@ -33,11 +33,11 @@ type OutboundChannelMessageReactionRemoved struct {
 	Reaction  string                               `json:"reaction"`
 }
 
-func (o OutboundChannelMessageReactionRemoved) GetActionName() messages.Action {
+func (o *OutboundChannelMessageReactionRemoved) GetActionName() messages.Action {
 	return messages.OutboundChannelMessageReactionRemovedAction
 }
 
-func (o OutboundChannelMessageReactionRemoved) Encode() ([]byte, error) {
+func (o *OutboundChannelMessageReactionRemoved) Encode() ([]byte, error) {
 	o.DefaultMessage = messages.NewDefaultMessage(o.GetActionName())
 	return json.Marshal(o)
 }

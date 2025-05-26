@@ -22,6 +22,7 @@ func NewAuthMiddleware(
 	return &AuthMiddleware{getUserByEmail: getUserByEmail, tokenStrategy: tokenStrategy}
 }
 
+//nolint:revive
 func (a *AuthMiddleware) Execute(c *gin.Context) {
 	accessToken, err := c.Cookie("accessToken")
 	if err != nil || accessToken == "" {

@@ -1,6 +1,8 @@
 package assign_role
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/entity"
@@ -17,7 +19,7 @@ func NewAssignRoleToUserHandler(useCase *AssignRoleToUserUsecase) *AssignRoleToU
 func (h AssignRoleToUserHandler) Handle(c *gin.Context) {
 	var req AssignRoleToUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -28,11 +30,11 @@ func (h AssignRoleToUserHandler) Handle(c *gin.Context) {
 		entity.WorkspaceId(req.WorkspaceId),
 	)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Role assigned successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Role assigned successfully"})
 }
 
 type AssignRoleToUserRequest struct {

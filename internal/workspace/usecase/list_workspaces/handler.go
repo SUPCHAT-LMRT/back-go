@@ -24,7 +24,7 @@ func (l ListWorkspaceHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	user := userVal.(*user_entity.User)
+	user := userVal.(*user_entity.User) //nolint:revive
 
 	workspaces, err := l.useCase.Execute(c, user.Id)
 	if err != nil {

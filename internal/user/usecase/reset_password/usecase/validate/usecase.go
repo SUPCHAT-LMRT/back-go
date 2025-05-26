@@ -14,11 +14,11 @@ type ValidateResetPasswordUseCase struct {
 }
 
 func NewValidateResetPasswordUseCase(
-	service service.ResetPasswordService,
+	resetPasswordService service.ResetPasswordService,
 	updatePasswordUseCase *update_password.ChangePasswordUseCase,
 ) *ValidateResetPasswordUseCase {
 	return &ValidateResetPasswordUseCase{
-		service:               service,
+		service:               resetPasswordService,
 		updatePasswordUseCase: updatePasswordUseCase,
 	}
 }

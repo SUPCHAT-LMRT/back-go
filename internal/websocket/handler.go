@@ -16,7 +16,7 @@ func NewWebsocketHandler(wsServer *WsServer) *WebsocketHandler {
 }
 
 func (h *WebsocketHandler) Handle(c *gin.Context) {
-	user := c.MustGet("user").(*user_entity.User)
+	user := c.MustGet("user").(*user_entity.User) //nolint:revive
 
 	conn, err := Upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {

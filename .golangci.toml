@@ -3,29 +3,103 @@ version = "2"
 [issues]
 fix = true
 
-[linters.settings.errcheck]
-exclude-functions = [
-  "(*go.mongodb.org/mongo-driver/mongo.Cursor).Close"
+[linters]
+enable = [
+    "revive",
+    "errcheck"
+]
+
+[linters.settings.revive]
+enable-all-rules = true
+confidence = 0.1
+
+[[linters.settings.revive.rules]]
+name = "var-naming"
+disabled = true
+
+[[linters.settings.revive.rules]]
+name = "line-length-limit"
+disabled = true
+
+[[linters.settings.revive.rules]]
+name = "function-length"
+arguments = [0, 100]
+
+[[linters.settings.revive.rules]]
+name = "max-public-structs"
+arguments = [10]
+
+[[linters.settings.revive.rules]]
+name = "package-comments"
+disabled = true
+
+[[linters.settings.revive.rules]]
+name = "unused-receiver"
+disabled = true
+
+[[linters.settings.revive.rules]]
+name = "unused-parameter"
+disabled = true
+
+[[linters.settings.revive.rules]]
+name = "add-constant"
+disabled = true
+
+[[linters.settings.revive.rules]]
+name = "flag-parameter"
+disabled = true
+
+[[linters.settings.revive.rules]]
+name = "unhandled-error"
+severity = "warning"
+disabled = false
+arguments = [
+    "fmt.Printf",
+    "fmt.Println"
+]
+
+[[linters.settings.revive.rules]]
+name = "exported"
+arguments = [
+    #  "check-private-receivers",
+    "disable-stuttering-check",
+    #  "say-repetitive-instead-of-stutters",
+    #  "check-public-interface",
+    "disable-checks-on-constants",
+    "disable-checks-on-functions",
+    "disable-checks-on-methods",
+    "disable-checks-on-types",
+    "disable-checks-on-variables"
+]
+
+[[linters.settings.revive.rules]]
+name = "import-alias-naming"
+severity = "warning"
+arguments = [
+    "^[a-z][a-z0-9_]{0,}$"
 ]
 
 [[linters.exclusions.rules]]
-linters = [ "errcheck" ]
+linters = ["errcheck"]
 source = "^\\s*defer\\s+"
 
 [formatters]
 enable = [
-  "gci",
-  "gofmt",
-  "gofumpt",
-  "goimports",
-  "golines"
+    "gci",
+    "gofmt",
+    "gofumpt",
+    "goimports",
+    "golines"
 ]
+
 [formatters.settings.gofmt]
 # Simplify code: gofmt with `-s` option.
 simplify = true
+
 [[formatters.settings.gofmt.rewrite-rules]]
 pattern = "interface{}"
 replacement = "any"
+
 [[formatters.settings.gofmt.rewrite-rules]]
 pattern = "a[b:len(a)]"
 replacement = "a[b:]"

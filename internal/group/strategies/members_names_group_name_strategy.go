@@ -31,9 +31,13 @@ func (s MembersNamesDefaultGroupNameStrategy) Handle(
 			return "", err
 		}
 
-		builder.WriteString(user.FullName())
-		if i != len(members)-1 {
-			builder.WriteString(", ")
+		_, err = builder.WriteString(user.FullName())
+		if err != nil {
+			return "", err
+		}
+
+		if i != len(members)-1 { //nolint:revive
+			_, _ = builder.WriteString(", ")
 		}
 	}
 

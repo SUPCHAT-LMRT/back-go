@@ -37,6 +37,7 @@ type MessageQuery struct {
 	AroundMessageId string    `form:"aroundMessageId"`
 }
 
+//nolint:revive
 func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {
@@ -75,22 +76,20 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 	for i, message := range channelMessages {
 		reactions := make([]ChannelMessageReactionResponse, len(message.Reactions))
 		for j, reaction := range message.Reactions {
-
 			reactionUsers := make([]ChannelMessageReactionUserResponse, len(reaction.UserIds))
 			for k, userId := range reaction.UserIds {
-				memberReacted, err := h.deps.GetWorkspaceMemberUseCase.Execute(
+				userReacted, err := h.deps.GetUserByIdUseCase.Execute(
 					c,
-					entity.WorkspaceId(workspaceId),
 					userId,
 				)
 				if err != nil {
 					continue
 				}
 
-        reactionUsers[k] = ChannelMessageReactionUserResponse{
-          Id:   userId.String(),
-          Name: userReacted.FullName(),
-        }
+				reactionUsers[k] = ChannelMessageReactionUserResponse{
+					Id:   userId.String(),
+					Name: userReacted.FullName(),
+				}
 			}
 
 			reactions[j] = ChannelMessageReactionResponse{

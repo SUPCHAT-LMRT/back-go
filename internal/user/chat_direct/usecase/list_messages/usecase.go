@@ -14,9 +14,9 @@ type ListDirectMessagesUseCase struct {
 }
 
 func NewListDirectMessagesUseCase(
-	repository repository.ChatDirectRepository,
+	chatDirectRepository repository.ChatDirectRepository,
 ) *ListDirectMessagesUseCase {
-	return &ListDirectMessagesUseCase{repository: repository}
+	return &ListDirectMessagesUseCase{repository: chatDirectRepository}
 }
 
 func (u ListDirectMessagesUseCase) Execute(

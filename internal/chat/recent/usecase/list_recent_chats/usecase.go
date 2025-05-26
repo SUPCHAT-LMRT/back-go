@@ -29,6 +29,7 @@ func NewListRecentChatsUseCase(deps ListRecentChatsUseCaseDeps) *ListRecentChats
 	return &ListRecentChatsUseCase{deps: deps}
 }
 
+//nolint:revive
 func (u *ListRecentChatsUseCase) Execute(
 	ctx context.Context,
 	currentUserId user_entity.UserId,

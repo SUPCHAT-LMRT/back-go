@@ -32,6 +32,7 @@ func NewSearchTermUseCase(deps SearchTermUseCaseDeps) *SearchTermUseCase {
 	return &SearchTermUseCase{deps: deps}
 }
 
+//nolint:revive
 func (u SearchTermUseCase) Execute(
 	ctx context.Context,
 	term string,
@@ -68,9 +69,13 @@ func (u SearchTermUseCase) Execute(
 	var results []*SearchResult
 	for _, response := range searchResponse.Results {
 		for _, hit := range response.Hits {
-			hitMap := hit.(map[string]any)
+			hitMap, ok := hit.(map[string]any)
+			if !ok {
+				return nil, fmt.Errorf("unexpected hit type: %T", hit)
+			}
 
 			if response.IndexUID == "messages" {
+				//nolint:revive
 				switch hitMap["Kind"].(string) {
 				case string(message.SearchMessageKindChannelMessage):
 					// The message was found in a channel (in a workspace)
@@ -80,7 +85,11 @@ func (u SearchTermUseCase) Execute(
 						return nil, err
 					}
 
-					data := result.Data.(message.SearchMessageChannelData)
+					data, ok := result.Data.(message.SearchMessageChannelData)
+					if !ok {
+						return nil, fmt.Errorf("unexpected data type: %T", result.Data)
+					}
+
 					workspaceMember, err := u.deps.GetWorkspaceMemberUseCase.Execute(
 						ctx,
 						data.WorkspaceId,
@@ -102,7 +111,7 @@ func (u SearchTermUseCase) Execute(
 							Content:    result.Content,
 							AuthorId:   result.AuthorId,
 							AuthorName: user.FullName(),
-              Href: fmt.Sprintf(
+							Href: fmt.Sprintf(
 								"/workspaces/%s/channels/%s?aroundMessageId=%s",
 								workspaceMember.WorkspaceId,
 								data.ChannelId,
@@ -118,7 +127,10 @@ func (u SearchTermUseCase) Execute(
 						return nil, err
 					}
 
-					data := result.Data.(message.SearchMessageDirectData)
+					data, ok := result.Data.(message.SearchMessageDirectData)
+					if !ok {
+						return nil, fmt.Errorf("unexpected data type: %T", result.Data)
+					}
 
 					user, err := u.deps.GetUserByIdUseCase.Execute(ctx, result.AuthorId)
 					if err != nil {

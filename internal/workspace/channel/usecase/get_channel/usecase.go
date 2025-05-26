@@ -11,8 +11,8 @@ type GetChannelUseCase struct {
 	repository repository.ChannelRepository
 }
 
-func NewGetChannelUseCase(repository repository.ChannelRepository) *GetChannelUseCase {
-	return &GetChannelUseCase{repository: repository}
+func NewGetChannelUseCase(channelRepository repository.ChannelRepository) *GetChannelUseCase {
+	return &GetChannelUseCase{repository: channelRepository}
 }
 
 func (u *GetChannelUseCase) Execute(

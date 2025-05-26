@@ -14,20 +14,20 @@ func NewMongoNotificationMapper() mapper.Mapper[*MongoNotification, *entity.Noti
 }
 
 func (m MongoNotificationMapper) MapFromEntity(
-	entity *entity.Notification,
+	entityNotification *entity.Notification,
 ) (*MongoNotification, error) {
-	notificationObjectId, err := bson.ObjectIDFromHex(entity.Id.String())
+	notificationObjectId, err := bson.ObjectIDFromHex(entityNotification.Id.String())
 	if err != nil {
 		return nil, err
 	}
 
 	return &MongoNotification{
 		Id:        notificationObjectId,
-		UserId:    entity.UserId.String(),
-		Content:   entity.Content,
-		IsRead:    entity.IsRead,
-		CreatedAt: entity.CreatedAt,
-		UpdatedAt: entity.UpdatedAt,
+		UserId:    entityNotification.UserId.String(),
+		Content:   entityNotification.Content,
+		IsRead:    entityNotification.IsRead,
+		CreatedAt: entityNotification.CreatedAt,
+		UpdatedAt: entityNotification.UpdatedAt,
 	}, nil
 }
 

@@ -1,3 +1,4 @@
+//nolint:revive
 package gin
 
 import (
@@ -210,7 +211,11 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			authMiddleware,
 			d.deps.UpdateAccountPersonalInformationsHandler.Handle,
 		)
-		accountGroup.PUT("/:user_id", authMiddleware, d.deps.UpdateAccountPersonalInformationsHandler.Handle)
+		accountGroup.PUT(
+			"/:user_id",
+			authMiddleware,
+			d.deps.UpdateAccountPersonalInformationsHandler.Handle,
+		)
 		accountGroup.PATCH("/avatar", authMiddleware, d.deps.UpdateUserAvatarHandler.Handle)
 		accountGroup.PATCH("/status", authMiddleware, d.deps.SaveStatusHandler.Handle)
 		accountGroup.GET("/users", authMiddleware, d.deps.GetListUsersHandler.Handle)

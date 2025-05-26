@@ -14,11 +14,11 @@ type ChangePasswordUseCase struct {
 }
 
 func NewChangePasswordUseCase(
-	repository repository.UserRepository,
+	userRepository repository.UserRepository,
 	cryptStrategy crypt.CryptStrategy,
 ) *ChangePasswordUseCase {
 	return &ChangePasswordUseCase{
-		repository:    repository,
+		repository:    userRepository,
 		cryptStrategy: cryptStrategy,
 	}
 }

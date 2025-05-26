@@ -18,6 +18,7 @@ type Workspace struct {
 	Topic   string
 	Type    WorkspaceType
 	OwnerId entity.UserId
+	TrucID  entity.UserId
 }
 
 func (id WorkspaceId) String() string {

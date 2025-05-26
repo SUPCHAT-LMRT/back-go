@@ -28,11 +28,15 @@ func NewAddMemberToGroupUseCase(deps AddMemberToGroupUseCaseDeps) *AddMemberToGr
 }
 
 // Todo transaction to be sure that if a problem occurs when adding the member to the group, the group is not created
+//
+//nolint:revive
 func (u *AddMemberToGroupUseCase) Execute(
 	ctx context.Context,
-	groupId *group_entity.GroupId,
+	givenGroupId *group_entity.GroupId,
 	inviterUserId, inviteeUserId entity.UserId,
 ) (*group_entity.Group, error) {
+	groupId := givenGroupId
+
 	var group *group_entity.Group
 	var groupMembers []*group_entity.GroupMember
 	if groupId == nil || *groupId == "" {

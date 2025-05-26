@@ -19,6 +19,7 @@ type WsServer struct {
 	backIdentifier string
 }
 
+//nolint:revive
 func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 	backIdentifier, err := deps.GetBackIdentifierUseCase.Execute(context.Background())
 	if err != nil {

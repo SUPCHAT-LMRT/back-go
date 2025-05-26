@@ -13,9 +13,9 @@ type GetPrivateChannelsUseCase struct {
 }
 
 func NewGetPrivateChannelsUseCase(
-	repository repository.ChannelRepository,
+	channelRepository repository.ChannelRepository,
 ) *GetPrivateChannelsUseCase {
-	return &GetPrivateChannelsUseCase{repository: repository}
+	return &GetPrivateChannelsUseCase{repository: channelRepository}
 }
 
 func (u *GetPrivateChannelsUseCase) Execute(

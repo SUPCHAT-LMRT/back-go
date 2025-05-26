@@ -139,6 +139,7 @@ import (
 	uberdig "go.uber.org/dig"
 )
 
+//nolint:revive
 func NewDi() *uberdig.Container {
 	di := uberdig.New()
 	providers := []dig.Provider{
@@ -225,9 +226,9 @@ func NewDi() *uberdig.Container {
 			uberdig.Group("update_type_workspace_observers"),
 		),
 		dig.NewProvider(
-      update_banner.NewUpdateWorkspaceBannerObserver, 
-      uberdig.Group("save_banner_workspace_observers"),
-    ),
+			update_banner.NewUpdateWorkspaceBannerObserver,
+			uberdig.Group("save_banner_workspace_observers"),
+		),
 		// Workspace mappers
 		dig.NewProvider(repository3.NewRedisInviteLinkMapper),
 		// Workspace channels
@@ -536,6 +537,7 @@ func NewDi() *uberdig.Container {
 
 	for _, provider := range providers {
 		if err := di.Provide(provider.Constructor, provider.ProvideOptions...); err != nil {
+			//nolint:revive
 			log.Fatalf("Unable to provide %s : %s", provider, err.Error())
 		}
 

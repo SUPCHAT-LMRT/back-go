@@ -12,9 +12,9 @@ type SaveGroupChatMessageUseCase struct {
 }
 
 func NewSaveGroupChatMessageUseCase(
-	repository repository.GroupChatMessageRepository,
+	groupChatMessageRepository repository.GroupChatMessageRepository,
 ) *SaveGroupChatMessageUseCase {
-	return &SaveGroupChatMessageUseCase{repository: repository}
+	return &SaveGroupChatMessageUseCase{repository: groupChatMessageRepository}
 }
 
 func (u SaveGroupChatMessageUseCase) Execute(

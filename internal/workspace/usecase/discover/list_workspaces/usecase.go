@@ -2,6 +2,7 @@ package list_workspaces
 
 import (
 	"context"
+
 	user_status_entity "github.com/supchat-lmrt/back-go/internal/user/status/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/get_public_status"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
@@ -34,16 +35,33 @@ func (u *DiscoverListWorkspacesUseCase) Execute(ctx context.Context) ([]*Discove
 		return nil, err
 	}
 
+	return u.getDiscoverWorkspaces(ctx, publicWorkspaces)
+}
+
+//nolint:revive
+func (u *DiscoverListWorkspacesUseCase) getDiscoverWorkspaces(
+	ctx context.Context,
+	publicWorkspaces []*entity.Workspace,
+) ([]*DiscoverWorkspace, error) {
 	discoverWorkspaces := make([]*DiscoverWorkspace, len(publicWorkspaces))
 	for i, workspace := range publicWorkspaces {
-		totalMembers, workspaceMembers, err := u.deps.WorkspaceMemberRepository.ListMembers(ctx, workspace.Id, 0, 1)
+		totalMembers, workspaceMembers, err := u.deps.WorkspaceMemberRepository.ListMembers(
+			ctx,
+			workspace.Id,
+			0,
+			1,
+		)
 		if err != nil {
 			return nil, err
 		}
 
 		var onlineMembersCount uint
 		for _, member := range workspaceMembers {
-			memberStatus, err := u.deps.GetPublicStatusUseCase.Execute(ctx, member.UserId, user_status_entity.StatusOffline)
+			memberStatus, err := u.deps.GetPublicStatusUseCase.Execute(
+				ctx,
+				member.UserId,
+				user_status_entity.StatusOffline,
+			)
 			if err != nil {
 				return nil, err
 			}

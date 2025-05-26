@@ -31,7 +31,7 @@ func (a *UserInWorkspaceMiddleware) Execute(c *gin.Context) {
 		return
 	}
 
-	loggedInUser := loggedInUserInter.(*user_entity.User)
+	loggedInUser := loggedInUserInter.(*user_entity.User) //nolint:revive
 
 	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {

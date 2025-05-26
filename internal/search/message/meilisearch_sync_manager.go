@@ -18,7 +18,7 @@ type MeilisearchSearchMessageSyncManager struct {
 
 func NewMeilisearchSearchMessageSyncManager(
 	client *meilisearch.MeilisearchClient,
-	logger logger.Logger,
+	logg logger.Logger,
 ) (SearchMessageSyncManager, error) {
 	cache, err := lru.New[string, *SearchMessage](1000)
 	if err != nil {
@@ -28,10 +28,11 @@ func NewMeilisearchSearchMessageSyncManager(
 	return &MeilisearchSearchMessageSyncManager{
 		cache:  cache,
 		client: client,
-		logger: logger,
+		logger: logg,
 	}, nil
 }
 
+//nolint:revive
 func (m MeilisearchSearchMessageSyncManager) CreateIndexIfNotExists(ctx context.Context) error {
 	createdIndexTask, err := m.client.Client.CreateIndexWithContext(ctx, &meilisearch2.IndexConfig{
 		Uid:        "messages",

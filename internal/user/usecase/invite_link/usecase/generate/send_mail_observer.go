@@ -14,10 +14,10 @@ type SendMailGenerateInviteLinkObserver struct {
 }
 
 func NewSendMailGenerateInviteLinkObserver(
-	logger logger.Logger,
+	logg logger.Logger,
 	sendMailUseCase *sendmail.SendMailUseCase,
 ) GenerateInviteLinkObserver {
-	return &SendMailGenerateInviteLinkObserver{logger: logger, sendMailUseCase: sendMailUseCase}
+	return &SendMailGenerateInviteLinkObserver{logger: logg, sendMailUseCase: sendMailUseCase}
 }
 
 func (o *SendMailGenerateInviteLinkObserver) NotifyInviteLinkGenerated(

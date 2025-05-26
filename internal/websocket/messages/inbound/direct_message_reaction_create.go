@@ -13,11 +13,11 @@ type InboundDirectMessageReactionToggle struct {
 	Reaction    string             `json:"reaction"`
 }
 
-func (i InboundDirectMessageReactionToggle) GetActionName() messages.Action {
+func (i *InboundDirectMessageReactionToggle) GetActionName() messages.Action {
 	return messages.InboundDirectMessageReactionToggle
 }
 
-func (i InboundDirectMessageReactionToggle) Encode() ([]byte, error) {
+func (i *InboundDirectMessageReactionToggle) Encode() ([]byte, error) {
 	i.DefaultMessage = messages.NewDefaultMessage(i.GetActionName())
 	return json.Marshal(i)
 }

@@ -18,11 +18,11 @@ type OutboundDirectMessageReactionMember struct {
 	Username string `json:"username"`
 }
 
-func (o OutboundDirectMessageReactionAdded) GetActionName() messages.Action {
+func (o *OutboundDirectMessageReactionAdded) GetActionName() messages.Action {
 	return messages.OutboundDirectMessageReactionAddedAction
 }
 
-func (o OutboundDirectMessageReactionAdded) Encode() ([]byte, error) {
+func (o *OutboundDirectMessageReactionAdded) Encode() ([]byte, error) {
 	o.DefaultMessage = messages.NewDefaultMessage(o.GetActionName())
 	return json.Marshal(o)
 }
@@ -35,11 +35,11 @@ type OutboundDirectMessageReactionRemoved struct {
 	Reaction    string                              `json:"reaction"`
 }
 
-func (o OutboundDirectMessageReactionRemoved) GetActionName() messages.Action {
+func (o *OutboundDirectMessageReactionRemoved) GetActionName() messages.Action {
 	return messages.OutboundDirectMessageReactionRemovedAction
 }
 
-func (o OutboundDirectMessageReactionRemoved) Encode() ([]byte, error) {
+func (o *OutboundDirectMessageReactionRemoved) Encode() ([]byte, error) {
 	o.DefaultMessage = messages.NewDefaultMessage(o.GetActionName())
 	return json.Marshal(o)
 }

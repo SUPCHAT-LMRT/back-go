@@ -19,7 +19,7 @@ func (h SearchTermHandler) Handle(c *gin.Context) {
 	query := c.Query("q")
 	kind := c.Query("kind")
 
-	authenticatedUser := c.MustGet("user").(*user_entity.User)
+	authenticatedUser := c.MustGet("user").(*user_entity.User) //nolint:revive
 
 	results, err := h.useCase.Execute(c, query, kind, authenticatedUser)
 	if err != nil {

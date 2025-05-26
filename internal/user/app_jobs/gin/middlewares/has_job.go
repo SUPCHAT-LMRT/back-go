@@ -21,7 +21,7 @@ func NewHasJobPermissionsMiddleware(
 
 func (h *HasJobPermissionsMiddleware) Execute(requiredPermission uint64) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user := c.MustGet("user").(*user_entity.User)
+		user := c.MustGet("user").(*user_entity.User) //nolint:revive
 
 		hasPermission, err := h.CheckPermissionJobUseCase.Execute(
 			c.Request.Context(),

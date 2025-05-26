@@ -2,7 +2,7 @@ package update_role
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/repository"
@@ -18,7 +18,7 @@ func NewUpdateRoleUseCase(roleRepository repository.RoleRepository) *UpdateRoleU
 
 func (u *UpdateRoleUseCase) Execute(ctx context.Context, role entity.Role) error {
 	if role.Id == "" {
-		return fmt.Errorf("role ID is required")
+		return errors.New("role ID is required")
 	}
 
 	err := u.roleRepository.Update(ctx, &role)

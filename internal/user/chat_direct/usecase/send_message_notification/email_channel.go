@@ -34,12 +34,12 @@ func (c *EmailChannel) SendNotification(
 		return err
 	}
 	// get receiver notification preferences
-	//if !receiver.NotificationPreferences.Email {
+	// if !receiver.NotificationPreferences.Email {
 	//	log.Printf("L'utilisateur %s a désactivé les notifications par email", receiver.Email)
 	//	return nil
-	//}
+	// }
 
-	message := mail.NewMessage(
+	message := mail.NewTextPlainMessage(
 		"Nouveau message privé",
 		fmt.Sprintf(
 			"Vous avez reçu un message de %s avec le contenu %s",

@@ -26,11 +26,11 @@ type OutboundSendMessageToChannelSender struct {
 	WorkspacePseudo   string                             `json:"workspacePseudo"`
 }
 
-func (m OutboundSendMessageToChannel) GetActionName() messages.Action {
+func (m *OutboundSendMessageToChannel) GetActionName() messages.Action {
 	return messages.OutboundSendChannelMessageAction
 }
 
-func (m OutboundSendMessageToChannel) Encode() ([]byte, error) {
+func (m *OutboundSendMessageToChannel) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }

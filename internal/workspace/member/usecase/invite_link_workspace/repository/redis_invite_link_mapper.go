@@ -15,12 +15,12 @@ func NewRedisInviteLinkMapper() mapper.Mapper[map[string]string, *entity.InviteL
 }
 
 func (m RedisInviteLinkWorkspaceMapper) MapFromEntity(
-	entity *entity.InviteLink,
+	inviteLinkEntity *entity.InviteLink,
 ) (map[string]string, error) {
 	return map[string]string{
-		"token":       entity.Token,
-		"workspaceId": entity.WorkspaceId.String(),
-		"expires_at":  entity.ExpiresAt.Format(time.RFC3339),
+		"token":       inviteLinkEntity.Token,
+		"workspaceId": inviteLinkEntity.WorkspaceId.String(),
+		"expires_at":  inviteLinkEntity.ExpiresAt.Format(time.RFC3339),
 	}, nil
 }
 

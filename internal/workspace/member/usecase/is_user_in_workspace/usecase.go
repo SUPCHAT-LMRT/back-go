@@ -13,9 +13,9 @@ type IsUserInWorkspaceUseCase struct {
 }
 
 func NewIsUserInWorkspaceUseCase(
-	repository repository.WorkspaceMemberRepository,
+	workspaceMemberRepository repository.WorkspaceMemberRepository,
 ) *IsUserInWorkspaceUseCase {
-	return &IsUserInWorkspaceUseCase{repository: repository}
+	return &IsUserInWorkspaceUseCase{repository: workspaceMemberRepository}
 }
 
 func (u *IsUserInWorkspaceUseCase) Execute(

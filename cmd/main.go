@@ -26,6 +26,7 @@ import (
 	uberdig "go.uber.org/dig"
 )
 
+//nolint:revive
 func main() {
 	diContainer := di.NewDi()
 	appContext := context.Background()
@@ -206,8 +207,8 @@ func main() {
 	logg.Info().Msg("Shutting down app...")
 }
 
-func invokeFatal(logg logger.Logger, di *uberdig.Container, f any) {
-	if err := di.Invoke(f); err != nil {
+func invokeFatal(logg logger.Logger, diContainer *uberdig.Container, f any) {
+	if err := diContainer.Invoke(f); err != nil {
 		logg.Fatal().Err(err).Msg("Unable to invoke")
 	}
 }

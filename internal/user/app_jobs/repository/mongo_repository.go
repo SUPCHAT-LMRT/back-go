@@ -249,10 +249,10 @@ func (r *MongoJobRepository) EnsureAdminJobExists(ctx context.Context) (*entity.
 }
 
 func (r *MongoJobRepository) EnsureManagerJobExists(ctx context.Context) (*entity.Job, error) {
-	const ManagerRoleName = "Manager"
+	const managerRoleName = "Manager"
 
 	// Vérifiez si le rôle Admin existe déjà
-	existingRole, err := r.FindByName(ctx, ManagerRoleName)
+	existingRole, err := r.FindByName(ctx, managerRoleName)
 	if err != nil {
 		return nil, fmt.Errorf("erreur lors de la vérification du rôle Admin: %w", err)
 	}
@@ -264,7 +264,7 @@ func (r *MongoJobRepository) EnsureManagerJobExists(ctx context.Context) (*entit
 
 	// Créez le rôle Admin avec les permissions PermissionAdmin
 	adminRole := &entity.Job{
-		Name:        ManagerRoleName,
+		Name:        managerRoleName,
 		Permissions: entity.CREATE_INVITATION | entity.VIEW_ADMINISTRATION_PANEL,
 	}
 
@@ -275,6 +275,7 @@ func (r *MongoJobRepository) EnsureManagerJobExists(ctx context.Context) (*entit
 	return adminRole, nil
 }
 
+//nolint:revive
 func (r *MongoJobRepository) FindByUserId(
 	ctx context.Context,
 	userId string,
@@ -319,7 +320,12 @@ func (r *MongoJobRepository) FindByUserId(
 	return jobs, nil
 }
 
-func (r *MongoJobRepository) UserHasPermission(ctx context.Context, userId string, permission uint64) (bool, error) {
+//nolint:revive
+func (r *MongoJobRepository) UserHasPermission(
+	ctx context.Context,
+	userId string,
+	permission uint64,
+) (bool, error) {
 	filter := bson.M{"assigned_users": userId}
 
 	cursor, err := r.deps.Client.Client.Database(databaseName).

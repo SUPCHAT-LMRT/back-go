@@ -13,9 +13,9 @@ type ToggleReactionChannelMessageUseCase struct {
 }
 
 func NewToggleReactionChannelMessageUseCase(
-	repository repository.ChannelMessageRepository,
+	channelMessageRepository repository.ChannelMessageRepository,
 ) *ToggleReactionChannelMessageUseCase {
-	return &ToggleReactionChannelMessageUseCase{repository: repository}
+	return &ToggleReactionChannelMessageUseCase{repository: channelMessageRepository}
 }
 
 func (u *ToggleReactionChannelMessageUseCase) Execute(
