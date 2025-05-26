@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
@@ -10,7 +12,6 @@ import (
 	mongo2 "go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 var (
@@ -49,7 +50,10 @@ func NewMongoChatDirectRepository(deps MongoChatDirectRepositoryDeps) ChatDirect
 	return &MongoChatDirectRepository{deps: deps}
 }
 
-func (m MongoChatDirectRepository) Create(ctx context.Context, chatDirect *entity.ChatDirect) error {
+func (m MongoChatDirectRepository) Create(
+	ctx context.Context,
+	chatDirect *entity.ChatDirect,
+) error {
 	if chatDirect.Id == "" {
 		chatDirect.Id = entity.ChatDirectId(bson.NewObjectID().Hex())
 	}
@@ -67,7 +71,9 @@ func (m MongoChatDirectRepository) Create(ctx context.Context, chatDirect *entit
 		return err
 	}
 
-	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).InsertOne(ctx, mongoChatDirect)
+	_, err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		InsertOne(ctx, mongoChatDirect)
 	if err != nil {
 		return err
 	}
@@ -75,7 +81,10 @@ func (m MongoChatDirectRepository) Create(ctx context.Context, chatDirect *entit
 	return nil
 }
 
-func (m MongoChatDirectRepository) ListRecentChats(ctx context.Context, userId user_entity.UserId) ([]*entity.ChatDirect, error) {
+func (m MongoChatDirectRepository) ListRecentChats(
+	ctx context.Context,
+	userId user_entity.UserId,
+) ([]*entity.ChatDirect, error) {
 	userObjectId, err := bson.ObjectIDFromHex(string(userId))
 	if err != nil {
 		return nil, err
@@ -83,32 +92,34 @@ func (m MongoChatDirectRepository) ListRecentChats(ctx context.Context, userId u
 
 	pipeline := mongo2.Pipeline{
 		// Étape 0 : Filtrer les conversations où l'utilisateur est impliqué
-		{{"$match", bson.D{
-			{"$or", bson.A{
-				bson.D{{"user1Id", userObjectId}},
-				bson.D{{"user2Id", userObjectId}},
+		{{Key: "$match", Value: bson.D{
+			{Key: "$or", Value: bson.A{
+				bson.D{{Key: "user1Id", Value: userObjectId}},
+				bson.D{{Key: "user2Id", Value: userObjectId}},
 			}},
 		}}},
 		// Étape 1 : Ajouter un champ `sortedIds` qui normalise l'ordre des IDs
-		{{"$addFields", bson.D{
-			{"sortedIds", bson.D{
-				{"$cond", bson.D{
-					{"if", bson.D{{"$lt", bson.A{"$user1Id", "$user2Id"}}}},
-					{"then", bson.A{"$user1Id", "$user2Id"}},
-					{"else", bson.A{"$user2Id", "$user1Id"}},
+		{{Key: "$addFields", Value: bson.D{
+			{Key: "sortedIds", Value: bson.D{
+				{Key: "$cond", Value: bson.D{
+					{Key: "if", Value: bson.D{{Key: "$lt", Value: bson.A{"$user1Id", "$user2Id"}}}},
+					{Key: "then", Value: bson.A{"$user1Id", "$user2Id"}},
+					{Key: "else", Value: bson.A{"$user2Id", "$user1Id"}},
 				}},
 			}},
 		}}},
 		// Étape 2 : Grouper par `sortedIds` en prenant le message le plus récent
-		{{"$group", bson.D{
-			{"_id", "$sortedIds"},
-			{"latestMessage", bson.D{{"$last", "$$ROOT"}}},
+		{{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: "$sortedIds"},
+			{Key: "latestMessage", Value: bson.D{{Key: "$last", Value: "$$ROOT"}}},
 		}}},
 		// Étape 3 : Trier par `updated_at` du dernier message
-		{{"$sort", bson.D{{"latestMessage.updated_at", -1}}}},
+		{{Key: "$sort", Value: bson.D{{Key: "latestMessage.updated_at", Value: -1}}}},
 	}
 
-	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).Aggregate(ctx, pipeline)
+	cursor, err := m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +144,10 @@ func (m MongoChatDirectRepository) ListRecentChats(ctx context.Context, userId u
 	return chatDirects, nil
 }
 
-func (m MongoChatDirectRepository) IsFirstMessage(ctx context.Context, user1Id, user2Id user_entity.UserId) (bool, error) {
+func (m MongoChatDirectRepository) IsFirstMessage(
+	ctx context.Context,
+	user1Id, user2Id user_entity.UserId,
+) (bool, error) {
 	user1IdHex, err := bson.ObjectIDFromHex(string(user1Id))
 	if err != nil {
 		return false, err
@@ -145,14 +159,17 @@ func (m MongoChatDirectRepository) IsFirstMessage(ctx context.Context, user1Id, 
 	}
 
 	filter := bson.D{
-		{"$or", bson.A{
-			bson.D{{"user1Id", user1IdHex}, {"user2Id", user2IdHex}},
-			bson.D{{"user1Id", user2IdHex}, {"user2Id", user1IdHex}},
-		},
+		{
+			Key: "$or", Value: bson.A{
+				bson.D{{Key: "user1Id", Value: user1IdHex}, {Key: "user2Id", Value: user2IdHex}},
+				bson.D{{Key: "user1Id", Value: user2IdHex}, {Key: "user2Id", Value: user1IdHex}},
+			},
 		},
 	}
 
-	count, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).CountDocuments(ctx, filter)
+	count, err := m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		CountDocuments(ctx, filter)
 	if err != nil {
 		return false, err
 	}
@@ -160,7 +177,12 @@ func (m MongoChatDirectRepository) IsFirstMessage(ctx context.Context, user1Id, 
 	return count == 1, nil
 }
 
-func (m MongoChatDirectRepository) ListByUser(ctx context.Context, user1Id, user2Id user_entity.UserId, params ListByUserQueryParams) ([]*entity.ChatDirect, error) {
+//nolint:revive
+func (m MongoChatDirectRepository) ListByUser(
+	ctx context.Context,
+	user1Id, user2Id user_entity.UserId,
+	params ListByUserQueryParams,
+) ([]*entity.ChatDirect, error) {
 	user1IdHex, err := bson.ObjectIDFromHex(string(user1Id))
 	if err != nil {
 		return nil, err
@@ -173,10 +195,11 @@ func (m MongoChatDirectRepository) ListByUser(ctx context.Context, user1Id, user
 
 	// Filter must match both ways
 	filter := bson.D{
-		{"$or", bson.A{
-			bson.D{{"user1Id", user1IdHex}, {"user2Id", user2IdHex}},
-			bson.D{{"user1Id", user2IdHex}, {"user2Id", user1IdHex}},
-		},
+		{
+			Key: "$or", Value: bson.A{
+				bson.D{{Key: "user1Id", Value: user1IdHex}, {Key: "user2Id", Value: user2IdHex}},
+				bson.D{{Key: "user1Id", Value: user2IdHex}, {Key: "user2Id", Value: user1IdHex}},
+			},
 		},
 	}
 
@@ -199,10 +222,14 @@ func (m MongoChatDirectRepository) ListByUser(ctx context.Context, user1Id, user
 		}
 
 		// Récupération des messages avant le message cible
-		beforeFilter := append(filter, bson.E{Key: "created_at", Value: bson.M{"$lt": aroundMessage.CreatedAt}})
+		beforeFilter := append(
+			filter,
+			bson.E{Key: "created_at", Value: bson.M{"$lt": aroundMessage.CreatedAt}},
+		)
 		beforeOpts := options.Find().
-			SetSort(bson.D{{"created_at", -1}}). // Ordre décroissant pour prendre les plus récents en premier
-			SetLimit(int64(params.Limit / 2))    // On récupère la moitié avant
+			SetSort(bson.D{{Key: "created_at", Value: -1}}).
+			// Ordre décroissant pour prendre les plus récents en premier
+			SetLimit(int64(params.Limit / 2)) // On récupère la moitié avant
 
 		beforeCursor, err := collection.Find(ctx, beforeFilter, beforeOpts)
 		if err != nil {
@@ -224,10 +251,14 @@ func (m MongoChatDirectRepository) ListByUser(ctx context.Context, user1Id, user
 		}
 
 		// Récupération des messages après le message cible
-		afterFilter := append(filter, bson.E{Key: "created_at", Value: bson.M{"$gt": aroundMessage.CreatedAt}})
+		afterFilter := append(
+			filter,
+			bson.E{Key: "created_at", Value: bson.M{"$gt": aroundMessage.CreatedAt}},
+		)
 		afterOpts := options.Find().
-			SetSort(bson.D{{"created_at", 1}}). // Ordre croissant pour prendre les plus anciens en premier
-			SetLimit(int64(params.Limit / 2))   // On récupère la moitié après
+			SetSort(bson.D{{Key: "created_at", Value: 1}}).
+			// Ordre croissant pour prendre les plus anciens en premier
+			SetLimit(int64(params.Limit / 2)) // On récupère la moitié après
 
 		afterCursor, err := collection.Find(ctx, afterFilter, afterOpts)
 		if err != nil {
@@ -264,12 +295,12 @@ func (m MongoChatDirectRepository) ListByUser(ctx context.Context, user1Id, user
 
 	// Sinon, on applique les filtres classiques
 	opts := options.Find().
-		SetSort(bson.D{{"created_at", -1}}). // Trier par date décroissante
+		SetSort(bson.D{{Key: "created_at", Value: -1}}). // Trier par date décroissante
 		SetLimit(int64(params.Limit))
 
-	if params.Before != (time.Time{}) {
+	if !params.Before.Equal(time.Time{}) {
 		filter = append(filter, bson.E{Key: "created_at", Value: bson.M{"$lt": params.Before}})
-	} else if params.After != (time.Time{}) {
+	} else if !params.After.Equal(time.Time{}) {
 		filter = append(filter, bson.E{Key: "created_at", Value: bson.M{"$gt": params.After}})
 	}
 
@@ -296,7 +327,14 @@ func (m MongoChatDirectRepository) ListByUser(ctx context.Context, user1Id, user
 }
 
 // ToggleReaction toggles the reaction of a user to a message. (If the user has already reacted, it will remove the reaction, otherwise it will add the reaction.)
-func (m MongoChatDirectRepository) ToggleReaction(ctx context.Context, messageId entity.ChatDirectId, userId user_entity.UserId, reaction string) (added bool, err error) {
+//
+//nolint:revive
+func (m MongoChatDirectRepository) ToggleReaction(
+	ctx context.Context,
+	messageId entity.ChatDirectId,
+	userId user_entity.UserId,
+	reaction string,
+) (added bool, err error) {
 	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
 
 	messageObjectId, err := bson.ObjectIDFromHex(string(messageId))
@@ -356,7 +394,11 @@ func (m MongoChatDirectRepository) ToggleReaction(ctx context.Context, messageId
 		}
 	}
 
-	_, err = collection.UpdateOne(ctx, bson.M{"_id": messageObjectId}, bson.M{"$set": bson.M{"reactions": updatedReactions}})
+	_, err = collection.UpdateOne(
+		ctx,
+		bson.M{"_id": messageObjectId},
+		bson.M{"$set": bson.M{"reactions": updatedReactions}},
+	)
 	if err != nil {
 		return false, err
 	}

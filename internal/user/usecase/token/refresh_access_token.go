@@ -10,7 +10,9 @@ func NewRefreshAccessTokenUseCase(tokenStrategy TokenStrategy) *RefreshAccessTok
 	return &RefreshAccessTokenUseCase{tokenStrategy: tokenStrategy}
 }
 
-func (u *RefreshAccessTokenUseCase) Execute(refreshToken string) (*RefreshAccessTokenResponse, error) {
+func (u *RefreshAccessTokenUseCase) Execute(
+	refreshToken string,
+) (*RefreshAccessTokenResponse, error) {
 	parsedRefreshToken, err := u.tokenStrategy.ValidateRefreshToken(refreshToken)
 	if err != nil {
 		return nil, err

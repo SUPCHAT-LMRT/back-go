@@ -2,6 +2,7 @@ package delete_user
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
 )

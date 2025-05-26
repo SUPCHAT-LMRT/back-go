@@ -3,6 +3,7 @@ package websocket
 import (
 	"context"
 	"fmt"
+
 	"github.com/goccy/go-json"
 	"github.com/supchat-lmrt/back-go/internal/event"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
@@ -18,6 +19,7 @@ type WsServer struct {
 	backIdentifier string
 }
 
+//nolint:revive
 func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 	backIdentifier, err := deps.GetBackIdentifierUseCase.Execute(context.Background())
 	if err != nil {
@@ -46,7 +48,10 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 
 		user1Client := server.findClientByUserId(messageSavedEvent.Message.User1Id)
 		if user1Client != nil {
-			user2, err := deps.GetUserByIdUseCase.Execute(context.Background(), messageSavedEvent.Message.User2Id)
+			user2, err := deps.GetUserByIdUseCase.Execute(
+				context.Background(),
+				messageSavedEvent.Message.User2Id,
+			)
 			if err != nil {
 				logg.Error().Err(err).
 					Msg("failed to get user2")
@@ -71,7 +76,10 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 
 		user2Client := server.findClientByUserId(messageSavedEvent.Message.User2Id)
 		if user2Client != nil {
-			user1, err := deps.GetUserByIdUseCase.Execute(context.Background(), messageSavedEvent.Message.User1Id)
+			user1, err := deps.GetUserByIdUseCase.Execute(
+				context.Background(),
+				messageSavedEvent.Message.User1Id,
+			)
 			if err != nil {
 				logg.Error().Err(err).
 					Msg("failed to get user1")
@@ -164,7 +172,6 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 					Index:       channelCreatedEvent.Channel.Index,
 				},
 			})
-
 			if err != nil {
 				logg.Error().Err(err).
 					Msg("failed to send channel create message to client")
@@ -185,10 +192,13 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 		// Convert []event.ChannelReorderMessage to []outbound.ChannelReorderMessage
 		var outboundChannelReorders []outbound.ChannelReorderMessage
 		for _, reorder := range channelsReorderedEvent.ChannelReorders {
-			outboundChannelReorders = append(outboundChannelReorders, outbound.ChannelReorderMessage{
-				ChannelId: reorder.ChannelId,
-				NewOrder:  reorder.NewOrder,
-			})
+			outboundChannelReorders = append(
+				outboundChannelReorders,
+				outbound.ChannelReorderMessage{
+					ChannelId: reorder.ChannelId,
+					NewOrder:  reorder.NewOrder,
+				},
+			)
 		}
 
 		// Broadcast the reordered channels to all connected clients
@@ -326,9 +336,7 @@ func (s *WsServer) registerClient(client *Client) {
 }
 
 func (s *WsServer) unregisterClient(client *Client) {
-	if _, ok := s.clients[client]; ok {
-		delete(s.clients, client)
-	}
+	delete(s.clients, client)
 }
 
 func (s *WsServer) findRoomById(id string) *Room {
@@ -351,7 +359,6 @@ func (s *WsServer) findClientByUserId(userId user_entity.UserId) *Client {
 	}
 
 	return nil
-
 }
 
 func (s *WsServer) createRoom(name string, roomData RoomData) *Room {

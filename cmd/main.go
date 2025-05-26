@@ -2,6 +2,12 @@ package main
 
 import (
 	"context"
+	"log"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+
 	"github.com/supchat-lmrt/back-go/cmd/di"
 	"github.com/supchat-lmrt/back-go/internal/gin"
 	"github.com/supchat-lmrt/back-go/internal/logger"
@@ -18,13 +24,9 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/websocket"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
-	"log"
-	"os"
-	"os/signal"
-	"strings"
-	"syscall"
 )
 
+//nolint:revive
 func main() {
 	diContainer := di.NewDi()
 	appContext := context.Background()
@@ -45,7 +47,12 @@ func main() {
 
 	invokeFatal(logg, diContainer, func(client *s3.S3Client) {
 		logg.Info().Msg("Creating buckets...")
-		bucketsToCreate := []string{"workspaces-icons", "workspaces-banners", "users-avatars", "messages-files"}
+		bucketsToCreate := []string{
+			"workspaces-icons",
+			"workspaces-banners",
+			"users-avatars",
+			"messages-files",
+		}
 
 		bucketsCreated := make([]string, 0, len(bucketsToCreate))
 		for _, bucket := range bucketsToCreate {
@@ -63,19 +70,22 @@ func main() {
 	})
 	invokeFatal(logg, diContainer, func(client *mongo.Client) {
 		// Create the time series collection "workspace_message_sent_ts" if it doesn't exist
-		err := client.Client.Database("supchat").CreateCollection(appContext, "workspace_message_sent_ts", options.CreateCollection().
-			SetTimeSeriesOptions(options.TimeSeries().
-				SetTimeField("sent_at").
-				SetMetaField("metadata").
-				SetGranularity("minutes"),
-			))
+		err := client.Client.Database("supchat").
+			CreateCollection(appContext, "workspace_message_sent_ts", options.CreateCollection().
+				SetTimeSeriesOptions(options.TimeSeries().
+					SetTimeField("sent_at").
+					SetMetaField("metadata").
+					SetGranularity("minutes"),
+				))
 		if err != nil {
 			if !strings.HasPrefix(err.Error(), "(NamespaceExists)") {
 				logg.Fatal().Err(err).Msg("Unable to create collection")
 			}
 		}
 
-		logg.Info().Str("collection", "workspace_message_sent_ts").Msg("Time-Series Collection created!")
+		logg.Info().
+			Str("collection", "workspace_message_sent_ts").
+			Msg("Time-Series Collection created!")
 	})
 
 	// Ensure the Admin role exists and users
@@ -197,8 +207,8 @@ func main() {
 	logg.Info().Msg("Shutting down app...")
 }
 
-func invokeFatal(logg logger.Logger, di *uberdig.Container, f any) {
-	if err := di.Invoke(f); err != nil {
+func invokeFatal(logg logger.Logger, diContainer *uberdig.Container, f any) {
+	if err := diContainer.Invoke(f); err != nil {
 		logg.Fatal().Err(err).Msg("Unable to invoke")
 	}
 }

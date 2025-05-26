@@ -1,9 +1,10 @@
 package list_workspaces
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
-	"net/http"
 )
 
 type ListWorkspaceHandler struct {
@@ -23,7 +24,7 @@ func (l ListWorkspaceHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	user := userVal.(*user_entity.User)
+	user := userVal.(*user_entity.User) //nolint:revive
 
 	workspaces, err := l.useCase.Execute(c, user.Id)
 	if err != nil {

@@ -1,6 +1,9 @@
 package list_messages
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	channel_message_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/entity"
@@ -8,8 +11,6 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_workpace_member"
 	uberdig "go.uber.org/dig"
-	"net/http"
-	"time"
 )
 
 type ListChannelMessagesHandlerDeps struct {
@@ -23,7 +24,9 @@ type ListChannelMessagesHandler struct {
 	deps ListChannelMessagesHandlerDeps
 }
 
-func NewListChannelMessagesHandler(deps ListChannelMessagesHandlerDeps) *ListChannelMessagesHandler {
+func NewListChannelMessagesHandler(
+	deps ListChannelMessagesHandlerDeps,
+) *ListChannelMessagesHandler {
 	return &ListChannelMessagesHandler{deps: deps}
 }
 
@@ -34,6 +37,7 @@ type MessageQuery struct {
 	AroundMessageId string    `form:"aroundMessageId"`
 }
 
+//nolint:revive
 func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {
@@ -53,12 +57,16 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	channelMessages, err := h.deps.UseCase.Execute(c, channel_entity.ChannelId(channelId), QueryParams{
-		Limit:           query.Limit,
-		Before:          query.Before,
-		After:           query.After,
-		AroundMessageId: channel_message_entity.ChannelMessageId(query.AroundMessageId),
-	})
+	channelMessages, err := h.deps.UseCase.Execute(
+		c,
+		channel_entity.ChannelId(channelId),
+		QueryParams{
+			Limit:           query.Limit,
+			Before:          query.Before,
+			After:           query.After,
+			AroundMessageId: channel_message_entity.ChannelMessageId(query.AroundMessageId),
+		},
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
@@ -68,15 +76,20 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 	for i, message := range channelMessages {
 		reactions := make([]ChannelMessageReactionResponse, len(message.Reactions))
 		for j, reaction := range message.Reactions {
-
 			reactionUsers := make([]ChannelMessageReactionUserResponse, len(reaction.UserIds))
 			for k, userId := range reaction.UserIds {
-				userReacted, err := h.deps.GetUserByIdUseCase.Execute(c, userId)
+				userReacted, err := h.deps.GetUserByIdUseCase.Execute(
+					c,
+					userId,
+				)
 				if err != nil {
 					continue
 				}
 
-				reactionUsers[k] = ChannelMessageReactionUserResponse{Id: userId.String(), Name: userReacted.FullName()}
+				reactionUsers[k] = ChannelMessageReactionUserResponse{
+					Id:   userId.String(),
+					Name: userReacted.FullName(),
+				}
 			}
 
 			reactions[j] = ChannelMessageReactionResponse{
@@ -94,7 +107,11 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 			Reactions: reactions,
 		}
 
-		member, err := h.deps.GetWorkspaceMemberUseCase.Execute(c, entity.WorkspaceId(workspaceId), message.AuthorId)
+		member, err := h.deps.GetWorkspaceMemberUseCase.Execute(
+			c,
+			entity.WorkspaceId(workspaceId),
+			message.AuthorId,
+		)
 		if err != nil {
 			continue
 		}

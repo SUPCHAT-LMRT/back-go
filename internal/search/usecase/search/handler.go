@@ -1,9 +1,10 @@
 package search
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
-	"net/http"
 )
 
 type SearchTermHandler struct {
@@ -18,7 +19,7 @@ func (h SearchTermHandler) Handle(c *gin.Context) {
 	query := c.Query("q")
 	kind := c.Query("kind")
 
-	authenticatedUser := c.MustGet("user").(*user_entity.User)
+	authenticatedUser := c.MustGet("user").(*user_entity.User) //nolint:revive
 
 	results, err := h.useCase.Execute(c, query, kind, authenticatedUser)
 	if err != nil {

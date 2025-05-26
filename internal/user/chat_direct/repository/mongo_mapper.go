@@ -13,7 +13,9 @@ func NewChatDirectMapper() mapper.Mapper[*MongoChatDirect, *chat_direct_entity.C
 	return &ChatDirectMapper{}
 }
 
-func (m ChatDirectMapper) MapToEntity(mongo *MongoChatDirect) (*chat_direct_entity.ChatDirect, error) {
+func (m ChatDirectMapper) MapToEntity(
+	mongo *MongoChatDirect,
+) (*chat_direct_entity.ChatDirect, error) {
 	reactions := make([]*chat_direct_entity.DirectMessageReaction, len(mongo.Reactions))
 	for i, reaction := range mongo.Reactions {
 		reactionUsers := make([]entity.UserId, len(reaction.Users))
@@ -41,7 +43,10 @@ func (m ChatDirectMapper) MapToEntity(mongo *MongoChatDirect) (*chat_direct_enti
 	}, nil
 }
 
-func (m ChatDirectMapper) MapFromEntity(entity *chat_direct_entity.ChatDirect) (*MongoChatDirect, error) {
+//nolint:revive
+func (m ChatDirectMapper) MapFromEntity(
+	entity *chat_direct_entity.ChatDirect,
+) (*MongoChatDirect, error) {
 	chatObjectId, err := bson.ObjectIDFromHex(string(entity.Id))
 	if err != nil {
 		return nil, err

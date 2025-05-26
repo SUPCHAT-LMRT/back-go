@@ -1,9 +1,10 @@
 package websocket
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
-	"log"
 )
 
 type WebsocketHandler struct {
@@ -15,7 +16,7 @@ func NewWebsocketHandler(wsServer *WsServer) *WebsocketHandler {
 }
 
 func (h *WebsocketHandler) Handle(c *gin.Context) {
-	user := c.MustGet("user").(*user_entity.User)
+	user := c.MustGet("user").(*user_entity.User) //nolint:revive
 
 	conn, err := Upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {

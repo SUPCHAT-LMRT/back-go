@@ -41,7 +41,7 @@ type UserRole struct {
 
 // Vérifie si un rôle possède une permissions spécifique
 func (r Role) HasPermission(permission uint64) bool {
-	return r.Permissions&permission != 0
+	return r.Permissions&permission != 0 //nolint:revive
 }
 
 func (id RoleId) String() string {

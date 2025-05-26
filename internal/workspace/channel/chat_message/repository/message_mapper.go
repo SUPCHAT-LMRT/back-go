@@ -14,7 +14,9 @@ func NewChannelMessageMapper() mapper.Mapper[*MongoChannelMessage, *entity.Chann
 	return &ChannelMessageMapper{}
 }
 
-func (m ChannelMessageMapper) MapToEntity(mongo *MongoChannelMessage) (*entity.ChannelMessage, error) {
+func (m ChannelMessageMapper) MapToEntity(
+	mongo *MongoChannelMessage,
+) (*entity.ChannelMessage, error) {
 	reactions := make([]*entity.ChannelMessageReaction, len(mongo.Reactions))
 	for i, reaction := range mongo.Reactions {
 		reactionUsers := make([]user_entity.UserId, len(reaction.Users))
@@ -41,22 +43,25 @@ func (m ChannelMessageMapper) MapToEntity(mongo *MongoChannelMessage) (*entity.C
 	}, nil
 }
 
-func (m ChannelMessageMapper) MapFromEntity(entity *entity.ChannelMessage) (*MongoChannelMessage, error) {
-	messageObjectId, err := bson.ObjectIDFromHex(string(entity.Id))
+//nolint:revive
+func (m ChannelMessageMapper) MapFromEntity(
+	channelMessage *entity.ChannelMessage,
+) (*MongoChannelMessage, error) {
+	messageObjectId, err := bson.ObjectIDFromHex(string(channelMessage.Id))
 	if err != nil {
 		return nil, err
 	}
-	channelObjectId, err := bson.ObjectIDFromHex(string(entity.ChannelId))
+	channelObjectId, err := bson.ObjectIDFromHex(string(channelMessage.ChannelId))
 	if err != nil {
 		return nil, err
 	}
-	authorObjectId, err := bson.ObjectIDFromHex(string(entity.AuthorId))
+	authorObjectId, err := bson.ObjectIDFromHex(string(channelMessage.AuthorId))
 	if err != nil {
 		return nil, err
 	}
 
-	reactions := make([]*MongoChannelMessageReaction, len(entity.Reactions))
-	for i, reaction := range entity.Reactions {
+	reactions := make([]*MongoChannelMessageReaction, len(channelMessage.Reactions))
+	for i, reaction := range channelMessage.Reactions {
 		reactionUsers := make([]bson.ObjectID, len(reaction.UserIds))
 		for j, user := range reaction.UserIds {
 			userObjectId, err := bson.ObjectIDFromHex(string(user))
@@ -83,8 +88,8 @@ func (m ChannelMessageMapper) MapFromEntity(entity *entity.ChannelMessage) (*Mon
 		Id:        messageObjectId,
 		ChannelId: channelObjectId,
 		AuthorId:  authorObjectId,
-		Content:   entity.Content,
-		CreatedAt: entity.CreatedAt,
+		Content:   channelMessage.Content,
+		CreatedAt: channelMessage.CreatedAt,
 		Reactions: reactions,
 	}, nil
 }

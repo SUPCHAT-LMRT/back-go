@@ -3,17 +3,14 @@ package repository
 import (
 	"context"
 	"errors"
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/entity"
 	"time"
+
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/entity"
 )
 
-var (
-	RedisInviteLinkExpiredTime = 7 * 24 * time.Hour
-)
+var RedisInviteLinkExpiredTime = 7 * 24 * time.Hour
 
-var (
-	InviteLinkNotFoundErr = errors.New("invite link not found")
-)
+var ErrInviteLinkNotFound = errors.New("invite link not found")
 
 type InviteLinkRepository interface {
 	GenerateInviteLink(ctx context.Context, link *entity.InviteLink) error

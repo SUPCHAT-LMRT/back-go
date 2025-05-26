@@ -3,6 +3,7 @@ package update_type_workspace
 import (
 	"context"
 	"errors"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	uberdig "go.uber.org/dig"
@@ -18,11 +19,17 @@ type UpdateTypeWorkspaceUseCase struct {
 	deps UpdateTypeWorkspaceUseCaseDeps
 }
 
-func NewUpdateTypeWorkspaceUseCase(deps UpdateTypeWorkspaceUseCaseDeps) *UpdateTypeWorkspaceUseCase {
+func NewUpdateTypeWorkspaceUseCase(
+	deps UpdateTypeWorkspaceUseCaseDeps,
+) *UpdateTypeWorkspaceUseCase {
 	return &UpdateTypeWorkspaceUseCase{deps: deps}
 }
 
-func (u *UpdateTypeWorkspaceUseCase) Execute(ctx context.Context, workspaceId entity.WorkspaceId, typeWorkspace entity.WorkspaceType) error {
+func (u *UpdateTypeWorkspaceUseCase) Execute(
+	ctx context.Context,
+	workspaceId entity.WorkspaceId,
+	typeWorkspace entity.WorkspaceType,
+) error {
 	if typeWorkspace == "" {
 		return errors.New("type_workspace is required")
 	}
@@ -43,5 +50,4 @@ func (u *UpdateTypeWorkspaceUseCase) Execute(ctx context.Context, workspaceId en
 	}
 
 	return nil
-
 }

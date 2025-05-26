@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_email"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/token"
 	"golang.org/x/crypto/bcrypt"
-	"time"
 )
 
 type LoginUserUseCase struct {
@@ -16,21 +17,36 @@ type LoginUserUseCase struct {
 	tokenStrategy         token.TokenStrategy
 }
 
-var InvalidUsernameOrPasswordErr = errors.New("invalid username or password")
-var UserNotVerifiedErr = errors.New("user not verified")
+var (
+	ErrInvalidUsernameOrPassword = errors.New("invalid username or password")
+	ErrUserNotVerified           = errors.New("user not verified")
+)
 
-func NewLoginUserUseCase(getUserByEmailUseCase *get_by_email.GetUserByEmailUseCase, tokenStrategy token.TokenStrategy) *LoginUserUseCase {
-	return &LoginUserUseCase{getUserByEmailUseCase: getUserByEmailUseCase, tokenStrategy: tokenStrategy}
+func NewLoginUserUseCase(
+	getUserByEmailUseCase *get_by_email.GetUserByEmailUseCase,
+	tokenStrategy token.TokenStrategy,
+) *LoginUserUseCase {
+	return &LoginUserUseCase{
+		getUserByEmailUseCase: getUserByEmailUseCase,
+		tokenStrategy:         tokenStrategy,
+	}
 }
 
-func (l *LoginUserUseCase) Execute(ctx context.Context, request LoginUserRequest) (*LoginUserResult, error) {
-	user, err := l.getUserByEmailUseCase.Execute(ctx, request.Email, get_by_email.WithUserPassword())
+func (l *LoginUserUseCase) Execute(
+	ctx context.Context,
+	request LoginUserRequest,
+) (*LoginUserResult, error) {
+	user, err := l.getUserByEmailUseCase.Execute(
+		ctx,
+		request.Email,
+		get_by_email.WithUserPassword(),
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)) != nil {
-		return nil, InvalidUsernameOrPasswordErr
+		return nil, ErrInvalidUsernameOrPassword
 	}
 
 	accessToken, err := l.tokenStrategy.GenerateAccessToken(map[string]any{

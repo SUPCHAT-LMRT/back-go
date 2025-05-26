@@ -13,13 +13,15 @@ func NewMongoOauthConnectionMapper() mapper.Mapper[*MongoOauthConnection, *entit
 	return &MongoOauthConnectionMapper{}
 }
 
-func (m MongoOauthConnectionMapper) MapFromEntity(entity *entity.OauthConnection) (*MongoOauthConnection, error) {
-	oauthConnectionId, err := bson.ObjectIDFromHex(entity.Id.String())
+func (m MongoOauthConnectionMapper) MapFromEntity(
+	entityOauthConnection *entity.OauthConnection,
+) (*MongoOauthConnection, error) {
+	oauthConnectionId, err := bson.ObjectIDFromHex(entityOauthConnection.Id.String())
 	if err != nil {
 		return nil, err
 	}
 
-	userId, err := bson.ObjectIDFromHex(entity.UserId.String())
+	userId, err := bson.ObjectIDFromHex(entityOauthConnection.UserId.String())
 	if err != nil {
 		return nil, err
 	}
@@ -27,13 +29,15 @@ func (m MongoOauthConnectionMapper) MapFromEntity(entity *entity.OauthConnection
 	return &MongoOauthConnection{
 		Id:          oauthConnectionId,
 		UserId:      userId,
-		Provider:    entity.Provider,
-		OauthEmail:  entity.OauthEmail,
-		OauthUserId: entity.OauthUserId,
+		Provider:    entityOauthConnection.Provider,
+		OauthEmail:  entityOauthConnection.OauthEmail,
+		OauthUserId: entityOauthConnection.OauthUserId,
 	}, nil
 }
 
-func (m MongoOauthConnectionMapper) MapToEntity(databaseUser *MongoOauthConnection) (*entity.OauthConnection, error) {
+func (m MongoOauthConnectionMapper) MapToEntity(
+	databaseUser *MongoOauthConnection,
+) (*entity.OauthConnection, error) {
 	return &entity.OauthConnection{
 		Id:          entity.OauthConnectionId(databaseUser.Id.Hex()),
 		UserId:      user_entity.UserId(databaseUser.UserId.Hex()),

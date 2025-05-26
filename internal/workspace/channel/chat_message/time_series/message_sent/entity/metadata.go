@@ -1,10 +1,11 @@
 package entity
 
 import (
+	"time"
+
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
-	"time"
 )
 
 type MessageSentMetadata struct {

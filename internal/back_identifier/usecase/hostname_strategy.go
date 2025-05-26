@@ -18,6 +18,6 @@ func NewHostnameBackIdentifierStrategy() (BackIdentifierStrategy, error) {
 	return &HostnameBackIdentifierStrategy{hostname: hostname}, nil
 }
 
-func (h HostnameBackIdentifierStrategy) Handle(ctx context.Context) (string, error) {
+func (h HostnameBackIdentifierStrategy) Handle(_ context.Context) (string, error) {
 	return h.hostname, nil
 }

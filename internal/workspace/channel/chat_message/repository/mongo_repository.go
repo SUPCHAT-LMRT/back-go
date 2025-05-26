@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
@@ -12,7 +14,6 @@ import (
 	mongo2 "go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 var (
@@ -46,11 +47,16 @@ type MongoChannelMessageReaction struct {
 	Reaction string          `bson:"reaction"`
 }
 
-func NewMongoChannelMessageRepository(deps MongoChannelMessageRepositoryDeps) ChannelMessageRepository {
+func NewMongoChannelMessageRepository(
+	deps MongoChannelMessageRepositoryDeps,
+) ChannelMessageRepository {
 	return &MongoChannelMessageRepository{deps: deps}
 }
 
-func (m MongoChannelMessageRepository) Create(ctx context.Context, message *entity.ChannelMessage) error {
+func (m MongoChannelMessageRepository) Create(
+	ctx context.Context,
+	message *entity.ChannelMessage,
+) error {
 	if message.Id == "" {
 		message.Id = entity.ChannelMessageId(bson.NewObjectID().Hex())
 	}
@@ -67,7 +73,9 @@ func (m MongoChannelMessageRepository) Create(ctx context.Context, message *enti
 		return err
 	}
 
-	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).InsertOne(ctx, mongoMessage)
+	_, err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		InsertOne(ctx, mongoMessage)
 	if err != nil {
 		return err
 	}
@@ -75,7 +83,12 @@ func (m MongoChannelMessageRepository) Create(ctx context.Context, message *enti
 	return nil
 }
 
-func (m MongoChannelMessageRepository) ListByChannelId(ctx context.Context, channelId channel_entity.ChannelId, params ListByChannelIdQueryParams) ([]*entity.ChannelMessage, error) {
+//nolint:revive
+func (m MongoChannelMessageRepository) ListByChannelId(
+	ctx context.Context,
+	channelId channel_entity.ChannelId,
+	params ListByChannelIdQueryParams,
+) ([]*entity.ChannelMessage, error) {
 	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
 
 	channelObjectId, err := bson.ObjectIDFromHex(string(channelId))
@@ -93,7 +106,8 @@ func (m MongoChannelMessageRepository) ListByChannelId(ctx context.Context, chan
 			return nil, err
 		}
 
-		err = collection.FindOne(ctx, bson.M{"_id": aroundObjectId, "channel_id": channelObjectId}).Decode(&aroundMessage)
+		err = collection.FindOne(ctx, bson.M{"_id": aroundObjectId, "channel_id": channelObjectId}).
+			Decode(&aroundMessage)
 		if err != nil {
 			return nil, err
 		}
@@ -104,8 +118,9 @@ func (m MongoChannelMessageRepository) ListByChannelId(ctx context.Context, chan
 			"created_at": bson.M{"$lt": aroundMessage.CreatedAt},
 		}
 		beforeOpts := options.Find().
-			SetSort(bson.D{{"created_at", -1}}). // Ordre décroissant pour prendre les plus récents en premier
-			SetLimit(int64(params.Limit / 2))    // On récupère la moitié avant
+			SetSort(bson.D{{Key: "created_at", Value: -1}}).
+			// Ordre décroissant pour prendre les plus récents en premier
+			SetLimit(int64(params.Limit / 2)) // On récupère la moitié avant
 
 		beforeCursor, err := collection.Find(ctx, beforeFilter, beforeOpts)
 		if err != nil {
@@ -132,8 +147,9 @@ func (m MongoChannelMessageRepository) ListByChannelId(ctx context.Context, chan
 			"created_at": bson.M{"$gt": aroundMessage.CreatedAt},
 		}
 		afterOpts := options.Find().
-			SetSort(bson.D{{"created_at", 1}}). // Ordre croissant pour prendre les plus anciens en premier
-			SetLimit(int64(params.Limit / 2))   // On récupère la moitié après
+			SetSort(bson.D{{Key: "created_at", Value: 1}}).
+			// Ordre croissant pour prendre les plus anciens en premier
+			SetLimit(int64(params.Limit / 2)) // On récupère la moitié après
 
 		afterCursor, err := collection.Find(ctx, afterFilter, afterOpts)
 		if err != nil {
@@ -170,14 +186,14 @@ func (m MongoChannelMessageRepository) ListByChannelId(ctx context.Context, chan
 
 	// Sinon, on applique les filtres classiques
 	opts := options.Find().
-		SetSort(bson.D{{"created_at", -1}}). // Trier par date décroissante
+		SetSort(bson.D{{Key: "created_at", Value: -1}}). // Trier par date décroissante
 		SetLimit(int64(params.Limit))
 
 	filter := bson.M{"channel_id": channelObjectId}
 
-	if params.Before != (time.Time{}) {
+	if !params.Before.Equal(time.Time{}) {
 		filter["created_at"] = bson.M{"$lt": params.Before}
-	} else if params.After != (time.Time{}) {
+	} else if !params.After.Equal(time.Time{}) {
 		filter["created_at"] = bson.M{"$gt": params.After}
 	}
 
@@ -203,7 +219,14 @@ func (m MongoChannelMessageRepository) ListByChannelId(ctx context.Context, chan
 }
 
 // ToggleReaction toggles the reaction of a user to a message. (If the user has already reacted, it will remove the reaction, otherwise it will add the reaction.)
-func (m MongoChannelMessageRepository) ToggleReaction(ctx context.Context, messageId entity.ChannelMessageId, userId user_entity.UserId, reaction string) (added bool, err error) {
+//
+//nolint:revive
+func (m MongoChannelMessageRepository) ToggleReaction(
+	ctx context.Context,
+	messageId entity.ChannelMessageId,
+	userId user_entity.UserId,
+	reaction string,
+) (added bool, err error) {
 	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
 
 	messageObjectId, err := bson.ObjectIDFromHex(string(messageId))
@@ -263,7 +286,11 @@ func (m MongoChannelMessageRepository) ToggleReaction(ctx context.Context, messa
 		}
 	}
 
-	_, err = collection.UpdateOne(ctx, bson.M{"_id": messageObjectId}, bson.M{"$set": bson.M{"reactions": updatedReactions}})
+	_, err = collection.UpdateOne(
+		ctx,
+		bson.M{"_id": messageObjectId},
+		bson.M{"$set": bson.M{"reactions": updatedReactions}},
+	)
 	if err != nil {
 		return false, err
 	}
@@ -271,7 +298,10 @@ func (m MongoChannelMessageRepository) ToggleReaction(ctx context.Context, messa
 	return !removed, nil
 }
 
-func (m MongoChannelMessageRepository) CountByWorkspace(ctx context.Context, id workspace_entity.WorkspaceId) (uint, error) {
+func (m MongoChannelMessageRepository) CountByWorkspace(
+	ctx context.Context,
+	id workspace_entity.WorkspaceId,
+) (uint, error) {
 	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
 
 	workspaceObjectId, err := bson.ObjectIDFromHex(string(id))
@@ -280,24 +310,26 @@ func (m MongoChannelMessageRepository) CountByWorkspace(ctx context.Context, id 
 	}
 
 	lookupStage := bson.D{
-		{"$lookup", bson.D{
-			{"from", "workspaces_channels"},
-			{"localField", "channel_id"},
-			{"foreignField", "_id"},
-			{"as", "channel_info"},
-		},
+		{
+			Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: "workspaces_channels"},
+				{Key: "localField", Value: "channel_id"},
+				{Key: "foreignField", Value: "_id"},
+				{Key: "as", Value: "channel_info"},
+			},
 		},
 	}
 
 	matchStage := bson.D{
-		{"$match", bson.M{
-			"channel_info.workspace_id": workspaceObjectId,
-		},
+		{
+			Key: "$match", Value: bson.M{
+				"channel_info.workspace_id": workspaceObjectId,
+			},
 		},
 	}
 
 	countStage := bson.D{
-		{"$count", "total_messages"},
+		{Key: "$count", Value: "total_messages"},
 	}
 
 	cursor, err := collection.Aggregate(ctx, mongo2.Pipeline{lookupStage, matchStage, countStage})

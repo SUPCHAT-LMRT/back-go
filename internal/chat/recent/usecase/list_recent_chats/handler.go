@@ -1,12 +1,13 @@
 package list_recent_chats
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/entity"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	uberdig "go.uber.org/dig"
-	"net/http"
 )
 
 type ListRecentChatsHandlerDeps struct {
@@ -24,11 +25,14 @@ func NewListRecentChatsHandler(deps ListRecentChatsHandlerDeps) *ListRecentChats
 }
 
 func (h *ListRecentChatsHandler) Handle(c *gin.Context) {
-	authenticatedUser := c.MustGet("user").(*user_entity.User)
+	authenticatedUser := c.MustGet("user").(*user_entity.User) //nolint:revive
 
 	recentChats, err := h.deps.UseCase.Execute(c, authenticatedUser.Id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "message": "failed to list recent chats"})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error(), "message": "failed to list recent chats"},
+		)
 		return
 	}
 
@@ -36,7 +40,10 @@ func (h *ListRecentChatsHandler) Handle(c *gin.Context) {
 	for i, recentChat := range recentChats {
 		response[i], err = h.deps.ResponseMapper.MapToEntity(recentChat)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "message": "failed to map recent chat"})
+			c.JSON(
+				http.StatusInternalServerError,
+				gin.H{"error": err.Error(), "message": "failed to map recent chat"},
+			)
 			return
 		}
 	}

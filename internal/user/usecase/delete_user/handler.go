@@ -1,9 +1,10 @@
 package delete_user
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
-	"net/http"
 )
 
 type DeleteUserHandler struct {

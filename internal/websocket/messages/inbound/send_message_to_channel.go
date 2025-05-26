@@ -12,11 +12,11 @@ type InboundSendMessageToChannel struct {
 	ChannelId channel_entity.ChannelId `json:"channelId"`
 }
 
-func (m InboundSendMessageToChannel) GetActionName() messages.Action {
+func (m *InboundSendMessageToChannel) GetActionName() messages.Action {
 	return messages.InboundSendChannelMessageAction
 }
 
-func (m InboundSendMessageToChannel) Encode() ([]byte, error) {
+func (m *InboundSendMessageToChannel) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }

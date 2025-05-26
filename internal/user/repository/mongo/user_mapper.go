@@ -12,20 +12,20 @@ func NewMongoUserMapper() mapper.Mapper[*MongoUser, *entity.User] {
 	return &MongoUserMapper{}
 }
 
-func (m MongoUserMapper) MapFromEntity(entity *entity.User) (*MongoUser, error) {
-	userObjectId, err := bson.ObjectIDFromHex(entity.Id.String())
+func (m MongoUserMapper) MapFromEntity(entityUser *entity.User) (*MongoUser, error) {
+	userObjectId, err := bson.ObjectIDFromHex(entityUser.Id.String())
 	if err != nil {
 		return nil, err
 	}
 
 	return &MongoUser{
 		Id:        userObjectId,
-		FirstName: entity.FirstName,
-		LastName:  entity.LastName,
-		Email:     entity.Email,
-		Password:  entity.Password,
-		CreatedAt: entity.CreatedAt,
-		UpdatedAt: entity.UpdatedAt,
+		FirstName: entityUser.FirstName,
+		LastName:  entityUser.LastName,
+		Email:     entityUser.Email,
+		Password:  entityUser.Password,
+		CreatedAt: entityUser.CreatedAt,
+		UpdatedAt: entityUser.UpdatedAt,
 	}, nil
 }
 

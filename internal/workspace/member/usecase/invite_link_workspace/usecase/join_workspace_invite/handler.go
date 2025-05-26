@@ -1,16 +1,19 @@
 package join_workspace_invite
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
-	"net/http"
 )
 
 type JoinWorkspaceInviteHandler struct {
 	useCase *JoinWorkspaceInviteUseCase
 }
 
-func NewJoinWorkspaceInviteHandler(useCase *JoinWorkspaceInviteUseCase) *JoinWorkspaceInviteHandler {
+func NewJoinWorkspaceInviteHandler(
+	useCase *JoinWorkspaceInviteUseCase,
+) *JoinWorkspaceInviteHandler {
 	return &JoinWorkspaceInviteHandler{useCase: useCase}
 }
 
@@ -21,7 +24,7 @@ func (h *JoinWorkspaceInviteHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	user := c.MustGet("user").(*user_entity.User)
+	user := c.MustGet("user").(*user_entity.User) //nolint:revive
 
 	err := h.useCase.Execute(c, token, user)
 	if err != nil {

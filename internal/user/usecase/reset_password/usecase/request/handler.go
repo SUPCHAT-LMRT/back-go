@@ -1,10 +1,11 @@
 package request
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	user_repository "github.com/supchat-lmrt/back-go/internal/user/repository"
-	"net/http"
 )
 
 type RequestResetPasswordHandler struct {
@@ -12,7 +13,10 @@ type RequestResetPasswordHandler struct {
 	requestResetPasswordUseCase *RequestResetPasswordUseCase
 }
 
-func NewRequestResetPasswordHandler(userRepository user_repository.UserRepository, requestResetPasswordUseCase *RequestResetPasswordUseCase) *RequestResetPasswordHandler {
+func NewRequestResetPasswordHandler(
+	userRepository user_repository.UserRepository,
+	requestResetPasswordUseCase *RequestResetPasswordUseCase,
+) *RequestResetPasswordHandler {
 	return &RequestResetPasswordHandler{
 		userRepository:              userRepository,
 		requestResetPasswordUseCase: requestResetPasswordUseCase,
@@ -30,7 +34,7 @@ func (h *RequestResetPasswordHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	user := loggedInUser.(*user_entity.User)
+	user := loggedInUser.(*user_entity.User) //nolint:revive
 
 	_, err := h.requestResetPasswordUseCase.Execute(c, user.Id)
 	if err != nil {
@@ -41,5 +45,4 @@ func (h *RequestResetPasswordHandler) Handle(c *gin.Context) {
 		})
 		return
 	}
-
 }

@@ -11,11 +11,11 @@ type InboundJoinChannel struct {
 	ChannelId channel_entity.ChannelId `json:"channelId"`
 }
 
-func (m InboundJoinChannel) GetActionName() messages.Action {
+func (m *InboundJoinChannel) GetActionName() messages.Action {
 	return messages.InboundJoinChannelRoomAction
 }
 
-func (m InboundJoinChannel) Encode() ([]byte, error) {
+func (m *InboundJoinChannel) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }

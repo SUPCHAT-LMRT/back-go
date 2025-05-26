@@ -2,6 +2,7 @@ package get_workspace_details
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/count_messages_by_workspace"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/count_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
@@ -22,11 +23,16 @@ type GetWorkspaceDetailsUseCase struct {
 	deps GetWorkspaceDetailsUseCaseDeps
 }
 
-func NewGetWorkspaceDetailsUseCase(deps GetWorkspaceDetailsUseCaseDeps) *GetWorkspaceDetailsUseCase {
+func NewGetWorkspaceDetailsUseCase(
+	deps GetWorkspaceDetailsUseCaseDeps,
+) *GetWorkspaceDetailsUseCase {
 	return &GetWorkspaceDetailsUseCase{deps: deps}
 }
 
-func (u *GetWorkspaceDetailsUseCase) Execute(ctx context.Context, workspaceId entity.WorkspaceId) (*WorkspaceDetails, error) {
+func (u *GetWorkspaceDetailsUseCase) Execute(
+	ctx context.Context,
+	workspaceId entity.WorkspaceId,
+) (*WorkspaceDetails, error) {
 	workspace, err := u.deps.WorkspaceRepository.GetById(ctx, workspaceId)
 	if err != nil {
 		return nil, err

@@ -9,10 +9,12 @@ type LogRequestForgotPasswordObserver struct {
 	logger logger.Logger
 }
 
-func NewLogRequestForgotPasswordObserver(logger logger.Logger) ForgotPasswordRequestObserver {
-	return &LogRequestForgotPasswordObserver{logger: logger}
+func NewLogRequestForgotPasswordObserver(logg logger.Logger) ForgotPasswordRequestObserver {
+	return &LogRequestForgotPasswordObserver{logger: logg}
 }
 
-func (o *LogRequestForgotPasswordObserver) NotifyRequestResetPasswordCreated(request entity.ForgotPasswordRequest) {
+func (o *LogRequestForgotPasswordObserver) NotifyRequestResetPasswordCreated(
+	request entity.ForgotPasswordRequest,
+) {
 	o.logger.Info().Any("request", request).Msg("Forgot password request sent")
 }

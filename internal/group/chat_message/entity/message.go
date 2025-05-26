@@ -1,9 +1,10 @@
 package entity
 
 import (
+	"time"
+
 	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
-	"time"
 )
 
 type GroupChatMessageId string

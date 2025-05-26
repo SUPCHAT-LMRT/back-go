@@ -14,7 +14,9 @@ func NewGroupChatMessageMapper() mapper.Mapper[*MongoGroupChatMessage, *entity.G
 	return &GroupChatMessageMapper{}
 }
 
-func (m GroupChatMessageMapper) MapToEntity(mongo *MongoGroupChatMessage) (*entity.GroupChatMessage, error) {
+func (m GroupChatMessageMapper) MapToEntity(
+	mongo *MongoGroupChatMessage,
+) (*entity.GroupChatMessage, error) {
 	return &entity.GroupChatMessage{
 		Id:        entity.GroupChatMessageId(mongo.Id.Hex()),
 		GroupId:   group_entity.GroupId(mongo.GroupId.Hex()),
@@ -24,16 +26,18 @@ func (m GroupChatMessageMapper) MapToEntity(mongo *MongoGroupChatMessage) (*enti
 	}, nil
 }
 
-func (m GroupChatMessageMapper) MapFromEntity(entity *entity.GroupChatMessage) (*MongoGroupChatMessage, error) {
-	messageObjectId, err := bson.ObjectIDFromHex(string(entity.Id))
+func (m GroupChatMessageMapper) MapFromEntity(
+	entityGroupChatMessage *entity.GroupChatMessage,
+) (*MongoGroupChatMessage, error) {
+	messageObjectId, err := bson.ObjectIDFromHex(string(entityGroupChatMessage.Id))
 	if err != nil {
 		return nil, err
 	}
-	groupObjectId, err := bson.ObjectIDFromHex(string(entity.GroupId))
+	groupObjectId, err := bson.ObjectIDFromHex(string(entityGroupChatMessage.GroupId))
 	if err != nil {
 		return nil, err
 	}
-	authorObjectId, err := bson.ObjectIDFromHex(string(entity.AuthorId))
+	authorObjectId, err := bson.ObjectIDFromHex(string(entityGroupChatMessage.AuthorId))
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +46,7 @@ func (m GroupChatMessageMapper) MapFromEntity(entity *entity.GroupChatMessage) (
 		Id:        messageObjectId,
 		GroupId:   groupObjectId,
 		AuthorId:  authorObjectId,
-		Content:   entity.Content,
-		CreatedAt: entity.CreatedAt,
+		Content:   entityGroupChatMessage.Content,
+		CreatedAt: entityGroupChatMessage.CreatedAt,
 	}, nil
 }

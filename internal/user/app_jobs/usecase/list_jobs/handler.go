@@ -1,10 +1,11 @@
 package list_jobs
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"sort"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type ListJobsHandler struct {
@@ -15,6 +16,7 @@ func NewListJobsHandler(useCase *ListJobsUseCase) *ListJobsHandler {
 	return &ListJobsHandler{useCase: useCase}
 }
 
+//nolint:revive
 func (h *ListJobsHandler) Handle(c *gin.Context) {
 	jobs, err := h.useCase.Execute(c)
 	if err != nil {

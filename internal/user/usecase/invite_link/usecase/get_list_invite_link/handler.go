@@ -1,9 +1,10 @@
 package get_list_invite_link
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type GetListInviteLinkHandler struct {

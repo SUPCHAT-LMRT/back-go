@@ -17,9 +17,9 @@ func NewHasPermissionsMiddleware(
 	return &HasPermissionsMiddleware{checkPermissionUseCase: checkPermissionUseCase}
 }
 
-func (h *HasPermissionsMiddleware) Execute(permissions uint64) gin.HandlerFunc {
+func (h *HasPermissionsMiddleware) Execute(permissionsBit uint64) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		workspaceMember := c.MustGet("workspace_member").(*workspace_entity.WorkspaceMember)
+		workspaceMember := c.MustGet("workspace_member").(*workspace_entity.WorkspaceMember) //nolint:revive
 		workspaceId := c.Param("workspace_id")
 		if workspaceId == "" {
 			c.JSON(400, gin.H{"error": "workspace_id is required"})
@@ -27,7 +27,12 @@ func (h *HasPermissionsMiddleware) Execute(permissions uint64) gin.HandlerFunc {
 			return
 		}
 
-		hasPermission, err := h.checkPermissionUseCase.Execute(c, workspaceMember.Id, entity.WorkspaceId(workspaceId), permissions)
+		hasPermission, err := h.checkPermissionUseCase.Execute(
+			c,
+			workspaceMember.Id,
+			entity.WorkspaceId(workspaceId),
+			permissionsBit,
+		)
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Internal server error"})
 			c.Abort()

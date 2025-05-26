@@ -2,6 +2,7 @@ package save_message
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/search/message"
 	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
@@ -23,7 +24,10 @@ func NewSaveDirectMessageUseCase(deps SaveDirectMessageUseCaseDeps) *SaveDirectM
 	return &SaveDirectMessageUseCase{deps: deps}
 }
 
-func (u SaveDirectMessageUseCase) Execute(ctx context.Context, msg *chat_direct_entity.ChatDirect) error {
+func (u SaveDirectMessageUseCase) Execute(
+	ctx context.Context,
+	msg *chat_direct_entity.ChatDirect,
+) error {
 	// Ensure that the two users are correctly ordered (the one with the smallest ID is the first)
 	if msg.User2Id.IsAfter(msg.User1Id) {
 		msg.User1Id, msg.User2Id = msg.User2Id, msg.User1Id

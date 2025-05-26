@@ -3,13 +3,14 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/supchat-lmrt/back-go/internal/group/entity"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 )
 
 var (
-	MemberAlreadyInGroupErr = errors.New("member already in group")
-	GroupNotFoundErr        = errors.New("group not found")
+	ErrMemberAlreadyInGroup = errors.New("member already in group")
+	ErrGroupNotFound        = errors.New("group not found")
 )
 
 type GroupRepository interface {

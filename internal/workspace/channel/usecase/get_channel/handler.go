@@ -1,9 +1,10 @@
 package get_channel
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
-	"net/http"
 )
 
 type GetChannelHandler struct {

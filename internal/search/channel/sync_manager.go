@@ -2,6 +2,7 @@ package channel
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 )
 

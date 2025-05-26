@@ -1,8 +1,9 @@
 package meilisearch
 
 import (
-	"github.com/meilisearch/meilisearch-go"
 	"os"
+
+	"github.com/meilisearch/meilisearch-go"
 )
 
 type MeilisearchClient struct {
@@ -10,6 +11,9 @@ type MeilisearchClient struct {
 }
 
 func NewClient() (*MeilisearchClient, error) {
-	client := meilisearch.New(os.Getenv("MEILISEARCH_HOST"), meilisearch.WithAPIKey(os.Getenv("MEILISEARCH_MASTER_KEY")))
+	client := meilisearch.New(
+		os.Getenv("MEILISEARCH_HOST"),
+		meilisearch.WithAPIKey(os.Getenv("MEILISEARCH_MASTER_KEY")),
+	)
 	return &MeilisearchClient{Client: client}, nil
 }

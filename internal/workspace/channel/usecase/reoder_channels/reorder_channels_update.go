@@ -21,8 +21,10 @@ func NewUserStatusUpdateObserver(deps ReorderChannelsObserverDeps) ReorderIndexC
 	return &ReorderChannelsObserver{deps: deps}
 }
 
-func (o ReorderChannelsObserver) NotifyChannelReordered(channels []ChannelReorderMessage, workspaceId entity.WorkspaceId) {
-
+func (o ReorderChannelsObserver) NotifyChannelReordered(
+	channels []ChannelReorderMessage,
+	workspaceId entity.WorkspaceId,
+) {
 	var eventChannelReorders []event.ChannelReorderMessage
 	for _, channel := range channels {
 		eventChannelReorders = append(eventChannelReorders, event.ChannelReorderMessage{

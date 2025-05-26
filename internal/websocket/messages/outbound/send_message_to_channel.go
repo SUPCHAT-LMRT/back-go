@@ -1,12 +1,13 @@
 package outbound
 
 import (
+	"time"
+
 	"github.com/goccy/go-json"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
-	"time"
 )
 
 type OutboundSendMessageToChannel struct {
@@ -25,11 +26,11 @@ type OutboundSendMessageToChannelSender struct {
 	WorkspacePseudo   string                             `json:"workspacePseudo"`
 }
 
-func (m OutboundSendMessageToChannel) GetActionName() messages.Action {
+func (m *OutboundSendMessageToChannel) GetActionName() messages.Action {
 	return messages.OutboundSendChannelMessageAction
 }
 
-func (m OutboundSendMessageToChannel) Encode() ([]byte, error) {
+func (m *OutboundSendMessageToChannel) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }

@@ -2,6 +2,7 @@ package get_workspace
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	uberdig "go.uber.org/dig"
@@ -9,16 +10,19 @@ import (
 
 type GetWorkspaceUseCaseDeps struct {
 	uberdig.In
-	repository.WorkspaceRepository
+	Repository repository.WorkspaceRepository
 }
 type GetWorkspaceUseCase struct {
-	repository repository.WorkspaceRepository
+	deps GetWorkspaceUseCaseDeps
 }
 
-func NewGetWorkspaceUseCase(repository GetWorkspaceUseCaseDeps) *GetWorkspaceUseCase {
-	return &GetWorkspaceUseCase{repository: repository}
+func NewGetWorkspaceUseCase(deps GetWorkspaceUseCaseDeps) *GetWorkspaceUseCase {
+	return &GetWorkspaceUseCase{deps: deps}
 }
 
-func (u GetWorkspaceUseCase) Execute(ctx context.Context, workspaceId entity.WorkspaceId) (*entity.Workspace, error) {
-	return u.repository.GetById(ctx, workspaceId)
+func (u GetWorkspaceUseCase) Execute(
+	ctx context.Context,
+	workspaceId entity.WorkspaceId,
+) (*entity.Workspace, error) {
+	return u.deps.Repository.GetById(ctx, workspaceId)
 }
