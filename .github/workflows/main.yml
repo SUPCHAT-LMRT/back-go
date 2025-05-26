@@ -15,8 +15,14 @@ jobs:
   run-tests:
     uses: ./.github/workflows/ci-test.yml
 
-  merge:
+  lint:
     needs: run-tests
+    uses: ./.github/workflows/ci-linter.yml
+
+  merge:
+    needs:
+      - run-tests
+      - lint
     uses: ./.github/workflows/ci-merge.yml
     with:
       head_branch: test
