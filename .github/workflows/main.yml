@@ -1,35 +1,12 @@
-name: Pipeline CI
+name: "Pipeline CI"
 
 on:
   push:
-    branches: [test]
+    branches: [ test ]
   pull_request:
-    branches: [test]
+    branches: [ test ]
   workflow_dispatch:
 
 jobs:
-  test:
-    name: Run Go tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout du dépôt
-        uses: actions/checkout@v3
-
-      - name: Mise en place de Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.23'    # adaptez selon la version de Go que vous utilisez
-
-      - name: Mise en cache des modules Go
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ${{ github.workspace }}/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Exécuter les tests Go
-        run: go test ./... -v
+  run-tests:
+    uses: ./.github/workflows/ci-test.yml
