@@ -7,17 +7,19 @@ on:
     branches: [ test ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  issues: write
+
 jobs:
-  ci-run-tests:
+  run-tests:
     uses: ./.github/workflows/ci-test.yml
 
-
-  ci-merge-dev:
-      needs: ci-run-tests
-      uses: ./.github/workflows/ci-merge.yml
-      with:
-        head_branch: test
-        base_branch: main
-      secrets:
-        ORG_READ_TOKEN: ${{ secrets.ORG_READ_TOKEN }}
-
+  merge:
+    needs: run-tests
+    uses: ./.github/workflows/ci-merge.yml
+    with:
+      head_branch: test
+      base_branch: main
+    secrets:
+      ORG_READ_TOKEN: ${{ secrets.ORG_READ_TOKEN }}
