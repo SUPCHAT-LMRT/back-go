@@ -18,7 +18,11 @@ func (h GetRolesForMemberHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	userId := c.Param("user_id")
 
-	roles, err := h.useCase.Execute(c, entity.WorkspaceId(workspaceId), entity2.WorkspaceMemberId(userId))
+	roles, err := h.useCase.Execute(
+		c,
+		entity.WorkspaceId(workspaceId),
+		entity2.WorkspaceMemberId(userId),
+	)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return

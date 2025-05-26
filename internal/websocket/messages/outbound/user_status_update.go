@@ -13,11 +13,11 @@ type OutboundUserStatusUpdated struct {
 	Status entity.Status      `json:"status"`
 }
 
-func (m OutboundUserStatusUpdated) GetActionName() messages.Action {
+func (m *OutboundUserStatusUpdated) GetActionName() messages.Action {
 	return messages.OutboundUserStatusUpdatedAction
 }
 
-func (m OutboundUserStatusUpdated) Encode() ([]byte, error) {
+func (m *OutboundUserStatusUpdated) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }
@@ -27,11 +27,11 @@ type OutboundSelfStatusUpdated struct {
 	Status entity.Status `json:"status"`
 }
 
-func (m OutboundSelfStatusUpdated) GetActionName() messages.Action {
+func (m *OutboundSelfStatusUpdated) GetActionName() messages.Action {
 	return messages.OutboundSelfStatusUpdatedAction
 }
 
-func (m OutboundSelfStatusUpdated) Encode() ([]byte, error) {
+func (m *OutboundSelfStatusUpdated) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }

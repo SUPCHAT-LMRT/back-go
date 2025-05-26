@@ -1,10 +1,11 @@
 package save_status
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	user_status_entity "github.com/supchat-lmrt/back-go/internal/user/status/entity"
-	"net/http"
 )
 
 type SaveStatusHandler struct {
@@ -16,7 +17,7 @@ func NewSaveStatusHandler(useCase *SaveStatusUseCase) *SaveStatusHandler {
 }
 
 func (h *SaveStatusHandler) Handle(c *gin.Context) {
-	user := c.MustGet("user").(*entity.User)
+	user := c.MustGet("user").(*entity.User) //nolint:revive
 
 	var body struct {
 		Status string `json:"status" binding:"required,userStatus"`

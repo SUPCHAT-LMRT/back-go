@@ -2,6 +2,7 @@ package get_by_email
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
 )
@@ -20,7 +21,11 @@ type GetUserByEmailOptions struct {
 
 type GetUserByEmailOptionFunc func(options *GetUserByEmailOptions)
 
-func (u *GetUserByEmailUseCase) Execute(ctx context.Context, userEmail string, options ...GetUserByEmailOptionFunc) (*entity.User, error) {
+func (u *GetUserByEmailUseCase) Execute(
+	ctx context.Context,
+	userEmail string,
+	options ...GetUserByEmailOptionFunc,
+) (*entity.User, error) {
 	getUserByEmailOptions := &GetUserByEmailOptions{}
 	for _, option := range options {
 		option(getUserByEmailOptions)

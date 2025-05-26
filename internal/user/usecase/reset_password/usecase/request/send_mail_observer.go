@@ -1,13 +1,14 @@
 package request
 
 import (
+	"os"
+	"strings"
+
 	"github.com/matcornic/hermes/v2"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/mail"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/reset_password/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/sendmail"
-	"os"
-	"strings"
 )
 
 type SendMailRequestResetPasswordObserver struct {
@@ -15,11 +16,16 @@ type SendMailRequestResetPasswordObserver struct {
 	sendMailUseCase *sendmail.SendMailUseCase
 }
 
-func NewSendMailRequestResetPasswordObserver(logger logger.Logger, sendMailUseCase *sendmail.SendMailUseCase) ResetPasswordRequestObserver {
-	return &SendMailRequestResetPasswordObserver{logger: logger, sendMailUseCase: sendMailUseCase}
+func NewSendMailRequestResetPasswordObserver(
+	logg logger.Logger,
+	sendMailUseCase *sendmail.SendMailUseCase,
+) ResetPasswordRequestObserver {
+	return &SendMailRequestResetPasswordObserver{logger: logg, sendMailUseCase: sendMailUseCase}
 }
 
-func (o *SendMailRequestResetPasswordObserver) NotifyRequestResetPasswordCreated(request entity.ResetPasswordRequest) {
+func (o *SendMailRequestResetPasswordObserver) NotifyRequestResetPasswordCreated(
+	request entity.ResetPasswordRequest,
+) {
 	user := request.User
 
 	validateUrl := os.Getenv("FRONT_ACCOUNT_RESET_PASSWORD_URL")
@@ -31,7 +37,10 @@ func (o *SendMailRequestResetPasswordObserver) NotifyRequestResetPasswordCreated
 	validateUrl = strings.Replace(validateUrl, "{token}", request.Token.String(), 1)
 
 	outros := o.sendMailUseCase.Outros()
-	outros = append(outros, "Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer ce message.")
+	outros = append(
+		outros,
+		"Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer ce message.",
+	)
 
 	email := hermes.Email{
 		Body: hermes.Body{

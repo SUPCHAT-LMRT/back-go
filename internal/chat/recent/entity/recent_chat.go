@@ -2,8 +2,10 @@ package entity
 
 import "time"
 
-type RecentChatKind int
-type RecentChatId string
+type (
+	RecentChatKind int
+	RecentChatId   string
+)
 
 const (
 	RecentChatKindGroup RecentChatKind = iota

@@ -2,22 +2,31 @@ package user
 
 import (
 	"context"
+	"time"
+
 	lru "github.com/hashicorp/golang-lru/v2"
 	meilisearch2 "github.com/meilisearch/meilisearch-go"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/meilisearch"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
-	"time"
+)
+
+type (
+	createLruCache = lru.Cache[user_entity.UserId, *SearchUser]
+	deleteLruCache = lru.Cache[user_entity.UserId, struct{}]
 )
 
 type MeilisearchSearchUserSyncManager struct {
-	createCache *lru.Cache[user_entity.UserId, *SearchUser]
-	deleteCache *lru.Cache[user_entity.UserId, struct{}]
+	createCache *createLruCache
+	deleteCache *deleteLruCache
 	client      *meilisearch.MeilisearchClient
 	logger      logger.Logger
 }
 
-func NewMeilisearchSearchUserSyncManager(client *meilisearch.MeilisearchClient, logger logger.Logger) (SearchUserSyncManager, error) {
+func NewMeilisearchSearchUserSyncManager(
+	client *meilisearch.MeilisearchClient,
+	logg logger.Logger,
+) (SearchUserSyncManager, error) {
 	createCache, err := lru.New[user_entity.UserId, *SearchUser](1000)
 	if err != nil {
 		return nil, err
@@ -32,10 +41,11 @@ func NewMeilisearchSearchUserSyncManager(client *meilisearch.MeilisearchClient, 
 		createCache: createCache,
 		deleteCache: deleteCache,
 		client:      client,
-		logger:      logger,
+		logger:      logg,
 	}, nil
 }
 
+//nolint:revive
 func (m MeilisearchSearchUserSyncManager) CreateIndexIfNotExists(ctx context.Context) error {
 	createdIndexTask, err := m.client.Client.CreateIndexWithContext(ctx, &meilisearch2.IndexConfig{
 		Uid:        "users",
@@ -48,7 +58,8 @@ func (m MeilisearchSearchUserSyncManager) CreateIndexIfNotExists(ctx context.Con
 	cancellableCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	task, err := m.client.Client.TaskReader().WaitForTaskWithContext(cancellableCtx, createdIndexTask.TaskUID, 0)
+	task, err := m.client.Client.TaskReader().
+		WaitForTaskWithContext(cancellableCtx, createdIndexTask.TaskUID, 0)
 	if err != nil {
 		return err
 	}
@@ -68,38 +79,40 @@ func (m MeilisearchSearchUserSyncManager) CreateIndexIfNotExists(ctx context.Con
 
 	if task.Status == meilisearch2.TaskStatusSucceeded {
 		m.logger.Info().Str("uid", task.IndexUID).Msg("Index created!")
-		updateSettingsTask, err := m.client.Client.Index(createdIndexTask.IndexUID).UpdateSettingsWithContext(ctx, &meilisearch2.Settings{
-			DisplayedAttributes: []string{"*"},
-			SearchableAttributes: []string{
-				"Id",
-				"FirstName",
-				"LastName",
-				"Email",
-			},
-			FilterableAttributes: []string{
-				"CreatedAt",
-				"UpdatedAt",
-			},
-			SortableAttributes: []string{
-				"CreatedAt",
-				"UpdatedAt",
-			},
-			RankingRules: []string{
-				"attribute",
-				"words",
-				"typo",
-				"proximity",
-				"sort",
-				"exactness",
-			},
-		})
+		updateSettingsTask, err := m.client.Client.Index(createdIndexTask.IndexUID).
+			UpdateSettingsWithContext(ctx, &meilisearch2.Settings{
+				DisplayedAttributes: []string{"*"},
+				SearchableAttributes: []string{
+					"Id",
+					"FirstName",
+					"LastName",
+					"Email",
+				},
+				FilterableAttributes: []string{
+					"CreatedAt",
+					"UpdatedAt",
+				},
+				SortableAttributes: []string{
+					"CreatedAt",
+					"UpdatedAt",
+				},
+				RankingRules: []string{
+					"attribute",
+					"words",
+					"typo",
+					"proximity",
+					"sort",
+					"exactness",
+				},
+			})
 		if err != nil {
 			return err
 		}
 
 		cancellableCtx, cancel = context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
-		task, err = m.client.Client.TaskReader().WaitForTaskWithContext(cancellableCtx, updateSettingsTask.TaskUID, 0)
+		task, err = m.client.Client.TaskReader().
+			WaitForTaskWithContext(cancellableCtx, updateSettingsTask.TaskUID, 0)
 		if err != nil {
 			return err
 		}
@@ -142,6 +155,7 @@ func (m MeilisearchSearchUserSyncManager) RemoveUser(ctx context.Context, user *
 	return nil
 }
 
+//nolint:revive
 func (m MeilisearchSearchUserSyncManager) Sync(ctx context.Context) {
 	// Handle additions/updates
 	var docs []*SearchUser

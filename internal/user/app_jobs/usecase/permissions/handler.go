@@ -1,15 +1,18 @@
 package permissions
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type CheckUserPermissionsHandler struct {
 	checkPermissionUseCase *CheckPermissionJobUseCase
 }
 
-func NewCheckUserPermissionsHandler(useCase *CheckPermissionJobUseCase) *CheckUserPermissionsHandler {
+func NewCheckUserPermissionsHandler(
+	useCase *CheckPermissionJobUseCase,
+) *CheckUserPermissionsHandler {
 	return &CheckUserPermissionsHandler{checkPermissionUseCase: useCase}
 }
 

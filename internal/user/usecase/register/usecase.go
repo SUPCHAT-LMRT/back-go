@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	user_search "github.com/supchat-lmrt/back-go/internal/search/user"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
@@ -17,9 +18,7 @@ import (
 	uberdig "go.uber.org/dig"
 )
 
-var (
-	UserAlreadyExistsErr = errors.New("an account with this email already exists")
-)
+var ErrUserAlreadyExists = errors.New("an account with this email already exists")
 
 type RegisterUserDeps struct {
 	uberdig.In
@@ -41,7 +40,12 @@ func NewRegisterUserUseCase(deps RegisterUserDeps) *RegisterUserUseCase {
 	return &RegisterUserUseCase{deps: deps}
 }
 
-func (r *RegisterUserUseCase) Execute(ctx context.Context, token string, opts ...RegisterOption) error {
+//nolint:revive
+func (r *RegisterUserUseCase) Execute(
+	ctx context.Context,
+	token string,
+	opts ...RegisterOption,
+) error {
 	options := RegisterOptions{}
 	for _, opt := range opts {
 		opt(&options)
@@ -57,7 +61,7 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, token string, opts ..
 		return fmt.Errorf("error checking if user exists: %w", err)
 	}
 	if userExists {
-		return UserAlreadyExistsErr
+		return ErrUserAlreadyExists
 	}
 
 	if options.Mode == RegisterModePassword {
@@ -94,12 +98,15 @@ func (r *RegisterUserUseCase) Execute(ctx context.Context, token string, opts ..
 
 	if options.Mode == RegisterModeOauth {
 		// Handle Oauth binding between user and provider
-		err = r.deps.OauthConnectionRepository.CreateOauthConnection(ctx, &oauth_entity.OauthConnection{
-			UserId:      user.Id,
-			Provider:    options.Oauth.Provider,
-			OauthEmail:  options.Oauth.Email,
-			OauthUserId: options.Oauth.UserId,
-		})
+		err = r.deps.OauthConnectionRepository.CreateOauthConnection(
+			ctx,
+			&oauth_entity.OauthConnection{
+				UserId:      user.Id,
+				Provider:    options.Oauth.Provider,
+				OauthEmail:  options.Oauth.Email,
+				OauthUserId: options.Oauth.UserId,
+			},
+		)
 		if err != nil {
 			return fmt.Errorf("error creating oauth connection: %w", err)
 		}

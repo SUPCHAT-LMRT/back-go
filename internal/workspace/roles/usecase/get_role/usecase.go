@@ -2,7 +2,8 @@ package get_role
 
 import (
 	"context"
-	"fmt"
+	"errors"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/repository"
 )
@@ -17,7 +18,7 @@ func NewGetRoleUseCase(roleRepository repository.RoleRepository) *GetRoleUseCase
 
 func (u *GetRoleUseCase) Execute(ctx context.Context, roleId string) (*entity.Role, error) {
 	if roleId == "" {
-		return nil, fmt.Errorf("roleId is required")
+		return nil, errors.New("roleId is required")
 	}
 
 	role, err := u.roleRepository.GetById(ctx, roleId)

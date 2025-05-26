@@ -2,11 +2,12 @@ package create_channel
 
 import (
 	"context"
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/search/channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 type CreateChannelUseCaseDeps struct {

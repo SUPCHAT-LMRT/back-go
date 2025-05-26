@@ -1,10 +1,11 @@
 package outbound
 
 import (
+	"time"
+
 	"github.com/goccy/go-json"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
-	"time"
 )
 
 type OutboundSendDirectMessage struct {
@@ -22,11 +23,11 @@ type OutboundSendDirectMessageSender struct {
 	LastName  string             `json:"lastName"`
 }
 
-func (m OutboundSendDirectMessage) GetActionName() messages.Action {
+func (m *OutboundSendDirectMessage) GetActionName() messages.Action {
 	return messages.OutboundSendDirectMessageAction
 }
 
-func (m OutboundSendDirectMessage) Encode() ([]byte, error) {
+func (m *OutboundSendDirectMessage) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }

@@ -3,6 +3,7 @@ package add_member
 import (
 	"context"
 	"errors"
+
 	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/group/repository"
 	"github.com/supchat-lmrt/back-go/internal/group/strategies"
@@ -10,9 +11,7 @@ import (
 	uberdig "go.uber.org/dig"
 )
 
-var (
-	GroupNotFoundErr = errors.New("group not found")
-)
+var ErrGroupNotFound = errors.New("group not found")
 
 type AddMemberToGroupUseCaseDeps struct {
 	uberdig.In
@@ -29,7 +28,15 @@ func NewAddMemberToGroupUseCase(deps AddMemberToGroupUseCaseDeps) *AddMemberToGr
 }
 
 // Todo transaction to be sure that if a problem occurs when adding the member to the group, the group is not created
-func (u *AddMemberToGroupUseCase) Execute(ctx context.Context, groupId *group_entity.GroupId, inviterUserId, inviteeUserId entity.UserId) (*group_entity.Group, error) {
+//
+//nolint:revive
+func (u *AddMemberToGroupUseCase) Execute(
+	ctx context.Context,
+	givenGroupId *group_entity.GroupId,
+	inviterUserId, inviteeUserId entity.UserId,
+) (*group_entity.Group, error) {
+	groupId := givenGroupId
+
 	var group *group_entity.Group
 	var groupMembers []*group_entity.GroupMember
 	if groupId == nil || *groupId == "" {

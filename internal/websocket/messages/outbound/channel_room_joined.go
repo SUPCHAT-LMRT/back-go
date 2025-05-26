@@ -10,11 +10,11 @@ type OutboundChannelRoomJoined struct {
 	RoomId string `json:"roomId"`
 }
 
-func (m OutboundChannelRoomJoined) GetActionName() messages.Action {
+func (m *OutboundChannelRoomJoined) GetActionName() messages.Action {
 	return messages.OutboundChannelRoomJoinedAction
 }
 
-func (m OutboundChannelRoomJoined) Encode() ([]byte, error) {
+func (m *OutboundChannelRoomJoined) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }

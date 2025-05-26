@@ -2,10 +2,11 @@ package register
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"regexp"
+
+	"github.com/gin-gonic/gin"
 )
 
 type RegisterHandler struct {
@@ -17,8 +18,8 @@ func NewRegisterHandler(useCase *RegisterUserUseCase) *RegisterHandler {
 }
 
 type RegisterRequest struct {
-	Token                string `json:"token" binding:"required"`
-	Password             string `json:"password" binding:"required,min=3"`
+	Token                string `json:"token"                binding:"required"`
+	Password             string `json:"password"             binding:"required,min=3"`
 	PasswordConfirmation string `json:"passwordConfirmation" binding:"required,eqfield=Password"`
 }
 
@@ -45,16 +46,16 @@ func (l RegisterHandler) Handle(c *gin.Context) {
 	}
 
 	// TODO re-enable this after tests (code works)
-	//if !isPasswordStrong(request.Password) {
+	// if !isPasswordStrong(request.Password) {
 	//	c.JSON(http.StatusBadRequest, gin.H{
 	//		"message": "Password is not strong enough. It must contain at least 8 characters, including uppercase, lowercase, numbers, and special characters.",
 	//	})
 	//	return
-	//}
+	// }
 
 	err := l.registerUserUseCase.Execute(c, request.Token, WithPassword(request.Password))
 	if err != nil {
-		if errors.Is(err, UserAlreadyExistsErr) {
+		if errors.Is(err, ErrUserAlreadyExists) {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error":          err.Error(),
 				"messageDisplay": "Un utilisateur existe déjà avec cet email.",
@@ -71,6 +72,7 @@ func (l RegisterHandler) Handle(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+//nolint:unused
 func isPasswordStrong(password string) bool {
 	if len(password) < 8 {
 		return false

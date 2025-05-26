@@ -2,12 +2,13 @@ package middlewares
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_workpace_member"
-	"net/http"
 )
 
 type UserInWorkspaceMiddleware struct {
@@ -30,7 +31,7 @@ func (a *UserInWorkspaceMiddleware) Execute(c *gin.Context) {
 		return
 	}
 
-	loggedInUser := loggedInUserInter.(*user_entity.User)
+	loggedInUser := loggedInUserInter.(*user_entity.User) //nolint:revive
 
 	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {
@@ -38,10 +39,17 @@ func (a *UserInWorkspaceMiddleware) Execute(c *gin.Context) {
 		return
 	}
 
-	workspaceMember, err := a.getWorkspaceMember.Execute(c, entity.WorkspaceId(workspaceId), loggedInUser.Id)
+	workspaceMember, err := a.getWorkspaceMember.Execute(
+		c,
+		entity.WorkspaceId(workspaceId),
+		loggedInUser.Id,
+	)
 	if err != nil {
-		if errors.Is(err, repository.WorkspaceMemberNotFoundErr) {
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "User not found in workspace"})
+		if errors.Is(err, repository.ErrWorkspaceMemberNotFound) {
+			c.AbortWithStatusJSON(
+				http.StatusNotFound,
+				gin.H{"error": "User not found in workspace"},
+			)
 			return
 		}
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

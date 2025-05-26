@@ -2,12 +2,13 @@ package redis
 
 import (
 	"context"
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/redis"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 var (
@@ -52,7 +53,8 @@ func (r RedisUserRepository) Create(ctx context.Context, user *entity.User) erro
 	}
 
 	// Create bindings
-	err = r.deps.Client.Client.Set(ctx, buildUserEmailBindingRedisKey(user.Email), user.Id.String(), userRedisExpiration).Err()
+	err = r.deps.Client.Client.Set(ctx, buildUserEmailBindingRedisKey(user.Email), user.Id.String(), userRedisExpiration).
+		Err()
 	if err != nil {
 		return err
 	}
@@ -60,7 +62,10 @@ func (r RedisUserRepository) Create(ctx context.Context, user *entity.User) erro
 	return nil
 }
 
-func (r RedisUserRepository) GetById(ctx context.Context, userId entity.UserId) (user *entity.User, err error) {
+func (r RedisUserRepository) GetById(
+	ctx context.Context,
+	userId entity.UserId,
+) (user *entity.User, err error) {
 	result, err := r.deps.Client.Client.HGetAll(ctx, buildUserRedisKey(userId)).Result()
 	if err != nil {
 		return nil, err
@@ -74,8 +79,13 @@ func (r RedisUserRepository) GetById(ctx context.Context, userId entity.UserId) 
 	return user, nil
 }
 
-func (r RedisUserRepository) GetByEmail(ctx context.Context, userEmail string, options ...repository.GetUserOptionFunc) (user *entity.User, err error) {
-	userIdStr, err := r.deps.Client.Client.Get(ctx, buildUserEmailBindingRedisKey(userEmail)).Result()
+func (r RedisUserRepository) GetByEmail(
+	ctx context.Context,
+	userEmail string,
+	options ...repository.GetUserOptionFunc,
+) (user *entity.User, err error) {
+	userIdStr, err := r.deps.Client.Client.Get(ctx, buildUserEmailBindingRedisKey(userEmail)).
+		Result()
 	if err != nil {
 		return nil, err
 	}
@@ -83,6 +93,7 @@ func (r RedisUserRepository) GetByEmail(ctx context.Context, userEmail string, o
 	return r.GetById(ctx, entity.UserId(userIdStr))
 }
 
+//nolint:revive
 func (r RedisUserRepository) List(ctx context.Context) ([]*entity.User, error) {
 	const batchSize = 100
 	var cursor uint64
@@ -90,7 +101,8 @@ func (r RedisUserRepository) List(ctx context.Context) ([]*entity.User, error) {
 	users := make([]*entity.User, 0)
 
 	for {
-		keys, nextCursor, err := r.deps.Client.Client.Scan(ctx, cursor, "user:*", batchSize).Result()
+		keys, nextCursor, err := r.deps.Client.Client.Scan(ctx, cursor, "user:*", batchSize).
+			Result()
 		if err != nil {
 			return nil, err
 		}

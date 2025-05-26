@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+
 	"github.com/supchat-lmrt/back-go/internal/dig"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/logger/zerolog"
@@ -19,9 +21,9 @@ import (
 	channel_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	uberdig "go.uber.org/dig"
-	"log"
 )
 
+//nolint:revive
 func main() {
 	diContainer := uberdig.New()
 	providers := []dig.Provider{
@@ -72,7 +74,11 @@ func main() {
 			}
 
 			for _, chann := range channels {
-				messages, err := channelMessageRepository.ListByChannelId(appContext, chann.Id, repository.ListByChannelIdQueryParams{Limit: 50000})
+				messages, err := channelMessageRepository.ListByChannelId(
+					appContext,
+					chann.Id,
+					repository.ListByChannelIdQueryParams{Limit: 50000},
+				)
 				if err != nil {
 					logg.Fatal().Err(err).Msg("Unable to list messages")
 				}
@@ -92,27 +98,30 @@ func main() {
 				fmt.Println("Inserted channel", chann.Id)
 
 				for _, channelMessage := range messages {
-					err = searchChannelMessageSyncManager.AddMessage(appContext, &message.SearchMessage{
-						Id:       channelMessage.Id.String(),
-						Content:  channelMessage.Content,
-						AuthorId: channelMessage.AuthorId,
-						Kind:     message.SearchMessageKindChannelMessage,
-						Data: message.SearchMessageChannelData{
-							ChannelId:   channelMessage.ChannelId,
-							WorkspaceId: workspaceId,
+					err = searchChannelMessageSyncManager.AddMessage(
+						appContext,
+						&message.SearchMessage{
+							Id:       channelMessage.Id.String(),
+							Content:  channelMessage.Content,
+							AuthorId: channelMessage.AuthorId,
+							Kind:     message.SearchMessageKindChannelMessage,
+							Data: message.SearchMessageChannelData{
+								ChannelId:   channelMessage.ChannelId,
+								WorkspaceId: workspaceId,
+							},
+							CreatedAt: channelMessage.CreatedAt,
+							UpdatedAt: channelMessage.UpdatedAt,
 						},
-						CreatedAt: channelMessage.CreatedAt,
-						UpdatedAt: channelMessage.UpdatedAt,
-					})
+					)
 					if err != nil {
 						logg.Fatal().Err(err).Msg("Unable to add message")
 					}
 				}
 
-				fmt.Println("Inserted messages", len(messages))
+				logg.Info().Int("messages_count", len(messages)).Msg("Inserted messages")
 			}
 
-			fmt.Println("Inserted workspace", workspaceId)
+			logg.Info().Str("workspace_id", workspaceId.String()).Msg("Inserted workspace")
 		}
 	})
 
@@ -155,7 +164,9 @@ func main() {
 	})
 }
 
-func mapChannelKindToSearchResultChannelKind(kind channel_entity.ChannelKind) channel.SearchChannelKind {
+func mapChannelKindToSearchResultChannelKind(
+	kind channel_entity.ChannelKind,
+) channel.SearchChannelKind {
 	switch kind {
 	case channel_entity.ChannelKindText:
 		return channel.SearchChannelKindText

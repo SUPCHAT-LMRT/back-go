@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
@@ -48,7 +49,9 @@ func (m MongoRoleRepository) Create(ctx context.Context, role *entity.Role) (ent
 		return "", err
 	}
 
-	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).InsertOne(ctx, mongoRole)
+	_, err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		InsertOne(ctx, mongoRole)
 	if err != nil {
 		return "", err
 	}
@@ -79,7 +82,10 @@ func (m MongoRoleRepository) GetById(ctx context.Context, roleId string) (*entit
 	return role, nil
 }
 
-func (m MongoRoleRepository) GetList(ctx context.Context, workspaceId string) ([]*entity.Role, error) {
+func (m MongoRoleRepository) GetList(
+	ctx context.Context,
+	workspaceId string,
+) ([]*entity.Role, error) {
 	objectId, err := bson.ObjectIDFromHex(workspaceId)
 	if err != nil {
 		return nil, fmt.Errorf("invalid workspace ID: %w", err)
@@ -148,7 +154,13 @@ func (m MongoRoleRepository) Delete(ctx context.Context, roleId string) error {
 
 	return nil
 }
-func (m MongoRoleRepository) AssignRoleToUser(ctx context.Context, workspaceMemberId entity2.WorkspaceMemberId, roleId entity.RoleId, workspaceId workspace_entity.WorkspaceId) error {
+
+func (m MongoRoleRepository) AssignRoleToUser(
+	ctx context.Context,
+	workspaceMemberId entity2.WorkspaceMemberId,
+	roleId entity.RoleId,
+	workspaceId workspace_entity.WorkspaceId,
+) error {
 	objectId, err := bson.ObjectIDFromHex(string(roleId))
 	if err != nil {
 		return fmt.Errorf("invalid role ID: %w", err)
@@ -186,7 +198,12 @@ func (m MongoRoleRepository) AssignRoleToUser(ctx context.Context, workspaceMemb
 	return nil
 }
 
-func (m MongoRoleRepository) DessassignRoleFromUser(ctx context.Context, userId string, roleId string, workspaceId string) error {
+func (m MongoRoleRepository) DessassignRoleFromUser(
+	ctx context.Context,
+	userId string,
+	roleId string,
+	workspaceId string,
+) error {
 	objectId, err := bson.ObjectIDFromHex(roleId)
 	if err != nil {
 		return fmt.Errorf("invalid role ID: %w", err)
@@ -210,7 +227,12 @@ func (m MongoRoleRepository) DessassignRoleFromUser(ctx context.Context, userId 
 	return nil
 }
 
-func (m MongoRoleRepository) GetRolesWithAssignmentForMember(ctx context.Context, workspaceId workspace_entity.WorkspaceId, WorkspaceMemberId entity2.WorkspaceMemberId) ([]*entity.Role, error) {
+//nolint:revive
+func (m MongoRoleRepository) GetRolesWithAssignmentForMember(
+	ctx context.Context,
+	workspaceId workspace_entity.WorkspaceId,
+	workspaceMemberId entity2.WorkspaceMemberId,
+) ([]*entity.Role, error) {
 	workspaceObjectId, err := bson.ObjectIDFromHex(string(workspaceId))
 	if err != nil {
 		return nil, fmt.Errorf("invalid workspace ID: %w", err)
@@ -233,7 +255,7 @@ func (m MongoRoleRepository) GetRolesWithAssignmentForMember(ctx context.Context
 
 		isAssigned := false
 		for _, assignedUser := range mongoRole.AssignedUsers {
-			if assignedUser == string(WorkspaceMemberId) {
+			if assignedUser == string(workspaceMemberId) {
 				isAssigned = true
 				break
 			}

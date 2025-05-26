@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
@@ -11,7 +13,6 @@ import (
 	mongo2 "go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 var (
@@ -48,7 +49,11 @@ func NewMongoGroupRepository(deps MongoGroupRepositoryDeps) GroupRepository {
 	return &MongoGroupRepository{deps: deps}
 }
 
-func (r MongoGroupRepository) Create(ctx context.Context, group *entity.Group, ownerMember *entity.GroupMember) error {
+func (r MongoGroupRepository) Create(
+	ctx context.Context,
+	group *entity.Group,
+	ownerMember *entity.GroupMember,
+) error {
 	group.Id = entity.GroupId(bson.NewObjectID().Hex())
 	group.CreatedAt = time.Now()
 	group.UpdatedAt = group.CreatedAt
@@ -64,8 +69,10 @@ func (r MongoGroupRepository) Create(ctx context.Context, group *entity.Group, o
 	}
 	defer session.EndSession(ctx)
 
-	_, err = session.WithTransaction(ctx, func(sessionContext context.Context) (interface{}, error) {
-		_, err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).InsertOne(sessionContext, mongoGroup)
+	_, err = session.WithTransaction(ctx, func(sessionContext context.Context) (any, error) {
+		_, err = r.deps.Client.Client.Database(databaseName).
+			Collection(collectionName).
+			InsertOne(sessionContext, mongoGroup)
 		if err != nil {
 			return nil, err
 		}
@@ -85,17 +92,23 @@ func (r MongoGroupRepository) Create(ctx context.Context, group *entity.Group, o
 	return nil
 }
 
-func (r MongoGroupRepository) GetGroup(ctx context.Context, groupId entity.GroupId) (*entity.Group, error) {
+func (r MongoGroupRepository) GetGroup(
+	ctx context.Context,
+	groupId entity.GroupId,
+) (*entity.Group, error) {
 	groupObjectId, err := bson.ObjectIDFromHex(groupId.String())
 	if err != nil {
 		return nil, err
 	}
 
 	var mongoGroup MongoGroup
-	err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"_id": groupObjectId}).Decode(&mongoGroup)
+	err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, bson.M{"_id": groupObjectId}).
+		Decode(&mongoGroup)
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
-			return nil, GroupNotFoundErr
+			return nil, ErrGroupNotFound
 		}
 		return nil, err
 	}
@@ -109,8 +122,10 @@ func (r MongoGroupRepository) GetGroup(ctx context.Context, groupId entity.Group
 }
 
 func (r MongoGroupRepository) ListRecentGroups(ctx context.Context) ([]*entity.Group, error) {
-	opts := options.Find().SetSort(bson.D{{"updated_at", 1}})
-	cursor, err := r.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{}, opts)
+	opts := options.Find().SetSort(bson.D{{Key: "updated_at", Value: 1}})
+	cursor, err := r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		Find(ctx, bson.M{}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -134,14 +149,18 @@ func (r MongoGroupRepository) ListRecentGroups(ctx context.Context) ([]*entity.G
 	return groups, nil
 }
 
-func (r MongoGroupRepository) AddMember(ctx context.Context, groupId entity.GroupId, inviteeUserId user_entity.UserId) error {
+func (r MongoGroupRepository) AddMember(
+	ctx context.Context,
+	groupId entity.GroupId,
+	inviteeUserId user_entity.UserId,
+) error {
 	isMember, err := r.isMember(ctx, groupId, inviteeUserId)
 	if err != nil {
 		return err
 	}
 
 	if isMember {
-		return MemberAlreadyInGroupErr
+		return ErrMemberAlreadyInGroup
 	}
 
 	return r.unsafeAddMember(ctx, groupId, &entity.GroupMember{UserId: inviteeUserId})
@@ -153,7 +172,9 @@ func (r MongoGroupRepository) Exists(ctx context.Context, groupId entity.GroupId
 		return false, err
 	}
 
-	count, err := r.deps.Client.Client.Database(databaseName).Collection(collectionName).CountDocuments(ctx, bson.M{"_id": groupObjectId})
+	count, err := r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		CountDocuments(ctx, bson.M{"_id": groupObjectId})
 	if err != nil {
 		return false, err
 	}
@@ -161,13 +182,19 @@ func (r MongoGroupRepository) Exists(ctx context.Context, groupId entity.GroupId
 	return count > 0, nil
 }
 
-func (r MongoGroupRepository) UpdateGroupName(ctx context.Context, groupId entity.GroupId, name string) error {
+func (r MongoGroupRepository) UpdateGroupName(
+	ctx context.Context,
+	groupId entity.GroupId,
+	name string,
+) error {
 	groupObjectId, err := bson.ObjectIDFromHex(groupId.String())
 	if err != nil {
 		return err
 	}
 
-	_, err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"_id": groupObjectId}, bson.M{"$set": bson.M{"name": name}})
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, bson.M{"_id": groupObjectId}, bson.M{"$set": bson.M{"name": name}})
 	if err != nil {
 		return err
 	}
@@ -175,7 +202,10 @@ func (r MongoGroupRepository) UpdateGroupName(ctx context.Context, groupId entit
 	return nil
 }
 
-func (r MongoGroupRepository) ListMembers(ctx context.Context, groupId entity.GroupId) ([]*entity.GroupMember, error) {
+func (r MongoGroupRepository) ListMembers(
+	ctx context.Context,
+	groupId entity.GroupId,
+) ([]*entity.GroupMember, error) {
 	groupObjectId, err := bson.ObjectIDFromHex(groupId.String())
 	if err != nil {
 		return nil, err
@@ -187,7 +217,9 @@ func (r MongoGroupRepository) ListMembers(ctx context.Context, groupId entity.Gr
 		{{Key: "$replaceRoot", Value: bson.D{{Key: "newRoot", Value: "$members"}}}},
 	}
 
-	cursor, err := r.deps.Client.Client.Database(databaseName).Collection(collectionName).Aggregate(ctx, pipeline)
+	cursor, err := r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +243,11 @@ func (r MongoGroupRepository) ListMembers(ctx context.Context, groupId entity.Gr
 	return groupMembers, nil
 }
 
-func (r MongoGroupRepository) isMember(ctx context.Context, groupId entity.GroupId, userId user_entity.UserId) (bool, error) {
+func (r MongoGroupRepository) isMember(
+	ctx context.Context,
+	groupId entity.GroupId,
+	userId user_entity.UserId,
+) (bool, error) {
 	groupObjectId, err := bson.ObjectIDFromHex(groupId.String())
 	if err != nil {
 		return false, err
@@ -221,7 +257,9 @@ func (r MongoGroupRepository) isMember(ctx context.Context, groupId entity.Group
 		return false, err
 	}
 
-	count, err := r.deps.Client.Client.Database(databaseName).Collection(collectionName).CountDocuments(ctx, bson.M{"_id": groupObjectId, "members.user_id": userObjectId})
+	count, err := r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		CountDocuments(ctx, bson.M{"_id": groupObjectId, "members.user_id": userObjectId})
 	if err != nil {
 		return false, err
 	}
@@ -230,7 +268,11 @@ func (r MongoGroupRepository) isMember(ctx context.Context, groupId entity.Group
 }
 
 // unsafeAddMember adds a member to a group without any checks. (e.g. if the user is already a member)
-func (r MongoGroupRepository) unsafeAddMember(ctx context.Context, groupId entity.GroupId, member *entity.GroupMember) error {
+func (r MongoGroupRepository) unsafeAddMember(
+	ctx context.Context,
+	groupId entity.GroupId,
+	member *entity.GroupMember,
+) error {
 	member.Id = entity.GroupMemberId(bson.NewObjectID().Hex())
 	member.GroupId = groupId
 
@@ -244,7 +286,9 @@ func (r MongoGroupRepository) unsafeAddMember(ctx context.Context, groupId entit
 		return err
 	}
 
-	_, err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"_id": workspaceObjectId}, bson.M{"$addToSet": bson.M{"members": mappedMember}})
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, bson.M{"_id": workspaceObjectId}, bson.M{"$addToSet": bson.M{"members": mappedMember}})
 	if err != nil {
 		return err
 	}

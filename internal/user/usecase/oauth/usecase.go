@@ -3,6 +3,9 @@ package oauth
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
@@ -15,8 +18,6 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/register"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/token"
 	uberdig "go.uber.org/dig"
-	"os"
-	"time"
 )
 
 func init() {
@@ -24,8 +25,16 @@ func init() {
 	store := sessions.NewCookieStore([]byte("secret"))
 	gothic.Store = store
 	goth.UseProviders(
-		google.New(os.Getenv("GOOGLE_CRED_ID"), os.Getenv("GOOGLE_CRED_SECRET"), os.Getenv("GOOGLE_CRED_CALLBACK_URL")),
-		facebook.New(os.Getenv("FACEBOOK_CRED_CRED_ID"), os.Getenv("FACEBOOK_CRED_SECRET"), os.Getenv("FACEBOOK_CRED_CALLBACK_URL")),
+		google.New(
+			os.Getenv("GOOGLE_CRED_ID"),
+			os.Getenv("GOOGLE_CRED_SECRET"),
+			os.Getenv("GOOGLE_CRED_CALLBACK_URL"),
+		),
+		facebook.New(
+			os.Getenv("FACEBOOK_CRED_CRED_ID"),
+			os.Getenv("FACEBOOK_CRED_SECRET"),
+			os.Getenv("FACEBOOK_CRED_CALLBACK_URL"),
+		),
 	)
 }
 
@@ -47,7 +56,10 @@ func NewLoginOAuthUseCase(deps LoginOAuthUseCaseDeps) *LoginOAuthUseCase {
 // Execute handles the OAuth registration process, create a new user if it doesn't exist and generate tokens
 func (u LoginOAuthUseCase) Execute(ctx context.Context, oauthUserId string) (*OAuthResult, error) {
 	// Vérifier si l'utilisateur existe déjà
-	oauthConnection, err := u.deps.OauthConnectionRepository.GetOauthConnectionByUserId(ctx, oauthUserId)
+	oauthConnection, err := u.deps.OauthConnectionRepository.GetOauthConnectionByUserId(
+		ctx,
+		oauthUserId,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get oauth connection: %w", err)
 	}
@@ -74,8 +86,18 @@ func NewRegisterOAuthUseCase(deps RegisterOAuthUseCaseDeps) *RegisterOAuthUseCas
 	return &RegisterOAuthUseCase{deps: deps}
 }
 
-func (u RegisterOAuthUseCase) Execute(ctx context.Context, provider string, oauthUserId string, oauthEmail string, inviteToken string) error {
-	err := u.deps.RegisterUserUseCase.Execute(ctx, inviteToken, register.WithOauth(provider, oauthUserId, oauthEmail))
+func (u RegisterOAuthUseCase) Execute(
+	ctx context.Context,
+	provider string,
+	oauthUserId string,
+	oauthEmail string,
+	inviteToken string,
+) error {
+	err := u.deps.RegisterUserUseCase.Execute(
+		ctx,
+		inviteToken,
+		register.WithOauth(provider, oauthUserId, oauthEmail),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to register user: %w", err)
 	}
@@ -84,7 +106,10 @@ func (u RegisterOAuthUseCase) Execute(ctx context.Context, provider string, oaut
 }
 
 // Génération des tokens d'accès et de rafraîchissement
-func (u LoginOAuthUseCase) generateTokens(user *entity.User, rememberMe bool) (*OAuthResult, error) {
+func (u LoginOAuthUseCase) generateTokens(
+	user *entity.User,
+	rememberMe bool,
+) (*OAuthResult, error) {
 	accessToken, err := u.deps.TokenStrategy.GenerateAccessToken(map[string]any{
 		"email": user.Email,
 	})

@@ -2,7 +2,8 @@ package delete_role
 
 import (
 	"context"
-	"fmt"
+	"errors"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/repository"
 )
 
@@ -16,7 +17,7 @@ func NewDeleteRoleUseCase(roleRepository repository.RoleRepository) *DeleteRoleU
 
 func (u *DeleteRoleUseCase) Execute(ctx context.Context, roleId string) error {
 	if roleId == "" {
-		return fmt.Errorf("roleId is required")
+		return errors.New("roleId is required")
 	}
 
 	err := u.roleRepository.Delete(ctx, roleId)

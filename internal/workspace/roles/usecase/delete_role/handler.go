@@ -1,6 +1,8 @@
 package delete_role
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,15 +17,15 @@ func NewDeleteRoleHandler(useCase *DeleteRoleUseCase) *DeleteRoleHandler {
 func (h DeleteRoleHandler) Handle(c *gin.Context) {
 	roleId := c.Param("role_id")
 	if roleId == "" {
-		c.JSON(400, gin.H{"error": "role_id is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "role_id is required"})
 		return
 	}
 
 	err := h.useCase.Execute(c, roleId)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Status(204)
+	c.Status(http.StatusNoContent)
 }

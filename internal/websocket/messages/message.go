@@ -1,8 +1,9 @@
 package messages
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Action string
@@ -62,8 +63,13 @@ func (m *DefaultMessage) SetCreatedAt(createdAt time.Time) {
 	m.TransportMessageCreatedAt = createdAt
 }
 
+//nolint:unused
 func (m *DefaultMessage) mustExtendDefaultMessage() {}
 
 func NewDefaultMessage(action Action) DefaultMessage {
-	return DefaultMessage{TransportMessageId: uuid.NewString(), Action: action, TransportMessageCreatedAt: time.Now()}
+	return DefaultMessage{
+		TransportMessageId:        uuid.NewString(),
+		Action:                    action,
+		TransportMessageCreatedAt: time.Now(),
+	}
 }

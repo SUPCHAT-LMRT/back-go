@@ -1,11 +1,12 @@
 package create_workspace
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
-	"net/http"
 )
 
 type CreateWorkspaceHandler struct {
@@ -37,7 +38,7 @@ func (l CreateWorkspaceHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	user := userVal.(*user_entity.User)
+	user := userVal.(*user_entity.User) //nolint:revive
 
 	workspace := entity.Workspace{
 		Name:    body.Name,

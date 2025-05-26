@@ -3,9 +3,9 @@ package get_member_id
 import (
 	"context"
 	"errors"
+
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
-
 	"github.com/supchat-lmrt/back-go/internal/workspace/repository"
 )
 
@@ -21,7 +21,11 @@ func NewGetMemberIdUsecase(repo repository.WorkspaceRepository) GetMemberIdUseca
 	return &getMemberIdUsecase{Repository: repo}
 }
 
-func (u *getMemberIdUsecase) Execute(ctx context.Context, workspaceId string, userId string) (string, error) {
+func (u *getMemberIdUsecase) Execute(
+	ctx context.Context,
+	workspaceId string,
+	userId string,
+) (string, error) {
 	workspaceIdEntity := entity.WorkspaceId(workspaceId)
 	userIdEntity := user_entity.UserId(userId)
 

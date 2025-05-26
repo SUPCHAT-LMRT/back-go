@@ -2,8 +2,9 @@ package create_job
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type CreateJobHandler struct {
@@ -26,7 +27,10 @@ func (h *CreateJobHandler) Handle(c *gin.Context) {
 	job, err := h.useCase.Execute(c, request.Name)
 	if err != nil {
 		if err.Error() == fmt.Sprintf("a job with the name '%s' already exists", request.Name) {
-			c.JSON(http.StatusConflict, gin.H{"error": fmt.Sprintf("Job with name '%s' already exists", request.Name)})
+			c.JSON(
+				http.StatusConflict,
+				gin.H{"error": fmt.Sprintf("Job with name '%s' already exists", request.Name)},
+			)
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create job"})

@@ -2,15 +2,14 @@ package update_banner
 
 import (
 	"context"
+	"io"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	uberdig "go.uber.org/dig"
-	"io"
 )
 
-var (
-	WorkspaceNotFoundErr = repository.WorkspaceNotFoundErr
-)
+var WorkspaceNotFoundErr = repository.ErrWorkspaceNotFound
 
 type UpdateWorkspaceBannerUseCaseDeps struct {
 	uberdig.In
@@ -23,11 +22,17 @@ type UpdateWorkspaceBannerUseCase struct {
 	deps UpdateWorkspaceBannerUseCaseDeps
 }
 
-func NewUpdateWorkspaceBannerUseCase(deps UpdateWorkspaceBannerUseCaseDeps) *UpdateWorkspaceBannerUseCase {
+func NewUpdateWorkspaceBannerUseCase(
+	deps UpdateWorkspaceBannerUseCaseDeps,
+) *UpdateWorkspaceBannerUseCase {
 	return &UpdateWorkspaceBannerUseCase{deps: deps}
 }
 
-func (u *UpdateWorkspaceBannerUseCase) Execute(ctx context.Context, workspaceId entity.WorkspaceId, image UpdateImage) error {
+func (u *UpdateWorkspaceBannerUseCase) Execute(
+	ctx context.Context,
+	workspaceId entity.WorkspaceId,
+	image UpdateImage,
+) error {
 	workspace, err := u.deps.Repository.GetById(ctx, workspaceId)
 	if err != nil {
 		return err

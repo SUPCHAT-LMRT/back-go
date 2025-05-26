@@ -51,7 +51,7 @@ func (h UpdateRoleHandler) Handle(c *gin.Context) {
 }
 
 type UpdateRoleRequest struct {
-	Name        string `json:"name" binding:"required,min=1,max=100"`
+	Name        string `json:"name"        binding:"required,min=1,max=100"`
 	Permissions uint64 `json:"permissions" binding:"min=0"`
-	Color       string `json:"color" binding:"hexcolor"`
+	Color       string `json:"color"       binding:"hexcolor"`
 }

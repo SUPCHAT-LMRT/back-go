@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages/inbound"
@@ -24,11 +25,19 @@ func NewSaveChannelMessageObserver(deps SaveChannelMessageObserverDeps) SendChan
 	return &SaveChannelMessageObserver{deps: deps}
 }
 
-func (s SaveChannelMessageObserver) OnSendMessage(message *inbound.InboundSendMessageToChannel, messageId entity.ChannelMessageId, userId user_entity.UserId) {
+func (s SaveChannelMessageObserver) OnSendMessage(
+	message *inbound.InboundSendMessageToChannel,
+	messageId entity.ChannelMessageId,
+	userId user_entity.UserId,
+) {
 	s.handleChannelMessage(message, messageId, userId)
 }
 
-func (s SaveChannelMessageObserver) handleChannelMessage(message *inbound.InboundSendMessageToChannel, messageId entity.ChannelMessageId, userId user_entity.UserId) {
+func (s SaveChannelMessageObserver) handleChannelMessage(
+	message *inbound.InboundSendMessageToChannel,
+	messageId entity.ChannelMessageId,
+	userId user_entity.UserId,
+) {
 	err := s.deps.SaveChannelMessageUseCase.Execute(context.Background(), &entity.ChannelMessage{
 		Id:        messageId,
 		ChannelId: message.ChannelId,

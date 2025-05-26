@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/status/entity"
@@ -15,9 +16,7 @@ const (
 	collectionName = "user_status"
 )
 
-var (
-	UnknownUserStatusErr = errors.New("unknown user status")
-)
+var ErrUnknownUserStatus = errors.New("unknown user status")
 
 type MongoUserStatusRepository struct {
 	client *mongo.Client
@@ -32,21 +31,27 @@ func NewMongoUserStatusRepository(client *mongo.Client) UserStatusRepository {
 	return &MongoUserStatusRepository{client: client}
 }
 
-func (m MongoUserStatusRepository) Get(ctx context.Context, userId user_entity.UserId) (*entity.UserStatus, error) {
+func (m MongoUserStatusRepository) Get(
+	ctx context.Context,
+	userId user_entity.UserId,
+) (*entity.UserStatus, error) {
 	userObjectId, err := bson.ObjectIDFromHex(userId.String())
 	if err != nil {
 		return nil, err
 	}
 
 	var mongoUserStatus MongoUserStatus
-	err = m.client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"user_id": userObjectId}).Decode(&mongoUserStatus)
+	err = m.client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, bson.M{"user_id": userObjectId}).
+		Decode(&mongoUserStatus)
 	if err != nil {
 		return nil, err
 	}
 
 	parsedUserStatus := entity.ParseStatus(mongoUserStatus.UserStatus)
 	if parsedUserStatus == entity.StatusUnknown {
-		return nil, UnknownUserStatusErr
+		return nil, ErrUnknownUserStatus
 	}
 
 	return &entity.UserStatus{
@@ -65,9 +70,11 @@ func (m MongoUserStatusRepository) Save(ctx context.Context, userStatus *entity.
 		UserId:     userObjectId,
 		UserStatus: userStatus.Status.String(),
 	}
-	_, err = m.client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"user_id": userObjectId}, bson.M{
-		"$set": mongoUserStatus,
-	}, options.UpdateOne().SetUpsert(true))
+	_, err = m.client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, bson.M{"user_id": userObjectId}, bson.M{
+			"$set": mongoUserStatus,
+		}, options.UpdateOne().SetUpsert(true))
 	if err != nil {
 		return err
 	}

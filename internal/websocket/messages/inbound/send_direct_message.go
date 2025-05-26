@@ -12,11 +12,11 @@ type InboundSendDirectMessage struct {
 	OtherUserId user_entity.UserId `json:"otherUserId"`
 }
 
-func (m InboundSendDirectMessage) GetActionName() messages.Action {
+func (m *InboundSendDirectMessage) GetActionName() messages.Action {
 	return messages.InboundSendDirectMessageAction
 }
 
-func (m InboundSendDirectMessage) Encode() ([]byte, error) {
+func (m *InboundSendDirectMessage) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }
