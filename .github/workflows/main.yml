@@ -8,5 +8,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-tests:
+  ci-run-tests:
     uses: ./.github/workflows/ci-test.yml
+
+
+  ci-merge-dev:
+      needs: ci-run-tests
+      uses: ./.github/workflows/ci-merge.yml
+      with:
+        head_branch: test
+        base_branch: main
+      secrets:
+        ORG_READ_TOKEN: ${{ secrets.ORG_READ_TOKEN }}
+
