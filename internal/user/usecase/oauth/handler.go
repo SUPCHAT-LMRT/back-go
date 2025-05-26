@@ -1,12 +1,13 @@
 package oauth
 
 import (
+	"net/http"
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/markbates/goth/gothic"
 	uberdig "go.uber.org/dig"
-	"net/http"
-	"os"
 )
 
 type RegisterOAuthHandlerDeps struct {
@@ -70,15 +71,37 @@ func (h *RegisterOAuthHandler) Callback(c *gin.Context) {
 		}
 
 		// Stocker les tokens dans des cookies
-		c.SetCookie("accessToken", response.AccessToken, int(response.AccessTokenLifespan.Seconds()), "/", os.Getenv("DOMAIN"), false, true)
-		c.SetCookie("refreshToken", response.RefreshToken, int(response.RefreshTokenLifespan.Seconds()), "/", os.Getenv("DOMAIN"), false, true)
+		c.SetCookie(
+			"accessToken",
+			response.AccessToken,
+			int(response.AccessTokenLifespan.Seconds()),
+			"/",
+			os.Getenv("DOMAIN"),
+			false,
+			true,
+		)
+		c.SetCookie(
+			"refreshToken",
+			response.RefreshToken,
+			int(response.RefreshTokenLifespan.Seconds()),
+			"/",
+			os.Getenv("DOMAIN"),
+			false,
+			true,
+		)
 
 		c.Redirect(http.StatusFound, os.Getenv("FRONT_URL"))
 		return
 	}
 
 	// If an invite token is provided, redirect to the login page
-	err = h.deps.RegisterOAuthUseCase.Execute(c, provider, oauthUser.UserID, oauthUser.Email, inviteToken)
+	err = h.deps.RegisterOAuthUseCase.Execute(
+		c,
+		provider,
+		oauthUser.UserID,
+		oauthUser.Email,
+		inviteToken,
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

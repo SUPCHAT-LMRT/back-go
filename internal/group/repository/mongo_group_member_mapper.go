@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+
 	"github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
@@ -14,7 +15,9 @@ func NewMongoGroupMemberMapper() mapper.Mapper[*MongoGroupMember, *entity.GroupM
 	return &MongoGroupMemberMapper{}
 }
 
-func (m MongoGroupMemberMapper) MapFromEntity(entity *entity.GroupMember) (*MongoGroupMember, error) {
+func (m MongoGroupMemberMapper) MapFromEntity(
+	entity *entity.GroupMember,
+) (*MongoGroupMember, error) {
 	memberObjectId, err := bson.ObjectIDFromHex(entity.Id.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert group member id to object id: %w", err)

@@ -3,6 +3,7 @@ package get_role
 import (
 	"context"
 	"fmt"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/repository"
 )

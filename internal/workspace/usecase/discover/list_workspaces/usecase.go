@@ -2,6 +2,7 @@ package list_workspaces
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	repository2 "github.com/supchat-lmrt/back-go/internal/workspace/member/repository"
@@ -19,7 +20,9 @@ type DiscoverListWorkspacesUseCase struct {
 	deps DiscoveryListWorkspacesUseCaseDeps
 }
 
-func NewDiscoverListWorkspacesUseCase(deps DiscoveryListWorkspacesUseCaseDeps) *DiscoverListWorkspacesUseCase {
+func NewDiscoverListWorkspacesUseCase(
+	deps DiscoveryListWorkspacesUseCaseDeps,
+) *DiscoverListWorkspacesUseCase {
 	return &DiscoverListWorkspacesUseCase{deps: deps}
 }
 
@@ -31,7 +34,10 @@ func (u *DiscoverListWorkspacesUseCase) Execute(ctx context.Context) ([]*Discove
 
 	discoverWorkspaces := make([]*DiscoverWorkspace, len(publicWorkspaces))
 	for i, workspace := range publicWorkspaces {
-		workspaceMembersCount, err := u.deps.WorkspaceMemberRepository.CountMembers(ctx, workspace.Id)
+		workspaceMembersCount, err := u.deps.WorkspaceMemberRepository.CountMembers(
+			ctx,
+			workspace.Id,
+		)
 		if err != nil {
 			return nil, err
 		}

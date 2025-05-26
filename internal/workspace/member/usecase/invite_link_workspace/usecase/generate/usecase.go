@@ -3,12 +3,13 @@ package generate
 import (
 	"context"
 	"errors"
+	"os"
+	"strings"
+
 	"github.com/google/uuid"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/repository"
-	"os"
-	"strings"
 )
 
 type InviteLinkUseCase struct {
@@ -19,7 +20,10 @@ func NewInviteLinkUseCase(linkRepository repository.InviteLinkRepository) *Invit
 	return &InviteLinkUseCase{repository: linkRepository}
 }
 
-func (u *InviteLinkUseCase) Execute(ctx context.Context, workspaceId workspace_entity.WorkspaceId) (string, error) {
+func (u *InviteLinkUseCase) Execute(
+	ctx context.Context,
+	workspaceId workspace_entity.WorkspaceId,
+) (string, error) {
 	token := uuid.New().String()
 
 	inviteLink := &entity.InviteLink{

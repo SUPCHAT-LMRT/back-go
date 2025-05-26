@@ -1,16 +1,19 @@
 package update_banner
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
-	"net/http"
 )
 
 type UpdateWorkspaceBannerHandler struct {
 	useCase *UpdateWorkspaceBannerUseCase
 }
 
-func NewUpdateWorkspaceBannerHandler(useCase *UpdateWorkspaceBannerUseCase) *UpdateWorkspaceBannerHandler {
+func NewUpdateWorkspaceBannerHandler(
+	useCase *UpdateWorkspaceBannerUseCase,
+) *UpdateWorkspaceBannerHandler {
 	return &UpdateWorkspaceBannerHandler{useCase: useCase}
 }
 

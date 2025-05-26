@@ -3,6 +3,7 @@ package public_profile
 import (
 	"context"
 	"fmt"
+
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
 	"github.com/supchat-lmrt/back-go/internal/user/status/entity"
@@ -20,11 +21,16 @@ type GetPublicUserProfileUseCase struct {
 	deps GetPublicUserProfileUseCaseDeps
 }
 
-func NewGetPublicUserProfileUseCase(deps GetPublicUserProfileUseCaseDeps) *GetPublicUserProfileUseCase {
+func NewGetPublicUserProfileUseCase(
+	deps GetPublicUserProfileUseCaseDeps,
+) *GetPublicUserProfileUseCase {
 	return &GetPublicUserProfileUseCase{deps: deps}
 }
 
-func (u GetPublicUserProfileUseCase) Execute(ctx context.Context, userId user_entity.UserId) (*PublicUserProfile, error) {
+func (u GetPublicUserProfileUseCase) Execute(
+	ctx context.Context,
+	userId user_entity.UserId,
+) (*PublicUserProfile, error) {
 	user, err := u.deps.UserRepository.GetById(ctx, userId)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get user: %w", err)

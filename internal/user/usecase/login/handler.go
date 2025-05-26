@@ -2,13 +2,14 @@ package login
 
 import (
 	"errors"
+	"net/http"
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	user_status_entity "github.com/supchat-lmrt/back-go/internal/user/status/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/get_or_create_status"
 	uberdig "go.uber.org/dig"
-	"net/http"
-	"os"
 )
 
 type LoginHandlerDeps struct {
@@ -26,8 +27,8 @@ func NewLoginHandler(deps LoginHandlerDeps) *LoginHandler {
 }
 
 type LoginRequest struct {
-	Email      string `json:"email" binding:"required"`
-	Password   string `json:"password" binding:"required,min=3"`
+	Email      string `json:"email"      binding:"required"`
+	Password   string `json:"password"   binding:"required,min=3"`
 	RememberMe bool   `json:"rememberMe"`
 }
 
@@ -49,13 +50,9 @@ func (l LoginHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	response, err := l.deps.LoginUserUseCase.Execute(c, LoginUserRequest{
-		Email:      request.Email,
-		Password:   request.Password,
-		RememberMe: request.RememberMe,
-	})
+	response, err := l.deps.LoginUserUseCase.Execute(c, LoginUserRequest(request))
 	if err != nil {
-		if errors.Is(err, InvalidUsernameOrPasswordErr) {
+		if errors.Is(err, ErrInvalidUsernameOrPassword) {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error":          err.Error(),
 				"messageDisplay": "Email ou mot de passe incorrect",
@@ -64,7 +61,7 @@ func (l LoginHandler) Handle(c *gin.Context) {
 			return
 		}
 
-		if errors.Is(err, UserNotVerifiedErr) {
+		if errors.Is(err, ErrUserNotVerified) {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error":          err.Error(),
 				"messageDisplay": "Votre compte n'est pas encore vérifié, veuillez vérifier votre boîte de réception",
@@ -80,19 +77,45 @@ func (l LoginHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	userStatus, err := l.deps.GetOrCreateStatusUseCase.Execute(c, response.User.Id, user_status_entity.StatusOnline)
+	userStatus, err := l.deps.GetOrCreateStatusUseCase.Execute(
+		c,
+		response.User.Id,
+		user_status_entity.StatusOnline,
+	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "message": "Failed to save status"})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error(), "message": "Failed to save status"},
+		)
 		return
 	}
 
-	c.SetCookie("accessToken", response.AccessToken, int(response.AccessTokenLifespan.Seconds()), "/", os.Getenv("DOMAIN"), false, true)
-	c.SetCookie("refreshToken", response.RefreshToken, int(response.RefreshTokenLifespan.Seconds()), "/", os.Getenv("DOMAIN"), false, true)
+	c.SetCookie(
+		"accessToken",
+		response.AccessToken,
+		int(response.AccessTokenLifespan.Seconds()),
+		"/",
+		os.Getenv("DOMAIN"),
+		false,
+		true,
+	)
+	c.SetCookie(
+		"refreshToken",
+		response.RefreshToken,
+		int(response.RefreshTokenLifespan.Seconds()),
+		"/",
+		os.Getenv("DOMAIN"),
+		false,
+		true,
+	)
 
 	c.JSON(http.StatusOK, l.LoginUserResponse(response.User, userStatus))
 }
 
-func (l LoginHandler) LoginUserResponse(user *entity.User, status user_status_entity.Status) LoginUserResponse {
+func (l LoginHandler) LoginUserResponse(
+	user *entity.User,
+	status user_status_entity.Status,
+) LoginUserResponse {
 	return LoginUserResponse{
 		Id:        user.Id.String(),
 		Email:     user.Email,

@@ -13,7 +13,9 @@ func NewMongoNotificationMapper() mapper.Mapper[*MongoNotification, *entity.Noti
 	return &MongoNotificationMapper{}
 }
 
-func (m MongoNotificationMapper) MapFromEntity(entity *entity.Notification) (*MongoNotification, error) {
+func (m MongoNotificationMapper) MapFromEntity(
+	entity *entity.Notification,
+) (*MongoNotification, error) {
 	notificationObjectId, err := bson.ObjectIDFromHex(entity.Id.String())
 	if err != nil {
 		return nil, err
@@ -29,7 +31,9 @@ func (m MongoNotificationMapper) MapFromEntity(entity *entity.Notification) (*Mo
 	}, nil
 }
 
-func (m MongoNotificationMapper) MapToEntity(databaseNotification *MongoNotification) (*entity.Notification, error) {
+func (m MongoNotificationMapper) MapToEntity(
+	databaseNotification *MongoNotification,
+) (*entity.Notification, error) {
 	return &entity.Notification{
 		Id:        entity.NotificationId(databaseNotification.Id.Hex()),
 		UserId:    user_entity.UserId(databaseNotification.UserId),

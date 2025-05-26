@@ -22,8 +22,10 @@ func NewDeleteChannelsObserver(deps DeleteChannelsObserverDeps) DeleteSpecifyCha
 	return &DeleteChannelsObserver{deps: deps}
 }
 
-func (o DeleteChannelsObserver) NotifyChannelsDeleted(channelId entity.ChannelId, workspaceId workspace_entity.WorkspaceId) {
-
+func (o DeleteChannelsObserver) NotifyChannelsDeleted(
+	channelId entity.ChannelId,
+	workspaceId workspace_entity.WorkspaceId,
+) {
 	o.deps.EventBus.Publish(&event.ChannelsDeletedEvent{
 		ChannelId:   channelId,
 		WorkspaceId: workspaceId,

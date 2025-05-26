@@ -2,6 +2,7 @@ package get_job_for_user
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/repository"
 )

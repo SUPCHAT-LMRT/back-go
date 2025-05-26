@@ -3,6 +3,7 @@ package create_workspace
 import (
 	"context"
 	"fmt"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/add_member"
@@ -32,7 +33,12 @@ func NewCreateWorkspaceUseCase(
 		assignRoleUseCase:   assignRoleUseCase,
 	}
 }
-func (u *CreateWorkspaceUseCase) Execute(ctx context.Context, workspace *entity.Workspace, ownerMember *entity2.WorkspaceMember) error {
+
+func (u *CreateWorkspaceUseCase) Execute(
+	ctx context.Context,
+	workspace *entity.Workspace,
+	ownerMember *entity2.WorkspaceMember,
+) error {
 	err := u.workspaceRepository.Create(ctx, workspace, ownerMember)
 	if err != nil {
 		return err
@@ -65,8 +71,24 @@ func (u *CreateWorkspaceUseCase) Execute(ctx context.Context, workspace *entity.
 		return err
 	}
 
-	fmt.Println("ownerRole.Id", ownerRole.Id, "ownerMember.Id", ownerMember.Id, "workspace.Id", workspace.Id)
+	fmt.Println(
+		"ownerRole.Id",
+		ownerRole.Id,
+		"ownerMember.Id",
+		ownerMember.Id,
+		"workspace.Id",
+		workspace.Id,
+	)
 
-	err = u.assignRoleUseCase.Execute(ctx, ownerMember.Id, ownerRole.Id, entity3.WorkspaceId(workspace.Id))
+	err = u.assignRoleUseCase.Execute(
+		ctx,
+		ownerMember.Id,
+		ownerRole.Id,
+		entity3.WorkspaceId(workspace.Id),
+	)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

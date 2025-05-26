@@ -2,6 +2,7 @@ package list_recent_groups
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/group/repository"
 	uberdig "go.uber.org/dig"

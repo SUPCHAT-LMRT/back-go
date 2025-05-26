@@ -1,16 +1,19 @@
 package get_workspace_details
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
-	"net/http"
 )
 
 type GetWorkspaceDetailsHandler struct {
 	useCase *GetWorkspaceDetailsUseCase
 }
 
-func NewGetWorkspaceDetailsHandler(useCase *GetWorkspaceDetailsUseCase) *GetWorkspaceDetailsHandler {
+func NewGetWorkspaceDetailsHandler(
+	useCase *GetWorkspaceDetailsUseCase,
+) *GetWorkspaceDetailsHandler {
 	return &GetWorkspaceDetailsHandler{useCase: useCase}
 }
 

@@ -2,13 +2,14 @@ package repository
 
 import (
 	"context"
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/group/chat_message/entity"
 	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 var (
@@ -34,11 +35,16 @@ type MongoGroupChatMessage struct {
 	CreatedAt time.Time     `bson:"created_at"`
 }
 
-func NewMongoGroupChatMessageRepository(deps MongoChatMessageRepositoryDeps) GroupChatMessageRepository {
+func NewMongoGroupChatMessageRepository(
+	deps MongoChatMessageRepositoryDeps,
+) GroupChatMessageRepository {
 	return &MongoGroupChatMessageRepository{deps: deps}
 }
 
-func (m MongoGroupChatMessageRepository) Create(ctx context.Context, message *entity.GroupChatMessage) error {
+func (m MongoGroupChatMessageRepository) Create(
+	ctx context.Context,
+	message *entity.GroupChatMessage,
+) error {
 	message.Id = entity.GroupChatMessageId(bson.NewObjectID().Hex())
 	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
 
@@ -55,7 +61,10 @@ func (m MongoGroupChatMessageRepository) Create(ctx context.Context, message *en
 	return nil
 }
 
-func (m MongoGroupChatMessageRepository) ListByGroupId(ctx context.Context, groupId group_entity.GroupId) ([]*entity.GroupChatMessage, error) {
+func (m MongoGroupChatMessageRepository) ListByGroupId(
+	ctx context.Context,
+	groupId group_entity.GroupId,
+) ([]*entity.GroupChatMessage, error) {
 	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
 
 	groupObjectId, err := bson.ObjectIDFromHex(string(groupId))

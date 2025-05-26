@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
@@ -32,11 +33,16 @@ type MongoOauthConnection struct {
 	OauthUserId string        `bson:"oauth_user_id"`
 }
 
-func NewMongoOauthConnectionRepository(deps MongoOauthConnectionRepositoryDeps) OauthConnectionRepository {
+func NewMongoOauthConnectionRepository(
+	deps MongoOauthConnectionRepositoryDeps,
+) OauthConnectionRepository {
 	return &MongoOauthConnectionRepository{deps: deps}
 }
 
-func (m MongoOauthConnectionRepository) CreateOauthConnection(ctx context.Context, connection *entity.OauthConnection) error {
+func (m MongoOauthConnectionRepository) CreateOauthConnection(
+	ctx context.Context,
+	connection *entity.OauthConnection,
+) error {
 	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
 
 	connection.Id = entity.OauthConnectionId(bson.NewObjectID().Hex())
@@ -53,7 +59,10 @@ func (m MongoOauthConnectionRepository) CreateOauthConnection(ctx context.Contex
 	return nil
 }
 
-func (m MongoOauthConnectionRepository) GetOauthConnectionByUserId(ctx context.Context, userId string) (*entity.OauthConnection, error) {
+func (m MongoOauthConnectionRepository) GetOauthConnectionByUserId(
+	ctx context.Context,
+	userId string,
+) (*entity.OauthConnection, error) {
 	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
 	filter := bson.M{"oauth_user_id": userId}
 	var mongoConnection MongoOauthConnection
@@ -70,7 +79,10 @@ func (m MongoOauthConnectionRepository) GetOauthConnectionByUserId(ctx context.C
 	return connection, nil
 }
 
-func (m MongoOauthConnectionRepository) ListOauthConnectionsByUser(ctx context.Context, userId user_entity.UserId) ([]*entity.OauthConnection, error) {
+func (m MongoOauthConnectionRepository) ListOauthConnectionsByUser(
+	ctx context.Context,
+	userId user_entity.UserId,
+) ([]*entity.OauthConnection, error) {
 	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
 	filter := bson.M{"user_id": userId}
 	cursor, err := collection.Find(ctx, filter)

@@ -1,9 +1,10 @@
 package list_channels
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
-	"net/http"
 )
 
 type ListChannelsHandler struct {

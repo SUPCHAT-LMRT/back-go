@@ -13,6 +13,7 @@ type AssignRoleToUserHandler struct {
 func NewAssignRoleToUserHandler(useCase *AssignRoleToUserUsecase) *AssignRoleToUserHandler {
 	return &AssignRoleToUserHandler{useCase: useCase}
 }
+
 func (h AssignRoleToUserHandler) Handle(c *gin.Context) {
 	var req AssignRoleToUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -35,7 +36,7 @@ func (h AssignRoleToUserHandler) Handle(c *gin.Context) {
 }
 
 type AssignRoleToUserRequest struct {
-	RoleId      string `json:"role_id" binding:"required,min=1,max=100"`
-	UserId      string `json:"user_id" binding:"required,min=1,max=100"`
+	RoleId      string `json:"role_id"      binding:"required,min=1,max=100"`
+	UserId      string `json:"user_id"      binding:"required,min=1,max=100"`
 	WorkspaceId string `json:"workspace_id" binding:"required,min=1,max=100"`
 }

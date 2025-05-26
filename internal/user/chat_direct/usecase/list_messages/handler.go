@@ -1,14 +1,15 @@
 package list_messages
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_workpace_member"
 	uberdig "go.uber.org/dig"
-	"net/http"
-	"time"
 )
 
 type ListDirectMessagesHandlerDeps struct {
@@ -48,12 +49,17 @@ func (h *ListDirectMessagesHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	directMessages, err := h.deps.UseCase.Execute(c, authenticatedUser.Id, user_entity.UserId(otherUserId), QueryParams{
-		Limit:           query.Limit,
-		Before:          query.Before,
-		After:           query.After,
-		AroundMessageId: chat_direct_entity.ChatDirectId(query.AroundMessageId),
-	})
+	directMessages, err := h.deps.UseCase.Execute(
+		c,
+		authenticatedUser.Id,
+		user_entity.UserId(otherUserId),
+		QueryParams{
+			Limit:           query.Limit,
+			Before:          query.Before,
+			After:           query.After,
+			AroundMessageId: chat_direct_entity.ChatDirectId(query.AroundMessageId),
+		},
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
@@ -71,7 +77,10 @@ func (h *ListDirectMessagesHandler) Handle(c *gin.Context) {
 					continue
 				}
 
-				reactionUsers[k] = DirectMessageReactionUserResponse{Id: userId.String(), Name: userReacted.FullName()}
+				reactionUsers[k] = DirectMessageReactionUserResponse{
+					Id:   userId.String(),
+					Name: userReacted.FullName(),
+				}
 			}
 
 			reactions[j] = DirectMessageReactionResponse{

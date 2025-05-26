@@ -3,6 +3,7 @@ package search
 import (
 	"context"
 	"fmt"
+
 	meilisearch2 "github.com/meilisearch/meilisearch-go"
 	"github.com/supchat-lmrt/back-go/internal/meilisearch"
 	"github.com/supchat-lmrt/back-go/internal/search/channel"
@@ -31,22 +32,35 @@ func NewSearchTermUseCase(deps SearchTermUseCaseDeps) *SearchTermUseCase {
 	return &SearchTermUseCase{deps: deps}
 }
 
-func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string, userInitiator *user_entity.User) ([]*SearchResult, error) {
+func (u SearchTermUseCase) Execute(
+	ctx context.Context,
+	term string,
+	kind string,
+	userInitiator *user_entity.User,
+) ([]*SearchResult, error) {
 	var queries []*meilisearch2.SearchRequest
 	// If no kind is specified, search in all indexes
-	if kind == "message" {
+	switch kind {
+	case "message":
 		queries = []*meilisearch2.SearchRequest{u.messageQuery(term, userInitiator.Id)}
-	} else if kind == "channel" {
+	case "channel":
 		queries = []*meilisearch2.SearchRequest{u.channelQuery(term)}
-	} else if kind == "user" {
+	case "user":
 		queries = []*meilisearch2.SearchRequest{u.userQuery(term)}
-	} else {
-		queries = []*meilisearch2.SearchRequest{u.messageQuery(term, userInitiator.Id), u.channelQuery(term), u.userQuery(term)}
+	default:
+		queries = []*meilisearch2.SearchRequest{
+			u.messageQuery(term, userInitiator.Id),
+			u.channelQuery(term),
+			u.userQuery(term),
+		}
 	}
 
-	searchResponse, err := u.deps.Client.Client.MultiSearchWithContext(ctx, &meilisearch2.MultiSearchRequest{
-		Queries: queries,
-	})
+	searchResponse, err := u.deps.Client.Client.MultiSearchWithContext(
+		ctx,
+		&meilisearch2.MultiSearchRequest{
+			Queries: queries,
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +68,7 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 	var results []*SearchResult
 	for _, response := range searchResponse.Results {
 		for _, hit := range response.Hits {
-			hitMap := hit.(map[string]interface{})
+			hitMap := hit.(map[string]any)
 
 			if response.IndexUID == "messages" {
 				switch hitMap["Kind"].(string) {
@@ -67,7 +81,11 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 					}
 
 					data := result.Data.(message.SearchMessageChannelData)
-					workspaceMember, err := u.deps.GetWorkspaceMemberUseCase.Execute(ctx, data.WorkspaceId, result.AuthorId)
+					workspaceMember, err := u.deps.GetWorkspaceMemberUseCase.Execute(
+						ctx,
+						data.WorkspaceId,
+						result.AuthorId,
+					)
 					if err != nil {
 						return nil, err
 					}
@@ -87,10 +105,14 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 							Content:    result.Content,
 							AuthorId:   result.AuthorId,
 							AuthorName: workspaceMember.Pseudo,
-							Href:       fmt.Sprintf("/workspaces/%s/channels/%s?aroundMessageId=%s", workspaceMember.WorkspaceId, data.ChannelId, result.Id),
+							Href: fmt.Sprintf(
+								"/workspaces/%s/channels/%s?aroundMessageId=%s",
+								workspaceMember.WorkspaceId,
+								data.ChannelId,
+								result.Id,
+							),
 						},
 					})
-					break
 				case string(message.SearchMessageKindDirectMessage):
 					// The message was found in a channel (in a workspace)
 					result := message.SearchMessage{Data: message.SearchMessageDirectData{}}
@@ -120,7 +142,11 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 							Content:    result.Content,
 							AuthorId:   result.AuthorId,
 							AuthorName: user.FullName(),
-							Href:       fmt.Sprintf("/chat/direct/%s?aroundMessageId=%s", otherUserId, result.Id),
+							Href: fmt.Sprintf(
+								"/chat/direct/%s?aroundMessageId=%s",
+								otherUserId,
+								result.Id,
+							),
 						},
 					})
 				}
@@ -140,7 +166,11 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 						Name:  result.Name,
 						Topic: result.Topic,
 						Kind:  u.mapSearchResultChannelKindToChannelKind(result.Kind),
-						Href:  fmt.Sprintf("/workspaces/%s/channels/%s", result.WorkspaceId, result.Id),
+						Href: fmt.Sprintf(
+							"/workspaces/%s/channels/%s",
+							result.WorkspaceId,
+							result.Id,
+						),
 					},
 				})
 			}
@@ -180,12 +210,19 @@ func (u SearchTermUseCase) Execute(ctx context.Context, term string, kind string
 
 // TODO Check if the user has access to this channel (or workspace) in case of channel messages
 // TODO Check if the user is in the group in case of group messages
-func (u SearchTermUseCase) messageQuery(term string, userInitiator user_entity.UserId) *meilisearch2.SearchRequest {
+func (u SearchTermUseCase) messageQuery(
+	term string,
+	userInitiator user_entity.UserId,
+) *meilisearch2.SearchRequest {
 	return &meilisearch2.SearchRequest{
 		IndexUID:              "messages",
 		AttributesToHighlight: []string{"Content"},
 		Query:                 term,
-		Filter:                fmt.Sprintf("(Kind = 'direct' AND (Data.User1 = '%s' OR Data.User2 = '%s')) OR Kind != 'direct'", userInitiator, userInitiator),
+		Filter: fmt.Sprintf(
+			"(Kind = 'direct' AND (Data.User1 = '%s' OR Data.User2 = '%s')) OR Kind != 'direct'",
+			userInitiator,
+			userInitiator,
+		),
 	}
 }
 
@@ -206,7 +243,9 @@ func (u SearchTermUseCase) userQuery(term string) *meilisearch2.SearchRequest {
 	}
 }
 
-func (u SearchTermUseCase) mapSearchResultChannelKindToChannelKind(kind channel.SearchChannelKind) channel_entity.ChannelKind {
+func (u SearchTermUseCase) mapSearchResultChannelKindToChannelKind(
+	kind channel.SearchChannelKind,
+) channel_entity.ChannelKind {
 	switch kind {
 	case channel.SearchChannelKindText:
 		return channel_entity.ChannelKindText

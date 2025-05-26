@@ -1,8 +1,9 @@
 package entity
 
 import (
-	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"time"
+
+	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 )
 
 type ChannelId string

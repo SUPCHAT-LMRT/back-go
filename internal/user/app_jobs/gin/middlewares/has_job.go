@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/repository"
 	permissions2 "github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/permissions"
@@ -24,7 +25,11 @@ func (h *HasJobPermissionsMiddleware) Execute(requiredPermission uint64) gin.Han
 	return func(c *gin.Context) {
 		user := c.MustGet("user").(*user_entity.User)
 
-		hasPermission, err := h.CheckPermissionJobUseCase.Execute(c.Request.Context(), user.Id.String(), requiredPermission)
+		hasPermission, err := h.CheckPermissionJobUseCase.Execute(
+			c.Request.Context(),
+			user.Id.String(),
+			requiredPermission,
+		)
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Internal server error"})
 			c.Abort()

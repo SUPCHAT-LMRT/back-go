@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
@@ -34,7 +35,9 @@ func (m MongoWorkspaceMapper) MapFromEntity(entity *entity.Workspace) (*MongoWor
 	}, nil
 }
 
-func (m MongoWorkspaceMapper) MapToEntity(databaseWorkspace *MongoWorkspace) (*entity.Workspace, error) {
+func (m MongoWorkspaceMapper) MapToEntity(
+	databaseWorkspace *MongoWorkspace,
+) (*entity.Workspace, error) {
 	return &entity.Workspace{
 		Id:      entity.WorkspaceId(databaseWorkspace.Id.Hex()),
 		Name:    databaseWorkspace.Name,

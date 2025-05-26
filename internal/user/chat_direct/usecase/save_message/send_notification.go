@@ -2,6 +2,7 @@ package save_message
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/send_message_notification"
@@ -33,11 +34,14 @@ func (o SendNotificationObserver) NotifyMessageSaved(msg *entity.ChatDirect) {
 		return
 	}
 
-	err = o.deps.SendMessageNotificationUseCase.Execute(context.Background(), send_message_notification.SendMessageNotificationRequest{
-		Content:    msg.Content,
-		SenderName: sender.FullName(),
-		ReceiverId: msg.GetReceiverId(),
-	})
+	err = o.deps.SendMessageNotificationUseCase.Execute(
+		context.Background(),
+		send_message_notification.SendMessageNotificationRequest{
+			Content:    msg.Content,
+			SenderName: sender.FullName(),
+			ReceiverId: msg.GetReceiverId(),
+		},
+	)
 	if err != nil {
 		o.deps.Logger.Error().
 			Str("chat_direct_id", msg.Id.String()).

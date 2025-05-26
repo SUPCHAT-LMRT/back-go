@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
@@ -9,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 var (
@@ -52,7 +53,9 @@ func (m MongoChannelRepository) Create(ctx context.Context, channel *entity.Chan
 		return err
 	}
 
-	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).InsertOne(ctx, mongoChannel)
+	_, err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		InsertOne(ctx, mongoChannel)
 	if err != nil {
 		return err
 	}
@@ -60,15 +63,20 @@ func (m MongoChannelRepository) Create(ctx context.Context, channel *entity.Chan
 	return nil
 }
 
-func (m MongoChannelRepository) GetById(ctx context.Context, id entity.ChannelId) (*entity.Channel, error) {
+func (m MongoChannelRepository) GetById(
+	ctx context.Context,
+	id entity.ChannelId,
+) (*entity.Channel, error) {
 	objectId, err := bson.ObjectIDFromHex(string(id))
-
 	if err != nil {
 		return nil, err
 	}
 
 	var mongoChannel MongoChannel
-	err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"_id": objectId}).Decode(&mongoChannel)
+	err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, bson.M{"_id": objectId}).
+		Decode(&mongoChannel)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +89,10 @@ func (m MongoChannelRepository) GetById(ctx context.Context, id entity.ChannelId
 	return channel, nil
 }
 
-func (m MongoChannelRepository) List(ctx context.Context, workspaceId workspace_entity.WorkspaceId) ([]*entity.Channel, error) {
+func (m MongoChannelRepository) List(
+	ctx context.Context,
+	workspaceId workspace_entity.WorkspaceId,
+) ([]*entity.Channel, error) {
 	workspaceObjectId, err := bson.ObjectIDFromHex(string(workspaceId))
 	if err != nil {
 		return nil, err
@@ -121,13 +132,18 @@ func (m MongoChannelRepository) List(ctx context.Context, workspaceId workspace_
 	return channels, nil
 }
 
-func (m MongoChannelRepository) CountByWorkspaceId(ctx context.Context, id workspace_entity.WorkspaceId) (uint, error) {
+func (m MongoChannelRepository) CountByWorkspaceId(
+	ctx context.Context,
+	id workspace_entity.WorkspaceId,
+) (uint, error) {
 	workspaceObjectId, err := bson.ObjectIDFromHex(string(id))
 	if err != nil {
 		return 0, err
 	}
 
-	count, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).CountDocuments(ctx, bson.M{"workspace_id": workspaceObjectId})
+	count, err := m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		CountDocuments(ctx, bson.M{"workspace_id": workspaceObjectId})
 	if err != nil {
 		return 0, err
 	}
@@ -135,7 +151,11 @@ func (m MongoChannelRepository) CountByWorkspaceId(ctx context.Context, id works
 	return uint(count), nil
 }
 
-func (m MongoChannelRepository) UpdateIndex(ctx context.Context, channelId entity.ChannelId, index int) error {
+func (m MongoChannelRepository) UpdateIndex(
+	ctx context.Context,
+	channelId entity.ChannelId,
+	index int,
+) error {
 	objectId, err := bson.ObjectIDFromHex(string(channelId))
 	if err != nil {
 		return err
@@ -170,7 +190,11 @@ func (m MongoChannelRepository) Delete(ctx context.Context, channelId entity.Cha
 	return err
 }
 
-func (m MongoChannelRepository) ListPrivateChannelsByUser(ctx context.Context, workspaceId workspace_entity.WorkspaceId, userId string) ([]*entity.Channel, error) {
+func (m MongoChannelRepository) ListPrivateChannelsByUser(
+	ctx context.Context,
+	workspaceId workspace_entity.WorkspaceId,
+	userId string,
+) ([]*entity.Channel, error) {
 	workspaceObjectId, err := bson.ObjectIDFromHex(string(workspaceId))
 	if err != nil {
 		return nil, err

@@ -3,6 +3,7 @@ package join_workspace_invite
 import (
 	"context"
 	"errors"
+
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/add_member"
@@ -11,9 +12,7 @@ import (
 	uberdig "go.uber.org/dig"
 )
 
-var (
-	UserAlreadyInWorkspaceErr = errors.New("user is already in workspace")
-)
+var ErrUserAlreadyInWorkspace = errors.New("user is already in workspace")
 
 type JoinWorkspaceInviteUseCaseDeps struct {
 	uberdig.In
@@ -26,25 +25,34 @@ type JoinWorkspaceInviteUseCase struct {
 	deps JoinWorkspaceInviteUseCaseDeps
 }
 
-func NewJoinWorkspaceInviteUseCase(deps JoinWorkspaceInviteUseCaseDeps) *JoinWorkspaceInviteUseCase {
+func NewJoinWorkspaceInviteUseCase(
+	deps JoinWorkspaceInviteUseCaseDeps,
+) *JoinWorkspaceInviteUseCase {
 	return &JoinWorkspaceInviteUseCase{deps: deps}
 }
 
-func (u *JoinWorkspaceInviteUseCase) Execute(ctx context.Context, token string, user *user_entity.User) error {
-
+func (u *JoinWorkspaceInviteUseCase) Execute(
+	ctx context.Context,
+	token string,
+	user *user_entity.User,
+) error {
 	data, err := u.deps.Repository.GetInviteLinkData(ctx, token)
 	if err != nil {
 		return err
 	}
 
 	// Check if user is already in workspace
-	isUserInWorkspace, err := u.deps.IsUserInWorkspaceUseCase.Execute(ctx, data.WorkspaceId, user.Id)
+	isUserInWorkspace, err := u.deps.IsUserInWorkspaceUseCase.Execute(
+		ctx,
+		data.WorkspaceId,
+		user.Id,
+	)
 	if err != nil {
 		return err
 	}
 
 	if isUserInWorkspace {
-		return UserAlreadyInWorkspaceErr
+		return ErrUserAlreadyInWorkspace
 	}
 
 	err = u.deps.AddMemberUseCase.Execute(ctx, data.WorkspaceId, &entity2.WorkspaceMember{

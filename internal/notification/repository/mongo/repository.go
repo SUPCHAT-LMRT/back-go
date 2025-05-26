@@ -3,6 +3,8 @@ package mongo
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"github.com/supchat-lmrt/back-go/internal/notification/entity"
@@ -11,7 +13,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 	mongo2 "go.mongodb.org/mongo-driver/v2/mongo"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 var (
@@ -38,11 +39,16 @@ type MongoNotification struct {
 	UpdatedAt time.Time     `bson:"updated_at"`
 }
 
-func NewMongoNotificationRepository(deps MongoNotificationRepositoryDeps) repository.NotificationRepository {
+func NewMongoNotificationRepository(
+	deps MongoNotificationRepositoryDeps,
+) repository.NotificationRepository {
 	return &MongoNotificationRepository{deps: deps}
 }
 
-func (r MongoNotificationRepository) Create(ctx context.Context, notification *entity.Notification) error {
+func (r MongoNotificationRepository) Create(
+	ctx context.Context,
+	notification *entity.Notification,
+) error {
 	notification.Id = entity.NotificationId(bson.NewObjectID().Hex())
 	notification.CreatedAt = time.Now()
 	notification.UpdatedAt = notification.CreatedAt
@@ -51,7 +57,9 @@ func (r MongoNotificationRepository) Create(ctx context.Context, notification *e
 		return err
 	}
 
-	_, err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).InsertOne(ctx, mongoEntity)
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		InsertOne(ctx, mongoEntity)
 	if err != nil {
 		return err
 	}
@@ -59,17 +67,23 @@ func (r MongoNotificationRepository) Create(ctx context.Context, notification *e
 	return nil
 }
 
-func (r MongoNotificationRepository) GetById(ctx context.Context, notificationId entity.NotificationId) (notification *entity.Notification, err error) {
+func (r MongoNotificationRepository) GetById(
+	ctx context.Context,
+	notificationId entity.NotificationId,
+) (notification *entity.Notification, err error) {
 	notificationObjectId, err := bson.ObjectIDFromHex(notificationId.String())
 	if err != nil {
 		return nil, err
 	}
 
 	var mongoNotification *MongoNotification
-	err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"_id": notificationObjectId}).Decode(&mongoNotification)
+	err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, bson.M{"_id": notificationObjectId}).
+		Decode(&mongoNotification)
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
-			return nil, repository.NotificationNotFoundErr
+			return nil, repository.ErrNotificationNotFound
 		}
 		return nil, err
 	}
@@ -82,8 +96,13 @@ func (r MongoNotificationRepository) GetById(ctx context.Context, notificationId
 	return notification, nil
 }
 
-func (r MongoNotificationRepository) List(ctx context.Context, userId user_entity.UserId) (notifications []*entity.Notification, err error) {
-	cursor, err := r.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{"user_id": userId.String()})
+func (r MongoNotificationRepository) List(
+	ctx context.Context,
+	userId user_entity.UserId,
+) (notifications []*entity.Notification, err error) {
+	cursor, err := r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		Find(ctx, bson.M{"user_id": userId.String()})
 	if err != nil {
 		return nil, err
 	}
@@ -106,16 +125,21 @@ func (r MongoNotificationRepository) List(ctx context.Context, userId user_entit
 	return notifications, nil
 }
 
-func (r MongoNotificationRepository) Update(ctx context.Context, notification *entity.Notification) error {
+func (r MongoNotificationRepository) Update(
+	ctx context.Context,
+	notification *entity.Notification,
+) error {
 	mongoEntity, err := r.deps.NotificationMapper.MapFromEntity(notification)
 	if err != nil {
 		return err
 	}
 
-	_, err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"_id": mongoEntity.Id}, bson.M{"$set": mongoEntity})
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, bson.M{"_id": mongoEntity.Id}, bson.M{"$set": mongoEntity})
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
-			return repository.NotificationNotFoundErr
+			return repository.ErrNotificationNotFound
 		}
 		return err
 	}
@@ -123,16 +147,21 @@ func (r MongoNotificationRepository) Update(ctx context.Context, notification *e
 	return nil
 }
 
-func (r MongoNotificationRepository) Delete(ctx context.Context, notificationId entity.NotificationId) error {
+func (r MongoNotificationRepository) Delete(
+	ctx context.Context,
+	notificationId entity.NotificationId,
+) error {
 	objectId, err := bson.ObjectIDFromHex(notificationId.String())
 	if err != nil {
 		return err
 	}
 
-	_, err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).DeleteOne(ctx, bson.M{"_id": objectId})
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		DeleteOne(ctx, bson.M{"_id": objectId})
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
-			return repository.NotificationNotFoundErr
+			return repository.ErrNotificationNotFound
 		}
 		return err
 	}

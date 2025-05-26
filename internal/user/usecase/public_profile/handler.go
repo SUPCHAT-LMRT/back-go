@@ -1,10 +1,11 @@
 package public_profile
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	uberdig "go.uber.org/dig"
-	"net/http"
 )
 
 type GetPublicProfileHandlerDeps struct {

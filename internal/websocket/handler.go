@@ -1,9 +1,10 @@
 package websocket
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
-	"log"
 )
 
 type WebsocketHandler struct {

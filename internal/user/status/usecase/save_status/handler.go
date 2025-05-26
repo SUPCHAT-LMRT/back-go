@@ -1,10 +1,11 @@
 package save_status
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	user_status_entity "github.com/supchat-lmrt/back-go/internal/user/status/entity"
-	"net/http"
 )
 
 type SaveStatusHandler struct {

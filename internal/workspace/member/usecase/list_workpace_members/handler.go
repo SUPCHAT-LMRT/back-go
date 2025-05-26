@@ -1,13 +1,13 @@
 package list_workpace_members
 
 import (
-	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
-	uberdig "go.uber.org/dig"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	uberdig "go.uber.org/dig"
 )
 
 type ListWorkspaceMembersHandlerDeps struct {
@@ -46,7 +46,12 @@ func (h *ListWorkspaceMembersHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	totalMembers, members, err := h.deps.UseCase.Execute(c, entity.WorkspaceId(workspaceId), limit, page)
+	totalMembers, members, err := h.deps.UseCase.Execute(
+		c,
+		entity.WorkspaceId(workspaceId),
+		limit,
+		page,
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),

@@ -3,14 +3,15 @@ package generate
 import (
 	"context"
 	"errors"
+	"os"
+	"strings"
+
 	"github.com/google/uuid"
 	user_repository "github.com/supchat-lmrt/back-go/internal/user/repository"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_email"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/repository"
 	uberdig "go.uber.org/dig"
-	"os"
-	"strings"
 )
 
 type InviteLinkUseCaseDeps struct {
@@ -28,18 +29,21 @@ func NewInviteLinkUseCase(deps InviteLinkUseCaseDeps) *InviteLinkUseCase {
 	return &InviteLinkUseCase{deps: deps}
 }
 
-func (u *InviteLinkUseCase) CreateInviteLink(ctx context.Context, firstName, lastName, email string) (string, error) {
+func (u *InviteLinkUseCase) CreateInviteLink(
+	ctx context.Context,
+	firstName, lastName, email string,
+) (string, error) {
 	_, err := u.deps.GetUserByEmailUseCase.Execute(ctx, email)
 	if err == nil {
 		return "", errors.New("user already exists")
-	} else if !errors.Is(err, user_repository.UserNotFoundErr) {
+	} else if !errors.Is(err, user_repository.ErrUserNotFound) {
 		return "", err
 	}
 
 	_, err = u.deps.Repository.GetInviteLinkDataByEmail(ctx, email)
 	if err == nil {
 		return "", errors.New("user already invited")
-	} else if !errors.Is(err, repository.InviteLinkNotFoundErr) {
+	} else if !errors.Is(err, repository.ErrInviteLinkNotFound) {
 		return "", err
 	}
 

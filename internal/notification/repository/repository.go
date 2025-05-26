@@ -3,11 +3,12 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/supchat-lmrt/back-go/internal/notification/entity"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 )
 
-var NotificationNotFoundErr = errors.New("notification not found")
+var ErrNotificationNotFound = errors.New("notification not found")
 
 type NotificationRepository interface {
 	Create(ctx context.Context, notification *entity.Notification) error

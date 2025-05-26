@@ -1,16 +1,19 @@
 package update_icon
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
-	"net/http"
 )
 
 type UpdateWorkspaceIconHandler struct {
 	useCase *UpdateWorkspaceIconUseCase
 }
 
-func NewUpdateWorkspaceIconHandler(useCase *UpdateWorkspaceIconUseCase) *UpdateWorkspaceIconHandler {
+func NewUpdateWorkspaceIconHandler(
+	useCase *UpdateWorkspaceIconUseCase,
+) *UpdateWorkspaceIconHandler {
 	return &UpdateWorkspaceIconHandler{useCase: useCase}
 }
 

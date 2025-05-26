@@ -1,10 +1,11 @@
 package get_data_token_invite
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace"
-	"net/http"
 )
 
 type GetInviteLinkWorkspaceDataHandler struct {
@@ -12,8 +13,14 @@ type GetInviteLinkWorkspaceDataHandler struct {
 	getWorkspaceUseCase *get_workspace.GetWorkspaceUseCase
 }
 
-func NewGetInviteLinkWorkspaceDataHandler(usecase *GetInviteLinkDataUseCase, getWorkspaceUseCase *get_workspace.GetWorkspaceUseCase) *GetInviteLinkWorkspaceDataHandler {
-	return &GetInviteLinkWorkspaceDataHandler{usecase: usecase, getWorkspaceUseCase: getWorkspaceUseCase}
+func NewGetInviteLinkWorkspaceDataHandler(
+	usecase *GetInviteLinkDataUseCase,
+	getWorkspaceUseCase *get_workspace.GetWorkspaceUseCase,
+) *GetInviteLinkWorkspaceDataHandler {
+	return &GetInviteLinkWorkspaceDataHandler{
+		usecase:             usecase,
+		getWorkspaceUseCase: getWorkspaceUseCase,
+	}
 }
 
 func (h *GetInviteLinkWorkspaceDataHandler) Handle(c *gin.Context) {

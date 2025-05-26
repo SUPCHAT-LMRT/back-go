@@ -3,6 +3,7 @@ package websocket
 import (
 	"context"
 	"fmt"
+
 	"github.com/goccy/go-json"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
@@ -21,8 +22,7 @@ type RoomData interface {
 	mustImplementRoomData()
 }
 
-type ChannelRoomData struct {
-}
+type ChannelRoomData struct{}
 
 func (ChannelRoomData) mustImplementRoomData() {}
 
@@ -72,9 +72,7 @@ func (room *Room) registerClientInRoom(client *Client) {
 }
 
 func (room *Room) unregisterClientInRoom(client *Client) {
-	if _, ok := room.clients[client]; ok {
-		delete(room.clients, client)
-	}
+	delete(room.clients, client)
 }
 
 func (room *Room) broadcastToClientsInRoom(message []byte) {
@@ -88,7 +86,9 @@ func (room *Room) broadcastToClientsInRoom(message []byte) {
 		return
 	}
 
-	forwardedMessage, err := json.Marshal(ForwardMessage{EmitterServerId: backIdentifier, Payload: message})
+	forwardedMessage, err := json.Marshal(
+		ForwardMessage{EmitterServerId: backIdentifier, Payload: message},
+	)
 	if err != nil {
 		room.deps.Logger.Error().Err(err).Msg("Error on forwarding message to clients")
 		return

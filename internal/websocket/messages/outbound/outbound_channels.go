@@ -1,11 +1,12 @@
 package outbound
 
 import (
+	"time"
+
 	"github.com/goccy/go-json"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
-	"time"
 )
 
 type OutboundChannelCreated struct {

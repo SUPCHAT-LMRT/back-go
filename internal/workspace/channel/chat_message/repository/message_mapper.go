@@ -14,7 +14,9 @@ func NewChannelMessageMapper() mapper.Mapper[*MongoChannelMessage, *entity.Chann
 	return &ChannelMessageMapper{}
 }
 
-func (m ChannelMessageMapper) MapToEntity(mongo *MongoChannelMessage) (*entity.ChannelMessage, error) {
+func (m ChannelMessageMapper) MapToEntity(
+	mongo *MongoChannelMessage,
+) (*entity.ChannelMessage, error) {
 	reactions := make([]*entity.ChannelMessageReaction, len(mongo.Reactions))
 	for i, reaction := range mongo.Reactions {
 		reactionUsers := make([]user_entity.UserId, len(reaction.Users))
@@ -41,7 +43,9 @@ func (m ChannelMessageMapper) MapToEntity(mongo *MongoChannelMessage) (*entity.C
 	}, nil
 }
 
-func (m ChannelMessageMapper) MapFromEntity(entity *entity.ChannelMessage) (*MongoChannelMessage, error) {
+func (m ChannelMessageMapper) MapFromEntity(
+	entity *entity.ChannelMessage,
+) (*MongoChannelMessage, error) {
 	messageObjectId, err := bson.ObjectIDFromHex(string(entity.Id))
 	if err != nil {
 		return nil, err
