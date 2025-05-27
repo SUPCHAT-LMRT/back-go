@@ -348,7 +348,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			channelGroup := specificWorkspaceGroup.Group("/channels")
 			{
 				channelGroup.GET("", d.deps.ListChannelsHandler.Handle)
-				channelGroup.GET("/private/:user_id", d.deps.ListPrivateChannelsHandler.Handle)
+				channelGroup.GET("/private", d.deps.ListPrivateChannelsHandler.Handle)
 				// TODO: add middleware to check if the user can access the channel
 				channelGroup.GET("/:channel_id", d.deps.GetChannelHandler.Handle)
 				channelGroup.GET("/:channel_id/messages", d.deps.ListChannelMessagesHandler.Handle)

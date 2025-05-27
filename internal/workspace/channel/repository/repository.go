@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	workspace_member_entity "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
@@ -17,6 +18,6 @@ type ChannelRepository interface {
 	ListPrivateChannelsByUser(
 		ctx context.Context,
 		workspaceId workspace_entity.WorkspaceId,
-		userId string,
+		memberId workspace_member_entity.WorkspaceMemberId,
 	) ([]*entity.Channel, error)
 }
