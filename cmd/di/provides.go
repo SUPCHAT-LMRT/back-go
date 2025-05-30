@@ -8,6 +8,13 @@ import (
 	"runtime"
 
 	"github.com/supchat-lmrt/back-go/internal/back_identifier/usecase"
+	poll "github.com/supchat-lmrt/back-go/internal/bots/poll/repository"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/create_poll"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/delete_poll"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/get_poll_by_id"
+	get_polls_listpackage "github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/get_polls_list"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/unvote_option_poll"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/vote_option_poll"
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/usecase/list_recent_chats"
 	"github.com/supchat-lmrt/back-go/internal/dig"
 	"github.com/supchat-lmrt/back-go/internal/event"
@@ -533,6 +540,24 @@ func NewDi() *uberdig.Container {
 		),
 		dig.NewProvider(send_message_notification.NewSendMessageNotificationUseCase),
 		dig.NewProvider(permissions2.NewCheckUserPermissionsHandler),
+		// bots
+		// bots repository
+		dig.NewProvider(poll.NewMongoPollMapper),
+		dig.NewProvider(poll.NewMongoPollRepository),
+		// bots usecases
+		dig.NewProvider(create_poll.NewCreatePollUseCase),
+		dig.NewProvider(get_poll_by_id.NewGetPollByIdUseCase),
+		dig.NewProvider(get_polls_listpackage.NewGetPollsListUseCase),
+		dig.NewProvider(delete_poll.NewDeletePollUseCase),
+		dig.NewProvider(vote_option_poll.NewVoteOptionPollUseCase),
+		dig.NewProvider(unvote_option_poll.NewUnvoteOptionPollUseCase),
+		// bots handlers
+		dig.NewProvider(create_poll.NewCreatePollHandler),
+		dig.NewProvider(get_poll_by_id.NewGetPollByIdHandler),
+		dig.NewProvider(get_polls_listpackage.NewGetPollsListHandler),
+		dig.NewProvider(delete_poll.NewDeletePollHandler),
+		dig.NewProvider(vote_option_poll.NewVoteOptionPollHandler),
+		dig.NewProvider(unvote_option_poll.NewUnvoteOptionPollHandler),
 	}
 
 	for _, provider := range providers {

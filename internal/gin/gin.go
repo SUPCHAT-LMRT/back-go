@@ -7,6 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/create_poll"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/delete_poll"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/get_poll_by_id"
+	get_polls_listpackage "github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/get_polls_list"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/unvote_option_poll"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/vote_option_poll"
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/usecase/list_recent_chats"
 	validator2 "github.com/supchat-lmrt/back-go/internal/gin/validator"
 	list_group_chat_messages "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/list_messages"
@@ -187,6 +193,13 @@ type GinRouterDeps struct {
 	UnassignJobHandler          *unassign_job.UnassignJobHandler
 	GetJobForUserHandler        *get_job_for_user.GetJobForUserHandler
 	CheckUserPermissionsHandler *permissions.CheckUserPermissionsHandler
+	// poll
+	CreatePollHandler       *create_poll.CreatePollHandler
+	GetPollByIdHandler      *get_poll_by_id.GetPollByIdHandler
+	GetPollsListHandler     *get_polls_listpackage.GetPollsListHandler
+	DeletePollHandler       *delete_poll.DeletePollHandler
+	VoteOptionPollHandler   *vote_option_poll.VoteOptionPollHandler
+	UnvoteOptionPollHandler *unvote_option_poll.UnvoteOptionPollHandler
 }
 
 func NewGinRouter(deps GinRouterDeps) GinRouter {
@@ -369,6 +382,16 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				roleGroup.POST("/assign", d.deps.AssignRoleHandler.Handle)
 				roleGroup.POST("/dessassign", d.deps.DessassignRoleHandler.Handle)
 				roleGroup.GET("/members/:user_id", d.deps.GetRolesForMemberHandler.Handle)
+			}
+
+			pollGroup := specificWorkspaceGroup.Group("/poll")
+			{
+				pollGroup.POST("", d.deps.CreatePollHandler.Handle)
+				pollGroup.GET("/:poll_id", d.deps.GetPollByIdHandler.Handle)
+				pollGroup.GET("", d.deps.GetPollsListHandler.Handle)
+				pollGroup.DELETE("/:poll_id", d.deps.DeletePollHandler.Handle)
+				pollGroup.POST("/:poll_id/vote/:option_id", d.deps.VoteOptionPollHandler.Handle)
+				pollGroup.POST("/:poll_id/unvote/:option_id", d.deps.UnvoteOptionPollHandler.Handle)
 			}
 		}
 	}
