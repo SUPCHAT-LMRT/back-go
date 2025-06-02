@@ -1,11 +1,11 @@
 package list_private_channels
 
 import (
-	workspace_member_entity "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	workspace_member_entity "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 )
 
 type GetPrivateChannelsHandler struct {
@@ -18,7 +18,11 @@ func NewGetPrivateChannelsHandler(useCase *GetPrivateChannelsUseCase) *GetPrivat
 
 func (h *GetPrivateChannelsHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
-	workspaceMember := c.MustGet("workspace_member").(*workspace_member_entity.WorkspaceMember)
+	workspaceMember, ok := c.MustGet("workspace_member").(*workspace_member_entity.WorkspaceMember)
+	if !ok || workspaceMember == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	if workspaceId == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "workspace_id and user_id are required"})
