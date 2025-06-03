@@ -21,7 +21,7 @@ func NewUpdateWorkspaceIconObserver(deps UpdateWorkspaceIconDeps) SaveIconWorksp
 	return &UpdateWorkspaceIconObserver{deps: deps}
 }
 
-func (o UpdateWorkspaceIconObserver) NotifyUpdateIconWorkspace(workspaces *entity.Workspace) {
+func (o UpdateWorkspaceIconObserver) NotifyUpdateBannerWorkspace(workspaces *entity.Workspace) {
 	o.deps.EventBus.Publish(&event.WorkspaceUpdatedEvent{
 		Workspace: workspaces,
 	})

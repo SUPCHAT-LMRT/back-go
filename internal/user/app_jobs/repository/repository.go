@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 )
@@ -15,6 +16,7 @@ type JobRepository interface {
 	FindAll(ctx context.Context) ([]*entity.Job, error)
 	AssignToUser(ctx context.Context, jobId entity.JobId, userId user_entity.UserId) error
 	UnassignFromUser(ctx context.Context, jobId entity.JobId, userId user_entity.UserId) error
-	EnsureAdminRoleExists(ctx context.Context) (*entity.Job, error)
+	EnsureAdminJobExists(ctx context.Context) (*entity.Job, error)
+	EnsureManagerJobExists(ctx context.Context) (*entity.Job, error)
 	FindByUserId(ctx context.Context, userId string) ([]*entity.Job, error)
 }

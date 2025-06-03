@@ -1,16 +1,19 @@
 package update_type_workspace
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
-	"net/http"
 )
 
 type UpdateTypeWorkspaceHandler struct {
 	useCase *UpdateTypeWorkspaceUseCase
 }
 
-func NewUpdateTypeWorkspaceHandler(useCase *UpdateTypeWorkspaceUseCase) *UpdateTypeWorkspaceHandler {
+func NewUpdateTypeWorkspaceHandler(
+	useCase *UpdateTypeWorkspaceUseCase,
+) *UpdateTypeWorkspaceHandler {
 	return &UpdateTypeWorkspaceHandler{useCase: useCase}
 }
 

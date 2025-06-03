@@ -2,15 +2,14 @@ package update_icon
 
 import (
 	"context"
+	"io"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	uberdig "go.uber.org/dig"
-	"io"
 )
 
-var (
-	WorkspaceNotFoundErr = repository.WorkspaceNotFoundErr
-)
+var WorkspaceNotFoundErr = repository.ErrWorkspaceNotFound
 
 type UpdateWorkspaceIconUseCaseDeps struct {
 	uberdig.In
@@ -23,11 +22,17 @@ type UpdateWorkspaceIconUseCase struct {
 	deps UpdateWorkspaceIconUseCaseDeps
 }
 
-func NewUpdateWorkspaceIconUseCase(deps UpdateWorkspaceIconUseCaseDeps) *UpdateWorkspaceIconUseCase {
+func NewUpdateWorkspaceIconUseCase(
+	deps UpdateWorkspaceIconUseCaseDeps,
+) *UpdateWorkspaceIconUseCase {
 	return &UpdateWorkspaceIconUseCase{deps: deps}
 }
 
-func (u *UpdateWorkspaceIconUseCase) Execute(ctx context.Context, workspaceId entity.WorkspaceId, image UpdateImage) error {
+func (u *UpdateWorkspaceIconUseCase) Execute(
+	ctx context.Context,
+	workspaceId entity.WorkspaceId,
+	image UpdateImage,
+) error {
 	exists, err := u.deps.Repository.ExistsById(ctx, workspaceId)
 	if err != nil {
 		return err
@@ -46,7 +51,7 @@ func (u *UpdateWorkspaceIconUseCase) Execute(ctx context.Context, workspaceId en
 	}
 
 	for _, observer := range u.deps.Observers {
-		observer.NotifyUpdateIconWorkspace(workspace)
+		observer.NotifyUpdateBannerWorkspace(workspace)
 	}
 
 	return nil

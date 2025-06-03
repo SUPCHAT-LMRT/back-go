@@ -14,7 +14,9 @@ func NewGroupChatMessageMapper() mapper.Mapper[*MongoGroupChatMessage, *entity.G
 	return &GroupChatMessageMapper{}
 }
 
-func (m GroupChatMessageMapper) MapToEntity(mongo *MongoGroupChatMessage) (*entity.GroupChatMessage, error) {
+func (m GroupChatMessageMapper) MapToEntity(
+	mongo *MongoGroupChatMessage,
+) (*entity.GroupChatMessage, error) {
 	return &entity.GroupChatMessage{
 		Id:        entity.GroupChatMessageId(mongo.Id.Hex()),
 		GroupId:   group_entity.GroupId(mongo.GroupId.Hex()),
@@ -24,7 +26,9 @@ func (m GroupChatMessageMapper) MapToEntity(mongo *MongoGroupChatMessage) (*enti
 	}, nil
 }
 
-func (m GroupChatMessageMapper) MapFromEntity(entity *entity.GroupChatMessage) (*MongoGroupChatMessage, error) {
+func (m GroupChatMessageMapper) MapFromEntity(
+	entity *entity.GroupChatMessage,
+) (*MongoGroupChatMessage, error) {
 	messageObjectId, err := bson.ObjectIDFromHex(string(entity.Id))
 	if err != nil {
 		return nil, err

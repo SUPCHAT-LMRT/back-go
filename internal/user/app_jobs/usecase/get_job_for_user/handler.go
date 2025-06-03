@@ -1,8 +1,9 @@
 package get_job_for_user
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type GetJobForUserHandler struct {

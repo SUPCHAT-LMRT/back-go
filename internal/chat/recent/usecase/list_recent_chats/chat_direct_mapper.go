@@ -2,6 +2,7 @@ package list_recent_chats
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/entity"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
@@ -13,7 +14,9 @@ type DirectChatMapper struct {
 	getUserByIdUseCase *get_by_id.GetUserByIdUseCase
 }
 
-func NewDirectChatMapper(getUserByIdUseCase *get_by_id.GetUserByIdUseCase) mapper.Mapper[*ChatDirectMapping, *entity.RecentChat] {
+func NewDirectChatMapper(
+	getUserByIdUseCase *get_by_id.GetUserByIdUseCase,
+) mapper.Mapper[*ChatDirectMapping, *entity.RecentChat] {
 	return &DirectChatMapper{getUserByIdUseCase: getUserByIdUseCase}
 }
 

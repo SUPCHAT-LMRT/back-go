@@ -2,18 +2,23 @@ package validate
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"io"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type ValidateForgotPasswordHandler struct {
 	validateForgotPasswordUseCase *ValidateForgotPasswordUseCase
 }
 
-func NewValidateForgotPasswordHandler(validateForgotPasswordUseCase *ValidateForgotPasswordUseCase) *ValidateForgotPasswordHandler {
-	return &ValidateForgotPasswordHandler{validateForgotPasswordUseCase: validateForgotPasswordUseCase}
+func NewValidateForgotPasswordHandler(
+	validateForgotPasswordUseCase *ValidateForgotPasswordUseCase,
+) *ValidateForgotPasswordHandler {
+	return &ValidateForgotPasswordHandler{
+		validateForgotPasswordUseCase: validateForgotPasswordUseCase,
+	}
 }
 
 func (h *ValidateForgotPasswordHandler) Handle(c *gin.Context) {
@@ -57,6 +62,6 @@ func (h *ValidateForgotPasswordHandler) Handle(c *gin.Context) {
 
 type ValidateForgotPasswordRequest struct {
 	Token                   uuid.UUID `json:"token" binding:"required,uuid"`
-	NewPassword             string    `json:"newPassword" binding:"required,min=8"`
+	NewPassword             string    `json:"newPassword" binding:"required"`
 	NewPasswordConfirmation string    `json:"newPasswordConfirmation" binding:"required,eqfield=NewPassword"`
 }

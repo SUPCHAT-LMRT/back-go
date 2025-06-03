@@ -2,8 +2,7 @@ package crypt
 
 import "golang.org/x/crypto/bcrypt"
 
-type BcryptStrategy struct {
-}
+type BcryptStrategy struct{}
 
 func NewBcryptStrategy() CryptStrategy {
 	return &BcryptStrategy{}

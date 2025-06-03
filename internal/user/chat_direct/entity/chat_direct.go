@@ -1,8 +1,9 @@
 package entity
 
 import (
-	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"time"
+
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 )
 
 type ChatDirectId string

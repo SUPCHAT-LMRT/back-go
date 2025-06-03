@@ -3,6 +3,7 @@ package update_info_workspaces
 import (
 	"context"
 	"errors"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	uberdig "go.uber.org/dig"
@@ -18,11 +19,17 @@ type UpdateInfoWorkspacesUseCase struct {
 	deps UpdateInfoWorkspacesUseCaseDeps
 }
 
-func NewUpdateInfoWorkspacesUseCase(deps UpdateInfoWorkspacesUseCaseDeps) *UpdateInfoWorkspacesUseCase {
+func NewUpdateInfoWorkspacesUseCase(
+	deps UpdateInfoWorkspacesUseCaseDeps,
+) *UpdateInfoWorkspacesUseCase {
 	return &UpdateInfoWorkspacesUseCase{deps: deps}
 }
 
-func (u *UpdateInfoWorkspacesUseCase) Execute(ctx context.Context, workspaceId entity.WorkspaceId, name, topic string) error {
+func (u *UpdateInfoWorkspacesUseCase) Execute(
+	ctx context.Context,
+	workspaceId entity.WorkspaceId,
+	name, topic string,
+) error {
 	if name == "" {
 		return errors.New("name is required")
 	}

@@ -6,7 +6,10 @@ import (
 )
 
 type ReorderIndexChannelsObserver interface {
-	NotifyChannelReordered(channels []ChannelReorderMessage, workspaceId workspace_entity.WorkspaceId)
+	NotifyChannelReordered(
+		channels []ChannelReorderMessage,
+		workspaceId workspace_entity.WorkspaceId,
+	)
 }
 
 type ChannelReorderMessage struct {

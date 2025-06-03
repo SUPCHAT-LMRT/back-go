@@ -3,6 +3,7 @@ package update_job
 import (
 	"context"
 	"fmt"
+
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/repository"
 )
@@ -15,7 +16,11 @@ func NewUpdateJobUseCase(repo repository.JobRepository) *UpdateJobUseCase {
 	return &UpdateJobUseCase{repo: repo}
 }
 
-func (uc *UpdateJobUseCase) Execute(ctx context.Context, jobId entity.JobId, name string) (*entity.Job, error) {
+func (uc *UpdateJobUseCase) Execute(
+	ctx context.Context,
+	jobId entity.JobId,
+	name string,
+) (*entity.Job, error) {
 	// Vérifier si le job existe
 	job, err := uc.repo.FindById(ctx, jobId)
 	if err != nil {

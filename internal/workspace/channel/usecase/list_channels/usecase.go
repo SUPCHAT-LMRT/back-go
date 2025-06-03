@@ -2,6 +2,7 @@ package list_channels
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
@@ -15,6 +16,9 @@ func NewListChannelsUseCase(repository repository.ChannelRepository) *ListChanne
 	return &ListChannelsUseCase{repository: repository}
 }
 
-func (u *ListChannelsUseCase) Execute(ctx context.Context, workspaceId workspace_entity.WorkspaceId) ([]*entity.Channel, error) {
+func (u *ListChannelsUseCase) Execute(
+	ctx context.Context,
+	workspaceId workspace_entity.WorkspaceId,
+) ([]*entity.Channel, error) {
 	return u.repository.List(ctx, workspaceId)
 }

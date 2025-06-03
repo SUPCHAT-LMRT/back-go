@@ -1,17 +1,20 @@
 package get_minutely
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 )
 
 type GetMinutelyMessageSentHandler struct {
 	useCase *GetMinutelyMessageSentUseCase
 }
 
-func NewGetMinutelyMessageSentHandler(useCase *GetMinutelyMessageSentUseCase) *GetMinutelyMessageSentHandler {
+func NewGetMinutelyMessageSentHandler(
+	useCase *GetMinutelyMessageSentUseCase,
+) *GetMinutelyMessageSentHandler {
 	return &GetMinutelyMessageSentHandler{useCase: useCase}
 }
 
@@ -22,7 +25,12 @@ func (h GetMinutelyMessageSentHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	messageSents, err := h.useCase.Execute(c, entity.WorkspaceId(workspaceId), time.Now(), time.Now())
+	messageSents, err := h.useCase.Execute(
+		c,
+		entity.WorkspaceId(workspaceId),
+		time.Now(),
+		time.Now(),
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

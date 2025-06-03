@@ -27,7 +27,12 @@ func (h *HasPermissionsMiddleware) Execute(permissions uint64) gin.HandlerFunc {
 			return
 		}
 
-		hasPermission, err := h.checkPermissionUseCase.Execute(c, workspaceMember.Id, entity.WorkspaceId(workspaceId), permissions)
+		hasPermission, err := h.checkPermissionUseCase.Execute(
+			c,
+			workspaceMember.Id,
+			entity.WorkspaceId(workspaceId),
+			permissions,
+		)
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Internal server error"})
 			c.Abort()

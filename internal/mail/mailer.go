@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
-	"github.com/google/uuid"
 	"mime"
 	"mime/multipart"
 	"net"
@@ -15,6 +14,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Mailer struct {
@@ -252,9 +253,9 @@ func (m *Message) Bytes() []byte {
 		buf.WriteString("Cc: " + strings.Join(m.Cc, ",") + "\r\n")
 	}
 
-	//fix Encode
-	var coder = base64.StdEncoding
-	var subject = "=?UTF-8?B?" + coder.EncodeToString([]byte(m.Subject)) + "?="
+	// fix Encode
+	coder := base64.StdEncoding
+	subject := "=?UTF-8?B?" + coder.EncodeToString([]byte(m.Subject)) + "?="
 	buf.WriteString("Subject: " + subject + "\r\n")
 
 	if len(m.ReplyTo) > 0 {
@@ -266,7 +267,7 @@ func (m *Message) Bytes() []byte {
 	// Add custom headers
 	if len(m.Headers) > 0 {
 		for _, header := range m.Headers {
-			buf.WriteString(fmt.Sprintf("%s: %s\r\n", header.Key, header.Value))
+			fmt.Fprintf(buf, "%s: %s\r\n", header.Key, header.Value)
 		}
 	}
 
@@ -278,7 +279,7 @@ func (m *Message) Bytes() []byte {
 		buf.WriteString("\r\n--" + boundary + "\r\n")
 	}
 
-	buf.WriteString(fmt.Sprintf("Content-Type: %s; charset=utf-8\r\n\r\n", m.BodyContentType))
+	fmt.Fprintf(buf, "Content-Type: %s; charset=utf-8\r\n\r\n", m.BodyContentType)
 	buf.WriteString(m.Body)
 	buf.WriteString("\r\n")
 
@@ -288,7 +289,9 @@ func (m *Message) Bytes() []byte {
 
 			if attachment.Inline {
 				buf.WriteString("Content-Type: message/rfc822\r\n")
-				buf.WriteString("Content-Disposition: inline; filename=\"" + attachment.Filename + "\"\r\n\r\n")
+				buf.WriteString(
+					"Content-Disposition: inline; filename=\"" + attachment.Filename + "\"\r\n\r\n",
+				)
 
 				buf.Write(attachment.Data)
 			} else {

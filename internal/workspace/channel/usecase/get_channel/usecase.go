@@ -2,6 +2,7 @@ package get_channel
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
 )
@@ -14,6 +15,9 @@ func NewGetChannelUseCase(repository repository.ChannelRepository) *GetChannelUs
 	return &GetChannelUseCase{repository: repository}
 }
 
-func (u *GetChannelUseCase) Execute(ctx context.Context, channelId entity.ChannelId) (*entity.Channel, error) {
+func (u *GetChannelUseCase) Execute(
+	ctx context.Context,
+	channelId entity.ChannelId,
+) (*entity.Channel, error) {
 	return u.repository.GetById(ctx, channelId)
 }

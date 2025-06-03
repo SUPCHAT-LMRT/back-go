@@ -1,9 +1,10 @@
 package token
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
+
+	"github.com/gin-gonic/gin"
 )
 
 type RefreshTokenHandler struct {
@@ -32,7 +33,15 @@ func (g *RefreshTokenHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("accessToken", response.AccessToken, int(response.AccessTokenLifespan.Seconds()), "/", os.Getenv("DOMAIN"), false, true)
+	c.SetCookie(
+		"accessToken",
+		response.AccessToken,
+		int(response.AccessTokenLifespan.Seconds()),
+		"/",
+		os.Getenv("DOMAIN"),
+		false,
+		true,
+	)
 
 	c.Status(http.StatusNoContent)
 }

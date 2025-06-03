@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	user_repository "github.com/supchat-lmrt/back-go/internal/user/repository"
@@ -10,8 +11,14 @@ import (
 )
 
 type ForgotPasswordService interface {
-	CreateForgotPasswordRequest(ctx context.Context, userId user_entity.UserId) (*entity.ForgotPasswordRequest, error)
-	DeleteForgotPasswordRequest(ctx context.Context, validationToken uuid.UUID) (*user_entity.User, error)
+	CreateForgotPasswordRequest(
+		ctx context.Context,
+		userId user_entity.UserId,
+	) (*entity.ForgotPasswordRequest, error)
+	DeleteForgotPasswordRequest(
+		ctx context.Context,
+		validationToken uuid.UUID,
+	) (*user_entity.User, error)
 }
 
 type DefaultValidationRequestService struct {
@@ -19,15 +26,24 @@ type DefaultValidationRequestService struct {
 	userRepository                  user_repository.UserRepository
 }
 
-func NewDefaultForgotPasswordRequestService(validationRequestRepository repository.ForgotPasswordRepository, userRepository user_repository.UserRepository) ForgotPasswordService {
+func NewDefaultForgotPasswordRequestService(
+	validationRequestRepository repository.ForgotPasswordRepository,
+	userRepository user_repository.UserRepository,
+) ForgotPasswordService {
 	return &DefaultValidationRequestService{
 		forgotPasswordRequestRepository: validationRequestRepository,
 		userRepository:                  userRepository,
 	}
 }
 
-func (s *DefaultValidationRequestService) CreateForgotPasswordRequest(ctx context.Context, userId user_entity.UserId) (*entity.ForgotPasswordRequest, error) {
-	validationRequestData, err := s.forgotPasswordRequestRepository.CreateForgotPasswordRequest(ctx, userId)
+func (s *DefaultValidationRequestService) CreateForgotPasswordRequest(
+	ctx context.Context,
+	userId user_entity.UserId,
+) (*entity.ForgotPasswordRequest, error) {
+	validationRequestData, err := s.forgotPasswordRequestRepository.CreateForgotPasswordRequest(
+		ctx,
+		userId,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +59,14 @@ func (s *DefaultValidationRequestService) CreateForgotPasswordRequest(ctx contex
 	}, nil
 }
 
-func (s *DefaultValidationRequestService) DeleteForgotPasswordRequest(ctx context.Context, validationToken uuid.UUID) (*user_entity.User, error) {
-	userId, err := s.forgotPasswordRequestRepository.DeleteForgotPasswordRequest(ctx, validationToken)
+func (s *DefaultValidationRequestService) DeleteForgotPasswordRequest(
+	ctx context.Context,
+	validationToken uuid.UUID,
+) (*user_entity.User, error) {
+	userId, err := s.forgotPasswordRequestRepository.DeleteForgotPasswordRequest(
+		ctx,
+		validationToken,
+	)
 	if err != nil {
 		return nil, err
 	}

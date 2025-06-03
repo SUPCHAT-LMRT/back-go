@@ -2,40 +2,52 @@ package update_banner
 
 import (
 	"context"
+	"io"
+
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	uberdig "go.uber.org/dig"
-	"io"
 )
 
-var (
-	WorkspaceNotFoundErr = repository.WorkspaceNotFoundErr
-)
+var WorkspaceNotFoundErr = repository.ErrWorkspaceNotFound
 
 type UpdateWorkspaceBannerUseCaseDeps struct {
 	uberdig.In
 	Strategy   UpdateWorkspaceBannerStrategy
 	Repository repository.WorkspaceRepository
+	Observers  []SaveBannerWorkspaceObserver `group:"save_banner_workspace_observers"`
 }
 
 type UpdateWorkspaceBannerUseCase struct {
 	deps UpdateWorkspaceBannerUseCaseDeps
 }
 
-func NewUpdateWorkspaceBannerUseCase(deps UpdateWorkspaceBannerUseCaseDeps) *UpdateWorkspaceBannerUseCase {
+func NewUpdateWorkspaceBannerUseCase(
+	deps UpdateWorkspaceBannerUseCaseDeps,
+) *UpdateWorkspaceBannerUseCase {
 	return &UpdateWorkspaceBannerUseCase{deps: deps}
 }
 
-func (u *UpdateWorkspaceBannerUseCase) Execute(ctx context.Context, workspaceId entity.WorkspaceId, image UpdateImage) error {
-	exists, err := u.deps.Repository.ExistsById(ctx, workspaceId)
+func (u *UpdateWorkspaceBannerUseCase) Execute(
+	ctx context.Context,
+	workspaceId entity.WorkspaceId,
+	image UpdateImage,
+) error {
+	workspace, err := u.deps.Repository.GetById(ctx, workspaceId)
 	if err != nil {
 		return err
 	}
-	if !exists {
-		return WorkspaceNotFoundErr
+
+	err = u.deps.Strategy.Handle(ctx, workspaceId, image.ImageReader, image.ContentType)
+	if err != nil {
+		return err
 	}
 
-	return u.deps.Strategy.Handle(ctx, workspaceId, image.ImageReader, image.ContentType)
+	for _, observer := range u.deps.Observers {
+		observer.NotifyUpdateBannerWorkspace(workspace)
+	}
+
+	return nil
 }
 
 type UpdateImage struct {

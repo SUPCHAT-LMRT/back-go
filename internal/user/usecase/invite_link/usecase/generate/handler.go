@@ -1,14 +1,15 @@
 package generate
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type CreateInviteLinkRequest struct {
 	FirstName string `json:"firstName" binding:"required"`
-	LastName  string `json:"lastName" binding:"required"`
-	Email     string `json:"email" binding:"required,email"`
+	LastName  string `json:"lastName"  binding:"required"`
+	Email     string `json:"email"     binding:"required,email"`
 }
 
 type CreateInviteLinkHandler struct {

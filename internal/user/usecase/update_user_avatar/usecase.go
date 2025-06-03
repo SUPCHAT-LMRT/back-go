@@ -2,9 +2,10 @@ package update_user_avatar
 
 import (
 	"context"
+	"io"
+
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	uberdig "go.uber.org/dig"
-	"io"
 )
 
 type UpdateUserAvatarUseCaseDeps struct {
@@ -20,7 +21,11 @@ func NewUpdateUserAvatarUseCase(deps UpdateUserAvatarUseCaseDeps) *UpdateUserAva
 	return &UpdateUserAvatarUseCase{deps: deps}
 }
 
-func (u *UpdateUserAvatarUseCase) Execute(ctx context.Context, userId entity.UserId, updateAvatar UpdateAvatar) error {
+func (u *UpdateUserAvatarUseCase) Execute(
+	ctx context.Context,
+	userId entity.UserId,
+	updateAvatar UpdateAvatar,
+) error {
 	return u.deps.Strategy.Handle(ctx, userId, updateAvatar.ImageReader, updateAvatar.ContentType)
 }
 

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/status/entity"
 )

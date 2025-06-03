@@ -1,9 +1,10 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/invite_link/entity"
-	"time"
 )
 
 type RedisInviteLinkMapper struct{}
@@ -22,7 +23,9 @@ func (m RedisInviteLinkMapper) MapFromEntity(entity *entity.InviteLink) (map[str
 	}, nil
 }
 
-func (m RedisInviteLinkMapper) MapToEntity(databaseInviteLink map[string]string) (*entity.InviteLink, error) {
+func (m RedisInviteLinkMapper) MapToEntity(
+	databaseInviteLink map[string]string,
+) (*entity.InviteLink, error) {
 	expiresAt, err := time.Parse(time.RFC3339, databaseInviteLink["expires_at"])
 	if err != nil {
 		return nil, err

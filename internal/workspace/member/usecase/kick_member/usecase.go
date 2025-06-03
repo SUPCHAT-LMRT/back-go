@@ -3,6 +3,7 @@ package kick_member
 import (
 	"context"
 	"errors"
+
 	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	entity3 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/repository"
@@ -18,7 +19,11 @@ func NewKickMemberUseCase(repo repository.WorkspaceMemberRepository) *KickMember
 	return &KickMemberUseCase{WorkspaceMemberRepository: repo}
 }
 
-func (u *KickMemberUseCase) Execute(ctx context.Context, workspaceId entity2.WorkspaceId, memberId entity3.WorkspaceMemberId) error {
+func (u *KickMemberUseCase) Execute(
+	ctx context.Context,
+	workspaceId entity2.WorkspaceId,
+	memberId entity3.WorkspaceMemberId,
+) error {
 	exists, err := u.WorkspaceMemberRepository.IsMemberExists(ctx, workspaceId, memberId)
 	if err != nil {
 		return err

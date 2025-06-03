@@ -2,6 +2,7 @@ package save_message
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/search/message"
 	chat_message_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/entity"
 	chat_message_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/repository"
@@ -29,7 +30,10 @@ func NewSaveChannelMessageUseCase(deps SaveChannelMessageUseCaseDeps) *SaveChann
 	return &SaveChannelMessageUseCase{deps: deps}
 }
 
-func (u SaveChannelMessageUseCase) Execute(ctx context.Context, msg *chat_message_entity.ChannelMessage) error {
+func (u SaveChannelMessageUseCase) Execute(
+	ctx context.Context,
+	msg *chat_message_entity.ChannelMessage,
+) error {
 	err := u.deps.Repository.Create(ctx, msg)
 	if err != nil {
 		return err
@@ -40,7 +44,11 @@ func (u SaveChannelMessageUseCase) Execute(ctx context.Context, msg *chat_messag
 		return err
 	}
 
-	workspaceMember, err := u.deps.GetWorkspaceMemberUseCase.Execute(ctx, channel.WorkspaceId, msg.AuthorId)
+	workspaceMember, err := u.deps.GetWorkspaceMemberUseCase.Execute(
+		ctx,
+		channel.WorkspaceId,
+		msg.AuthorId,
+	)
 	if err != nil {
 		return err
 	}

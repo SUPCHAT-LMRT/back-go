@@ -1,0 +1,31 @@
+version = "2"
+
+[issues]
+fix = true
+
+[linters.settings.errcheck]
+exclude-functions = [
+  "(*go.mongodb.org/mongo-driver/mongo.Cursor).Close"
+]
+
+[[linters.exclusions.rules]]
+linters = [ "errcheck" ]
+source = "^\\s*defer\\s+"
+
+[formatters]
+enable = [
+  "gci",
+  "gofmt",
+  "gofumpt",
+  "goimports",
+  "golines"
+]
+[formatters.settings.gofmt]
+# Simplify code: gofmt with `-s` option.
+simplify = true
+[[formatters.settings.gofmt.rewrite-rules]]
+pattern = "interface{}"
+replacement = "any"
+[[formatters.settings.gofmt.rewrite-rules]]
+pattern = "a[b:len(a)]"
+replacement = "a[b:]"

@@ -3,6 +3,12 @@ package websocket
 import (
 	"context"
 	"fmt"
+	"log"
+	"reflect"
+	"strings"
+	"sync/atomic"
+	"time"
+
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -16,11 +22,6 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/entity"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"log"
-	"reflect"
-	"strings"
-	"sync/atomic"
-	"time"
 )
 
 const (
@@ -72,7 +73,7 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 
 	message.SetId(uuid.NewString())
 	message.SetCreatedAt(time.Now())
-	//message.SetEmittedBy(c)
+	// message.SetEmittedBy(c)
 
 	c.wsServer.Deps.Logger.Info().
 		Str("action", string(message.Action)).
@@ -88,7 +89,6 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 			return
 		}
 		c.handleJoinChannelRoomMessage(&joinChannelMessage)
-		break
 	case messages.InboundJoinDirectRoomAction:
 		joinDirectRoomMessage := inbound.InboundJoinDirectRoom{DefaultMessage: message}
 		if err := json.Unmarshal(jsonMessage, &joinDirectRoomMessage); err != nil {
@@ -96,7 +96,6 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 			return
 		}
 		c.handleJoinDirectRoomMessage(&joinDirectRoomMessage)
-		break
 	case messages.InboundSendChannelMessageAction:
 		sendMessage := inbound.InboundSendMessageToChannel{DefaultMessage: message}
 		if err := json.Unmarshal(jsonMessage, &sendMessage); err != nil {
@@ -105,7 +104,6 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 		}
 
 		c.handleSendMessageToChannel(&sendMessage)
-		break
 	case messages.InboundSendDirectMessageAction:
 		sendMessage := inbound.InboundSendDirectMessage{DefaultMessage: message}
 		if err := json.Unmarshal(jsonMessage, &sendMessage); err != nil {
@@ -113,7 +111,6 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 			return
 		}
 		c.handleSendDirectMessage(&sendMessage)
-		break
 	case messages.InboundSelectWorkspaceAction:
 		selectWorkspaceMessage := inbound.InboundSelectWorkspace{DefaultMessage: message}
 		if err := json.Unmarshal(jsonMessage, &selectWorkspaceMessage); err != nil {
@@ -122,7 +119,6 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 		}
 
 		c.handleSelectWorkspaceMessage(&selectWorkspaceMessage)
-		break
 	case messages.InboundUnselectWorkspaceAction:
 		unselectWorkspaceMessage := inbound.InboundUnselectWorkspace{DefaultMessage: message}
 		if err := json.Unmarshal(jsonMessage, &unselectWorkspaceMessage); err != nil {
@@ -131,7 +127,6 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 		}
 
 		c.handleUnselectWorkspaceMessage(&unselectWorkspaceMessage)
-		break
 	case messages.InboundLeaveRoomAction:
 		leaveRoomMessage := inbound.InboundLeaveRoom{DefaultMessage: message}
 		if err := json.Unmarshal(jsonMessage, &leaveRoomMessage); err != nil {
@@ -140,7 +135,6 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 		}
 
 		c.handleLeaveRoomMessage(&leaveRoomMessage)
-		break
 	case messages.InboundChannelMessageReactionToggle:
 		reactionMessage := inbound.InboundChannelMessageReactionToggle{DefaultMessage: message}
 		if err := json.Unmarshal(jsonMessage, &reactionMessage); err != nil {
@@ -149,7 +143,6 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 		}
 
 		c.handleChannelMessageReactionToggleMessage(&reactionMessage)
-		break
 	case messages.InboundDirectMessageReactionToggle:
 		reactionMessage := inbound.InboundDirectMessageReactionToggle{DefaultMessage: message}
 		if err := json.Unmarshal(jsonMessage, &reactionMessage); err != nil {
@@ -157,7 +150,6 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 			return
 		}
 		c.handleDirectMessageReactionToggleMessage(&reactionMessage)
-		break
 	default:
 		log.Printf("Unknown action %s", message.Action)
 	}
@@ -202,7 +194,6 @@ func (c *Client) handleSendMessageToChannel(message *inbound.InboundSendMessageT
 			observer.OnSendMessage(message, entity.ChannelMessageId(messageId), c.UserId)
 		}
 	}
-
 }
 
 func (c *Client) handleSendDirectMessage(message *inbound.InboundSendDirectMessage) {
@@ -269,9 +260,7 @@ func (c *Client) handleLeaveRoomMessage(message *inbound.InboundLeaveRoom) {
 		return
 	}
 
-	if _, ok := c.rooms[foundRoom]; ok {
-		delete(c.rooms, foundRoom)
-	}
+	delete(c.rooms, foundRoom)
 
 	foundRoom.unregister <- c
 }
@@ -303,7 +292,9 @@ func (c *Client) handleUnselectWorkspaceMessage(message *inbound.InboundUnselect
 //	target.joinRoom(roomName, DirectRoomKind, c)
 //}
 
-func (c *Client) handleChannelMessageReactionToggleMessage(message *inbound.InboundChannelMessageReactionToggle) {
+func (c *Client) handleChannelMessageReactionToggleMessage(
+	message *inbound.InboundChannelMessageReactionToggle,
+) {
 	// The send-message action, this will send messages to a specific room now.
 	// Which room wil depend on the message Target
 	roomId := message.RoomId
@@ -320,7 +311,12 @@ func (c *Client) handleChannelMessageReactionToggleMessage(message *inbound.Inbo
 			return
 		}
 
-		added, err := c.wsServer.Deps.ToggleReactionChannelMessageUseCase.Execute(context.Background(), entity.ChannelMessageId(message.MessageId), c.UserId, message.Reaction)
+		added, err := c.wsServer.Deps.ToggleReactionChannelMessageUseCase.Execute(
+			context.Background(),
+			entity.ChannelMessageId(message.MessageId),
+			c.UserId,
+			message.Reaction,
+		)
 		if err != nil {
 			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on creating reaction")
 			return
@@ -350,7 +346,9 @@ func (c *Client) handleChannelMessageReactionToggleMessage(message *inbound.Inbo
 	}
 }
 
-func (c *Client) handleDirectMessageReactionToggleMessage(message *inbound.InboundDirectMessageReactionToggle) {
+func (c *Client) handleDirectMessageReactionToggleMessage(
+	message *inbound.InboundDirectMessageReactionToggle,
+) {
 	// The send-message action, this will send messages to a specific room now.
 	// Which room wil depend on the message Target
 	roomId := utils.BuildDirectMessageRoomId(c.UserId, message.OtherUserId)
@@ -367,7 +365,12 @@ func (c *Client) handleDirectMessageReactionToggleMessage(message *inbound.Inbou
 			return
 		}
 
-		added, err := c.wsServer.Deps.ToggleReactionDirectMessageUseCase.Execute(context.Background(), chat_direct_entity.ChatDirectId(message.MessageId), c.UserId, message.Reaction)
+		added, err := c.wsServer.Deps.ToggleReactionDirectMessageUseCase.Execute(
+			context.Background(),
+			chat_direct_entity.ChatDirectId(message.MessageId),
+			c.UserId,
+			message.Reaction,
+		)
 		if err != nil {
 			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on creating reaction")
 			return
@@ -448,7 +451,10 @@ func (c *Client) notifyRoomJoined(r *Room) {
 	}
 
 	if message == nil {
-		c.wsServer.Deps.Logger.Warn().Any("data", r.Data).Str("data_type", reflect.TypeOf(r.Data).String()).Msg("Unknown room data")
+		c.wsServer.Deps.Logger.Warn().
+			Any("data", r.Data).
+			Str("data_type", reflect.TypeOf(r.Data).String()).
+			Msg("Unknown room data")
 		return
 	}
 
@@ -474,14 +480,18 @@ func (c *Client) ReadPump() {
 	defer c.disconnect()
 
 	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	_ = c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error {
-		c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		_ = c.conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
 
 	// Set the user status to offline
-	err := c.wsServer.Deps.SaveStatusUseCase.Execute(context.Background(), c.UserId, user_status_entity.StatusOnline)
+	err := c.wsServer.Deps.SaveStatusUseCase.Execute(
+		context.Background(),
+		c.UserId,
+		user_status_entity.StatusOnline,
+	)
 	if err != nil {
 		c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on setting user status to online")
 		return
@@ -490,7 +500,11 @@ func (c *Client) ReadPump() {
 	for {
 		_, jsonMessage, err := c.conn.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+			if websocket.IsUnexpectedCloseError(
+				err,
+				websocket.CloseGoingAway,
+				websocket.CloseAbnormalClosure,
+			) {
 				log.Printf("unexpected close error: %v", err)
 			}
 			break
@@ -500,24 +514,22 @@ func (c *Client) ReadPump() {
 	}
 }
 
-var (
-	newline = []byte{'\n'}
-)
+var newline = []byte{'\n'}
 
 func (c *Client) WritePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.conn.Close()
+		_ = c.conn.Close()
 	}()
 
 	for {
 		select {
 		case message, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The WsServer closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
@@ -525,13 +537,13 @@ func (c *Client) WritePump() {
 			if err != nil {
 				return
 			}
-			w.Write(message)
+			_, _ = w.Write(message)
 
 			// Attach queued chat messages to the current websocket message.
 			n := len(c.send)
 			for i := 0; i < n; i++ {
-				w.Write(newline)
-				w.Write(<-c.send)
+				_, _ = w.Write(newline)
+				_, _ = w.Write(<-c.send)
 			}
 
 			if err = w.Close(); err != nil {
@@ -539,7 +551,7 @@ func (c *Client) WritePump() {
 				return
 			}
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
@@ -553,24 +565,37 @@ func (c *Client) disconnect() {
 		iteratedRoom.unregister <- c
 	}
 	close(c.send)
-	c.conn.Close()
+	_ = c.conn.Close()
 
 	// Set the user status to offline
-	err := c.wsServer.Deps.SaveStatusUseCase.Execute(context.Background(), c.UserId, user_status_entity.StatusOffline)
+	err := c.wsServer.Deps.SaveStatusUseCase.Execute(
+		context.Background(),
+		c.UserId,
+		user_status_entity.StatusOffline,
+	)
 	if err != nil {
 		c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on setting user status to offline")
 		return
 	}
 }
 
-func (c *Client) toOutboundSendChannelMessageSender(roomId string) (*outbound.OutboundSendMessageToChannelSender, error) {
+func (c *Client) toOutboundSendChannelMessageSender(
+	roomId string,
+) (*outbound.OutboundSendMessageToChannelSender, error) {
 	// The room id is the channel id
-	channel, err := c.wsServer.Deps.GetChannelUseCase.Execute(context.Background(), channel_entity.ChannelId(roomId))
+	channel, err := c.wsServer.Deps.GetChannelUseCase.Execute(
+		context.Background(),
+		channel_entity.ChannelId(roomId),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	workspaceMember, err := c.wsServer.Deps.GetWorkspaceMemberUseCase.Execute(context.Background(), channel.WorkspaceId, c.UserId)
+	workspaceMember, err := c.wsServer.Deps.GetWorkspaceMemberUseCase.Execute(
+		context.Background(),
+		channel.WorkspaceId,
+		c.UserId,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -580,43 +605,37 @@ func (c *Client) toOutboundSendChannelMessageSender(roomId string) (*outbound.Ou
 		return nil, err
 	}
 
-	username := workspaceMember.Pseudo
-	if username == "" {
-		username = user.FullName()
-	}
-
 	return &outbound.OutboundSendMessageToChannelSender{
 		UserId:            user.Id,
 		Pseudo:            user.FullName(),
 		WorkspaceMemberId: workspaceMember.Id,
-		WorkspacePseudo:   username,
+		WorkspacePseudo:   user.FullName(),
 	}, nil
 }
 
-func (c *Client) toOutboundChannelMessageReactionMember(roomId string) (*outbound.OutboundChannelMessageReactionMember, error) {
-	channel, err := c.wsServer.Deps.GetChannelUseCase.Execute(context.Background(), channel_entity.ChannelId(roomId))
+func (c *Client) toOutboundChannelMessageReactionMember(
+	roomId string,
+) (*outbound.OutboundChannelMessageReactionMember, error) {
+	channel, err := c.wsServer.Deps.GetChannelUseCase.Execute(
+		context.Background(),
+		channel_entity.ChannelId(roomId),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	workspaceMember, err := c.wsServer.Deps.GetWorkspaceMemberUseCase.Execute(context.Background(), channel.WorkspaceId, c.UserId)
+	workspaceMember, err := c.wsServer.Deps.GetWorkspaceMemberUseCase.Execute(
+		context.Background(),
+		channel.WorkspaceId,
+		c.UserId,
+	)
 	if err != nil {
 		return nil, err
-	}
-
-	username := workspaceMember.Pseudo
-	// If the user is not in the workspace, we will use the user pseudo (fallback)
-	if username == "" {
-		user, err := c.wsServer.Deps.GetUserByIdUseCase.Execute(context.Background(), c.UserId)
-		if err != nil {
-			return nil, err
-		}
-		username = user.FullName()
 	}
 
 	return &outbound.OutboundChannelMessageReactionMember{
 		UserId:   c.UserId.String(),
-		Username: username,
+		Username: user.FullName(),
 	}, nil
 }
 

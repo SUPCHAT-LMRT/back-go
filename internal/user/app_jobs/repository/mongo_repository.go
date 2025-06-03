@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
@@ -54,7 +55,10 @@ func (r *MongoJobRepository) FindByName(ctx context.Context, name string) (*enti
 	return r.deps.JobMapper.MapToEntity(&mongoJob)
 }
 
-func (r *MongoJobRepository) FindById(ctx context.Context, jobId entity.JobId) (*entity.Job, error) {
+func (r *MongoJobRepository) FindById(
+	ctx context.Context,
+	jobId entity.JobId,
+) (*entity.Job, error) {
 	objectID, err := bson.ObjectIDFromHex(jobId.String())
 	if err != nil {
 		return nil, fmt.Errorf("invalid job ID: %w", err)
@@ -161,7 +165,11 @@ func (r *MongoJobRepository) FindAll(ctx context.Context) ([]*entity.Job, error)
 	return jobs, nil
 }
 
-func (r *MongoJobRepository) AssignToUser(ctx context.Context, jobId entity.JobId, userId user_entity.UserId) error {
+func (r *MongoJobRepository) AssignToUser(
+	ctx context.Context,
+	jobId entity.JobId,
+	userId user_entity.UserId,
+) error {
 	objectID, err := bson.ObjectIDFromHex(jobId.String())
 	if err != nil {
 		return fmt.Errorf("invalid job ID: %w", err)
@@ -184,7 +192,11 @@ func (r *MongoJobRepository) AssignToUser(ctx context.Context, jobId entity.JobI
 	return nil
 }
 
-func (r *MongoJobRepository) UnassignFromUser(ctx context.Context, jobId entity.JobId, userId user_entity.UserId) error {
+func (r *MongoJobRepository) UnassignFromUser(
+	ctx context.Context,
+	jobId entity.JobId,
+	userId user_entity.UserId,
+) error {
 	objectID, err := bson.ObjectIDFromHex(jobId.String())
 	if err != nil {
 		return fmt.Errorf("invalid job ID: %w", err)
@@ -209,7 +221,7 @@ func (r *MongoJobRepository) UnassignFromUser(ctx context.Context, jobId entity.
 	return nil
 }
 
-func (r *MongoJobRepository) EnsureAdminRoleExists(ctx context.Context) (*entity.Job, error) {
+func (r *MongoJobRepository) EnsureAdminJobExists(ctx context.Context) (*entity.Job, error) {
 	const adminRoleName = "Admin"
 
 	// Vérifiez si le rôle Admin existe déjà
@@ -236,7 +248,37 @@ func (r *MongoJobRepository) EnsureAdminRoleExists(ctx context.Context) (*entity
 	return adminRole, nil
 }
 
-func (r *MongoJobRepository) FindByUserId(ctx context.Context, userId string) ([]*entity.Job, error) {
+func (r *MongoJobRepository) EnsureManagerJobExists(ctx context.Context) (*entity.Job, error) {
+	const ManagerRoleName = "Manager"
+
+	// Vérifiez si le rôle Admin existe déjà
+	existingRole, err := r.FindByName(ctx, ManagerRoleName)
+	if err != nil {
+		return nil, fmt.Errorf("erreur lors de la vérification du rôle Admin: %w", err)
+	}
+
+	if existingRole != nil {
+		// Le rôle Admin existe déjà
+		return nil, nil
+	}
+
+	// Créez le rôle Admin avec les permissions PermissionAdmin
+	adminRole := &entity.Job{
+		Name:        ManagerRoleName,
+		Permissions: entity.CREATE_INVITATION | entity.VIEW_ADMINISTRATION_PANEL,
+	}
+
+	if err = r.Create(ctx, adminRole); err != nil {
+		return nil, fmt.Errorf("erreur lors de la création du rôle Manageur: %w", err)
+	}
+
+	return adminRole, nil
+}
+
+func (r *MongoJobRepository) FindByUserId(
+	ctx context.Context,
+	userId string,
+) ([]*entity.Job, error) {
 	filter := bson.M{"assigned_users": userId}
 
 	cursor, err := r.deps.Client.Client.Database(databaseName).
@@ -275,4 +317,35 @@ func (r *MongoJobRepository) FindByUserId(ctx context.Context, userId string) ([
 	}
 
 	return jobs, nil
+}
+
+func (r *MongoJobRepository) UserHasPermission(ctx context.Context, userId string, permission uint64) (bool, error) {
+	filter := bson.M{"assigned_users": userId}
+
+	cursor, err := r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		Find(ctx, filter)
+	if err != nil {
+		return false, fmt.Errorf("error finding jobs for user: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var mongoJob MongoJob
+		if err := cursor.Decode(&mongoJob); err != nil {
+			return false, fmt.Errorf("error decoding job: %w", err)
+		}
+
+		for _, assignedUser := range mongoJob.AssignedUsers {
+			if assignedUser == userId && (mongoJob.Permissions&permission) != 0 {
+				return true, nil
+			}
+		}
+	}
+
+	if err := cursor.Err(); err != nil {
+		return false, fmt.Errorf("cursor error: %w", err)
+	}
+
+	return false, nil
 }

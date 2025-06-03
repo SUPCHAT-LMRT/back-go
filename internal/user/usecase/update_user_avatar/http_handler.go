@@ -1,9 +1,10 @@
 package update_user_avatar
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
-	"net/http"
 )
 
 type UpdateUserAvatarHandler struct {

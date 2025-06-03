@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
@@ -41,7 +42,11 @@ func NewMongoWorkspaceRepository(deps MongoWorkspaceRepositoryDeps) WorkspaceRep
 	return &MongoWorkspaceRepository{deps: deps}
 }
 
-func (m MongoWorkspaceRepository) Create(ctx context.Context, workspace *entity.Workspace, ownerMember *entity2.WorkspaceMember) error {
+func (m MongoWorkspaceRepository) Create(
+	ctx context.Context,
+	workspace *entity.Workspace,
+	ownerMember *entity2.WorkspaceMember,
+) error {
 	workspace.Id = entity.WorkspaceId(bson.NewObjectID().Hex())
 	ownerMember.WorkspaceId = workspace.Id
 
@@ -50,7 +55,9 @@ func (m MongoWorkspaceRepository) Create(ctx context.Context, workspace *entity.
 		return err
 	}
 
-	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).InsertOne(ctx, mongoWorkspace)
+	_, err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		InsertOne(ctx, mongoWorkspace)
 	if err != nil {
 		return err
 	}
@@ -58,7 +65,10 @@ func (m MongoWorkspaceRepository) Create(ctx context.Context, workspace *entity.
 	return nil
 }
 
-func (m MongoWorkspaceRepository) GetById(ctx context.Context, id entity.WorkspaceId) (*entity.Workspace, error) {
+func (m MongoWorkspaceRepository) GetById(
+	ctx context.Context,
+	id entity.WorkspaceId,
+) (*entity.Workspace, error) {
 	workspaceObjectId, err := bson.ObjectIDFromHex(id.String())
 	if err != nil {
 		return nil, err
@@ -66,10 +76,13 @@ func (m MongoWorkspaceRepository) GetById(ctx context.Context, id entity.Workspa
 
 	var mongoWorkspace MongoWorkspace
 
-	err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"_id": workspaceObjectId}).Decode(&mongoWorkspace)
+	err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, bson.M{"_id": workspaceObjectId}).
+		Decode(&mongoWorkspace)
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
-			return nil, WorkspaceNotFoundErr
+			return nil, ErrWorkspaceNotFound
 		}
 		return nil, err
 	}
@@ -82,13 +95,18 @@ func (m MongoWorkspaceRepository) GetById(ctx context.Context, id entity.Workspa
 	return workspace, nil
 }
 
-func (m MongoWorkspaceRepository) ExistsById(ctx context.Context, id entity.WorkspaceId) (bool, error) {
+func (m MongoWorkspaceRepository) ExistsById(
+	ctx context.Context,
+	id entity.WorkspaceId,
+) (bool, error) {
 	workspaceObjectId, err := bson.ObjectIDFromHex(id.String())
 	if err != nil {
 		return false, err
 	}
 
-	count, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).CountDocuments(ctx, bson.M{"_id": workspaceObjectId})
+	count, err := m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		CountDocuments(ctx, bson.M{"_id": workspaceObjectId})
 	if err != nil {
 		return false, err
 	}
@@ -97,7 +115,9 @@ func (m MongoWorkspaceRepository) ExistsById(ctx context.Context, id entity.Work
 }
 
 func (m MongoWorkspaceRepository) List(ctx context.Context) ([]*entity.Workspace, error) {
-	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{})
+	cursor, err := m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +142,9 @@ func (m MongoWorkspaceRepository) List(ctx context.Context) ([]*entity.Workspace
 }
 
 func (m MongoWorkspaceRepository) ListPublics(ctx context.Context) ([]*entity.Workspace, error) {
-	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{"type": entity.WorkspaceTypePublic})
+	cursor, err := m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		Find(ctx, bson.M{"type": entity.WorkspaceTypePublic})
 	if err != nil {
 		return nil, err
 	}
@@ -146,14 +168,19 @@ func (m MongoWorkspaceRepository) ListPublics(ctx context.Context) ([]*entity.Wo
 	return workspaces, nil
 }
 
-func (m MongoWorkspaceRepository) ListByUserId(ctx context.Context, userId user_entity.UserId) ([]*entity.Workspace, error) {
+func (m MongoWorkspaceRepository) ListByUserId(
+	ctx context.Context,
+	userId user_entity.UserId,
+) ([]*entity.Workspace, error) {
 	userObjectId, err := bson.ObjectIDFromHex(userId.String())
 	if err != nil {
 		return nil, err
 	}
 
 	// Find all workspace IDs where the user is a member
-	cursor, err := m.deps.Client.Client.Database(databaseName).Collection(membersCollectionName).Find(ctx, bson.M{"user_id": userObjectId})
+	cursor, err := m.deps.Client.Client.Database(databaseName).
+		Collection(membersCollectionName).
+		Find(ctx, bson.M{"user_id": userObjectId})
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +202,9 @@ func (m MongoWorkspaceRepository) ListByUserId(ctx context.Context, userId user_
 	}
 
 	// Find all workspaces with the collected workspace IDs
-	cursor, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{"_id": bson.M{"$in": workspaceIds}})
+	cursor, err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		Find(ctx, bson.M{"_id": bson.M{"$in": workspaceIds}})
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +239,9 @@ func (m MongoWorkspaceRepository) Update(ctx context.Context, workspace *entity.
 		return err
 	}
 
-	_, err = m.deps.Client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"_id": workspaceObjectId}, bson.M{"$set": mongoWorkspace})
+	_, err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, bson.M{"_id": workspaceObjectId}, bson.M{"$set": mongoWorkspace})
 	if err != nil {
 		return err
 	}
@@ -219,7 +250,9 @@ func (m MongoWorkspaceRepository) Update(ctx context.Context, workspace *entity.
 }
 
 func (m MongoWorkspaceRepository) Delete(ctx context.Context, id entity.WorkspaceId) error {
-	_, err := m.deps.Client.Client.Database(databaseName).Collection(collectionName).DeleteOne(ctx, bson.M{"_id": id})
+	_, err := m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return err
 	}
@@ -227,7 +260,11 @@ func (m MongoWorkspaceRepository) Delete(ctx context.Context, id entity.Workspac
 	return nil
 }
 
-func (m MongoWorkspaceRepository) GetMemberId(ctx context.Context, workspaceId entity.WorkspaceId, userId user_entity.UserId) (entity2.WorkspaceMemberId, error) {
+func (m MongoWorkspaceRepository) GetMemberId(
+	ctx context.Context,
+	workspaceId entity.WorkspaceId,
+	userId user_entity.UserId,
+) (entity2.WorkspaceMemberId, error) {
 	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceId.String())
 	if err != nil {
 		return "", err
@@ -242,10 +279,13 @@ func (m MongoWorkspaceRepository) GetMemberId(ctx context.Context, workspaceId e
 		Id bson.ObjectID `bson:"_id"`
 	}
 
-	err = m.deps.Client.Client.Database(databaseName).Collection(membersCollectionName).FindOne(ctx, bson.M{
-		"workspace_id": workspaceObjectId,
-		"user_id":      userObjectId,
-	}).Decode(&member)
+	err = m.deps.Client.Client.Database(databaseName).
+		Collection(membersCollectionName).
+		FindOne(ctx, bson.M{
+			"workspace_id": workspaceObjectId,
+			"user_id":      userObjectId,
+		}).
+		Decode(&member)
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
 			return "", nil

@@ -1,10 +1,11 @@
 package list_workspaces
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
-	"net/http"
 )
 
 type DiscoverListWorkspaceHandler struct {
@@ -12,7 +13,10 @@ type DiscoverListWorkspaceHandler struct {
 	getUserByIdUseCase *get_by_id.GetUserByIdUseCase
 }
 
-func NewDiscoverListWorkspaceHandler(useCase *DiscoverListWorkspacesUseCase, getUserByIdUseCase *get_by_id.GetUserByIdUseCase) *DiscoverListWorkspaceHandler {
+func NewDiscoverListWorkspaceHandler(
+	useCase *DiscoverListWorkspacesUseCase,
+	getUserByIdUseCase *get_by_id.GetUserByIdUseCase,
+) *DiscoverListWorkspaceHandler {
 	return &DiscoverListWorkspaceHandler{useCase: useCase, getUserByIdUseCase: getUserByIdUseCase}
 }
 
@@ -35,11 +39,12 @@ func (h DiscoverListWorkspaceHandler) Handle(c *gin.Context) {
 		}
 
 		result[i] = gin.H{
-			"id":           workspace.Id,
-			"name":         workspace.Name,
-			"topic":        workspace.Topic,
-			"ownerName":    ownerUser.FullName(),
-			"membersCount": workspace.MembersCount,
+			"id":                 workspace.Id,
+			"name":               workspace.Name,
+			"topic":              workspace.Topic,
+			"ownerName":          ownerUser.FullName(),
+			"membersCount":       workspace.MembersCount,
+			"onlineMembersCount": workspace.OnlineMembersCount,
 		}
 	}
 

@@ -3,6 +3,8 @@ package mongo
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
@@ -10,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 	mongo2 "go.mongodb.org/mongo-driver/v2/mongo"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 var (
@@ -51,7 +52,9 @@ func (r MongoUserRepository) Create(ctx context.Context, user *entity.User) erro
 		return err
 	}
 
-	_, err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).InsertOne(ctx, mongoEntity)
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		InsertOne(ctx, mongoEntity)
 	if err != nil {
 		return err
 	}
@@ -59,17 +62,23 @@ func (r MongoUserRepository) Create(ctx context.Context, user *entity.User) erro
 	return nil
 }
 
-func (r MongoUserRepository) GetById(ctx context.Context, userId entity.UserId) (user *entity.User, err error) {
+func (r MongoUserRepository) GetById(
+	ctx context.Context,
+	userId entity.UserId,
+) (user *entity.User, err error) {
 	userObjectId, err := bson.ObjectIDFromHex(userId.String())
 	if err != nil {
 		return nil, err
 	}
 
 	var mongoUser *MongoUser
-	err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"_id": userObjectId}).Decode(&mongoUser)
+	err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, bson.M{"_id": userObjectId}).
+		Decode(&mongoUser)
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
-			return nil, repository.UserNotFoundErr
+			return nil, repository.ErrUserNotFound
 		}
 		return nil, err
 	}
@@ -82,12 +91,19 @@ func (r MongoUserRepository) GetById(ctx context.Context, userId entity.UserId) 
 	return user, nil
 }
 
-func (r MongoUserRepository) GetByEmail(ctx context.Context, userEmail string, options ...repository.GetUserOptionFunc) (user *entity.User, err error) {
+func (r MongoUserRepository) GetByEmail(
+	ctx context.Context,
+	userEmail string,
+	options ...repository.GetUserOptionFunc,
+) (user *entity.User, err error) {
 	var mongoUser *MongoUser
-	err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"email": userEmail}).Decode(&mongoUser)
+	err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, bson.M{"email": userEmail}).
+		Decode(&mongoUser)
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
-			return nil, repository.UserNotFoundErr
+			return nil, repository.ErrUserNotFound
 		}
 		return nil, err
 	}
@@ -100,12 +116,18 @@ func (r MongoUserRepository) GetByEmail(ctx context.Context, userEmail string, o
 	return user, nil
 }
 
-func (r MongoUserRepository) GetByOauthEmail(ctx context.Context, oauthEmail string) (user *entity.User, err error) {
+func (r MongoUserRepository) GetByOauthEmail(
+	ctx context.Context,
+	oauthEmail string,
+) (user *entity.User, err error) {
 	var mongoUser *MongoUser
-	err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).FindOne(ctx, bson.M{"oauth_email": oauthEmail}).Decode(&mongoUser)
+	err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, bson.M{"oauth_email": oauthEmail}).
+		Decode(&mongoUser)
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
-			return nil, repository.UserNotFoundErr
+			return nil, repository.ErrUserNotFound
 		}
 		return nil, err
 	}
@@ -119,7 +141,9 @@ func (r MongoUserRepository) GetByOauthEmail(ctx context.Context, oauthEmail str
 }
 
 func (r MongoUserRepository) List(ctx context.Context) (users []*entity.User, err error) {
-	cursor, err := r.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{})
+	cursor, err := r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
@@ -148,10 +172,12 @@ func (r MongoUserRepository) Update(ctx context.Context, user *entity.User) erro
 		return err
 	}
 
-	_, err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).UpdateOne(ctx, bson.M{"_id": mongoEntity.Id}, bson.M{"$set": mongoEntity})
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, bson.M{"_id": mongoEntity.Id}, bson.M{"$set": mongoEntity})
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
-			return repository.UserNotFoundErr
+			return repository.ErrUserNotFound
 		}
 		return err
 	}
@@ -165,10 +191,12 @@ func (r MongoUserRepository) Delete(ctx context.Context, userId entity.UserId) e
 		return err
 	}
 
-	_, err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).DeleteOne(ctx, bson.M{"_id": objectId})
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		DeleteOne(ctx, bson.M{"_id": objectId})
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
-			return repository.UserNotFoundErr
+			return repository.ErrUserNotFound
 		}
 		return err
 	}

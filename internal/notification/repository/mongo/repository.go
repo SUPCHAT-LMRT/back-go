@@ -3,6 +3,8 @@ package mongo
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"github.com/supchat-lmrt/back-go/internal/notification/entity"
@@ -11,7 +13,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 	mongo2 "go.mongodb.org/mongo-driver/v2/mongo"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 var (

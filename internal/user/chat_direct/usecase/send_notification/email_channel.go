@@ -3,10 +3,11 @@ package send_notification
 import (
 	"context"
 	"fmt"
+	"log"
+
 	"github.com/supchat-lmrt/back-go/internal/mail"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	uberdig "go.uber.org/dig"
-	"log"
 )
 
 type EmailChannelDeps struct {
@@ -23,7 +24,10 @@ func NewEmailChannel(deps EmailChannelDeps) Channel {
 	return &EmailChannel{deps: deps}
 }
 
-func (c *EmailChannel) SendNotification(ctx context.Context, req SendMessageNotificationRequest) error {
+func (c *EmailChannel) SendNotification(
+	ctx context.Context,
+	req SendMessageNotificationRequest,
+) error {
 	receiver, err := c.deps.GetUserByIdUseCase.Execute(ctx, req.ReceiverId)
 	if err != nil {
 		log.Printf("Erreur lors de la récupération de l'utilisateur par son ID: %v", err)
@@ -35,7 +39,14 @@ func (c *EmailChannel) SendNotification(ctx context.Context, req SendMessageNoti
 	//	return nil
 	//}
 
-	message := mail.NewMessage("Nouveau message privé", fmt.Sprintf("Vous avez reçu un message de %s avec le contenu %s", req.SenderName, req.Content))
+	message := mail.NewMessage(
+		"Nouveau message privé",
+		fmt.Sprintf(
+			"Vous avez reçu un message de %s avec le contenu %s",
+			req.SenderName,
+			req.Content,
+		),
+	)
 	message.AddTo(receiver.Email)
 	message.SetFrom(c.deps.Mailer.From)
 

@@ -1,10 +1,11 @@
 package generate
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace"
-	"net/http"
 )
 
 type CreateInviteLinkHandler struct {
@@ -12,7 +13,10 @@ type CreateInviteLinkHandler struct {
 	getWorkspaceUseCase *get_workspace.GetWorkspaceUseCase
 }
 
-func NewCreateInviteLinkHandler(usecase *InviteLinkUseCase, getWorkspaceUseCase *get_workspace.GetWorkspaceUseCase) *CreateInviteLinkHandler {
+func NewCreateInviteLinkHandler(
+	usecase *InviteLinkUseCase,
+	getWorkspaceUseCase *get_workspace.GetWorkspaceUseCase,
+) *CreateInviteLinkHandler {
 	return &CreateInviteLinkHandler{useCase: usecase, getWorkspaceUseCase: getWorkspaceUseCase}
 }
 

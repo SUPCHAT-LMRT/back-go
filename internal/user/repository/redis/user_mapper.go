@@ -1,10 +1,11 @@
 package redis
 
 import (
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"time"
 )
 
 type RedisUserMapper struct{}

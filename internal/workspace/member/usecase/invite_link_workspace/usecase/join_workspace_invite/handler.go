@@ -1,16 +1,19 @@
 package join_workspace_invite
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
-	"net/http"
 )
 
 type JoinWorkspaceInviteHandler struct {
 	useCase *JoinWorkspaceInviteUseCase
 }
 
-func NewJoinWorkspaceInviteHandler(useCase *JoinWorkspaceInviteUseCase) *JoinWorkspaceInviteHandler {
+func NewJoinWorkspaceInviteHandler(
+	useCase *JoinWorkspaceInviteUseCase,
+) *JoinWorkspaceInviteHandler {
 	return &JoinWorkspaceInviteHandler{useCase: useCase}
 }
 

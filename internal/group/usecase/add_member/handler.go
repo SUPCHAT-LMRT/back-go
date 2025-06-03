@@ -1,12 +1,13 @@
 package add_member
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	uberdig "go.uber.org/dig"
-	"net/http"
 )
 
 type AddMemberToGroupHandlerDeps struct {
