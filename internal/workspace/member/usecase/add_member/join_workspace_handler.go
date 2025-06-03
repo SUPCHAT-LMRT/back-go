@@ -33,7 +33,7 @@ func (h *AddMemberHandler) Handle(c *gin.Context) {
 
 	workspace, err := h.deps.GetWorkspaceUseCase.Execute(c, entity.WorkspaceId(workspaceId))
 	if err != nil {
-		if errors.Is(err, repository.WorkspaceNotFoundErr) {
+		if errors.Is(err, repository.ErrWorkspaceNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"displayError": "Cet espace de travail n'existe pas"})
 			return
 		}
@@ -51,7 +51,7 @@ func (h *AddMemberHandler) Handle(c *gin.Context) {
 		UserId:      user.Id,
 	})
 	if err != nil {
-		if errors.Is(err, repository2.WorkspaceMemberExistsErr) {
+		if errors.Is(err, repository2.ErrWorkspaceMemberExists) {
 			c.JSON(http.StatusConflict, gin.H{"displayError": "Vous êtes déjà membre de cet espace de travail"})
 			return
 		}

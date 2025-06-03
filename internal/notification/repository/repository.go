@@ -8,7 +8,7 @@ import (
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 )
 
-var ErrNotificationNotFound = errors.New("notification not found")
+var NotificationNotFoundErr = errors.New("notification not found")
 
 type NotificationRepository interface {
 	Create(ctx context.Context, notification *entity.Notification) error

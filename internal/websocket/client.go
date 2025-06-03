@@ -64,6 +64,7 @@ func NewClient(user *user_entity.User, conn *websocket.Conn, wsServer *WsServer)
 	return c
 }
 
+//nolint:revive
 func (c *Client) HandleNewMessage(jsonMessage []byte) {
 	var message messages.DefaultMessage
 	if err := json.Unmarshal(jsonMessage, &message); err != nil {
@@ -155,6 +156,7 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 	}
 }
 
+//nolint:revive
 func (c *Client) handleSendMessageToChannel(message *inbound.InboundSendMessageToChannel) {
 	if strings.TrimSpace(message.Content) == "" {
 		return
@@ -196,6 +198,7 @@ func (c *Client) handleSendMessageToChannel(message *inbound.InboundSendMessageT
 	}
 }
 
+//nolint:revive
 func (c *Client) handleSendDirectMessage(message *inbound.InboundSendDirectMessage) {
 	if strings.TrimSpace(message.Content) == "" {
 		return
@@ -273,7 +276,7 @@ func (c *Client) handleUnselectWorkspaceMessage(message *inbound.InboundUnselect
 	c.CurrentSelectedWorkspace.Store("")
 }
 
-//func (c *Client) handleJoinRoomPrivateMessage(message Message) {
+// func (c *Client) handleJoinRoomPrivateMessage(message Message) {
 //	clientId, err := uuid.Parse(message.Message)
 //	if err != nil {
 //		log.Println("Error parsing room id")
@@ -290,8 +293,9 @@ func (c *Client) handleUnselectWorkspaceMessage(message *inbound.InboundUnselect
 //
 //	c.joinRoom(roomName, DirectRoomKind, target)
 //	target.joinRoom(roomName, DirectRoomKind, c)
-//}
+// }
 
+//nolint:revive
 func (c *Client) handleChannelMessageReactionToggleMessage(
 	message *inbound.InboundChannelMessageReactionToggle,
 ) {
@@ -346,6 +350,7 @@ func (c *Client) handleChannelMessageReactionToggleMessage(
 	}
 }
 
+//nolint:revive
 func (c *Client) handleDirectMessageReactionToggleMessage(
 	message *inbound.InboundDirectMessageReactionToggle,
 ) {
@@ -467,15 +472,6 @@ func (c *Client) notifyRoomJoined(r *Room) {
 	c.send <- encoded
 }
 
-func (c *Client) extractOtherUserIdFromDirectRoomId(roomId string) user_entity.UserId {
-	ids := strings.Split(roomId, "_")
-	if ids[0] == c.UserId.String() {
-		return user_entity.UserId(ids[1])
-	} else {
-		return user_entity.UserId(ids[0])
-	}
-}
-
 func (c *Client) ReadPump() {
 	defer c.disconnect()
 
@@ -516,6 +512,7 @@ func (c *Client) ReadPump() {
 
 var newline = []byte{'\n'}
 
+//nolint:revive
 func (c *Client) WritePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
@@ -616,17 +613,8 @@ func (c *Client) toOutboundSendChannelMessageSender(
 func (c *Client) toOutboundChannelMessageReactionMember(
 	roomId string,
 ) (*outbound.OutboundChannelMessageReactionMember, error) {
-	channel, err := c.wsServer.Deps.GetChannelUseCase.Execute(
+	user, err := c.wsServer.Deps.GetUserByIdUseCase.Execute(
 		context.Background(),
-		channel_entity.ChannelId(roomId),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	workspaceMember, err := c.wsServer.Deps.GetWorkspaceMemberUseCase.Execute(
-		context.Background(),
-		channel.WorkspaceId,
 		c.UserId,
 	)
 	if err != nil {
