@@ -1,4 +1,4 @@
-package send_message_notification
+package send_notification
 
 import (
 	"context"
@@ -37,6 +37,7 @@ func (c *EmailChannel) SendNotification(ctx context.Context, req SendMessageNoti
 
 	message := mail.NewMessage("Nouveau message privé", fmt.Sprintf("Vous avez reçu un message de %s avec le contenu %s", req.SenderName, req.Content))
 	message.AddTo(receiver.Email)
+	message.SetFrom(c.deps.Mailer.From)
 
 	err = c.deps.Mailer.Send(message)
 	if err != nil {

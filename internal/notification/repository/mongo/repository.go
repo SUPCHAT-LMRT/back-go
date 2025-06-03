@@ -31,11 +31,34 @@ type MongoNotificationRepository struct {
 
 type MongoNotification struct {
 	Id        bson.ObjectID `bson:"_id"`
-	UserId    string        `bson:"user_id"`
-	Content   string        `bson:"content"`
+	UserId    bson.ObjectID `bson:"user_id"`
+	Type      string        `bson:"type"`
 	IsRead    bool          `bson:"is_read"`
 	CreatedAt time.Time     `bson:"created_at"`
-	UpdatedAt time.Time     `bson:"updated_at"`
+	// Metadata spécifiques selon le type
+	DirectMessageData   *DirectMessageNotificationData   `bson:"direct_message_data,omitempty"`
+	ChannelMessageData  *ChannelMessageNotificationData  `bson:"channel_message_data,omitempty"`
+	WorkspaceInviteData *WorkspaceInviteNotificationData `bson:"workspace_invite_data,omitempty"`
+}
+
+type DirectMessageNotificationData struct {
+	SenderId  bson.ObjectID `bson:"sender_id"`
+	MessageId bson.ObjectID `bson:"message_id"`
+	//MessagePreview string
+}
+
+type ChannelMessageNotificationData struct {
+	SenderId        bson.ObjectID `bson:"sender_id"`
+	SenderAvatarUrl string        `bson:"sender_avatar_url"`
+	ChannelId       bson.ObjectID `bson:"channel_id"`
+	WorkspaceId     bson.ObjectID `bson:"workspace_id"`
+	MessageId       bson.ObjectID `bson:"message_id"`
+	//MessagePreview string
+}
+
+type WorkspaceInviteNotificationData struct {
+	InviterId   bson.ObjectID `bson:"inviter_id"`
+	WorkspaceId bson.ObjectID `bson:"workspace_id"`
 }
 
 func NewMongoNotificationRepository(deps MongoNotificationRepositoryDeps) repository.NotificationRepository {
@@ -45,7 +68,6 @@ func NewMongoNotificationRepository(deps MongoNotificationRepositoryDeps) reposi
 func (r MongoNotificationRepository) Create(ctx context.Context, notification *entity.Notification) error {
 	notification.Id = entity.NotificationId(bson.NewObjectID().Hex())
 	notification.CreatedAt = time.Now()
-	notification.UpdatedAt = notification.CreatedAt
 	mongoEntity, err := r.deps.NotificationMapper.MapFromEntity(notification)
 	if err != nil {
 		return err
@@ -55,12 +77,11 @@ func (r MongoNotificationRepository) Create(ctx context.Context, notification *e
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func (r MongoNotificationRepository) GetById(ctx context.Context, notificationId entity.NotificationId) (notification *entity.Notification, err error) {
-	notificationObjectId, err := bson.ObjectIDFromHex(notificationId.String())
+	notificationObjectId, err := bson.ObjectIDFromHex(string(notificationId))
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +104,12 @@ func (r MongoNotificationRepository) GetById(ctx context.Context, notificationId
 }
 
 func (r MongoNotificationRepository) List(ctx context.Context, userId user_entity.UserId) (notifications []*entity.Notification, err error) {
-	cursor, err := r.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{"user_id": userId.String()})
+	notificationUserObjectId, err := bson.ObjectIDFromHex(string(userId))
+	if err != nil {
+		return nil, err
+	}
+
+	cursor, err := r.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{"user_id": notificationUserObjectId})
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +150,7 @@ func (r MongoNotificationRepository) Update(ctx context.Context, notification *e
 }
 
 func (r MongoNotificationRepository) Delete(ctx context.Context, notificationId entity.NotificationId) error {
-	objectId, err := bson.ObjectIDFromHex(notificationId.String())
+	objectId, err := bson.ObjectIDFromHex(string(notificationId))
 	if err != nil {
 		return err
 	}

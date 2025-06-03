@@ -1,4 +1,4 @@
-package send_message_notification
+package send_notification
 
 import (
 	"context"

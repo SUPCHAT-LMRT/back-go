@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
-	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/send_message_notification"
+	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/send_notification"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	uberdig "go.uber.org/dig"
 )
@@ -12,7 +12,7 @@ import (
 type SendNotificationObserverDeps struct {
 	uberdig.In
 	GetUserByIdUseCase             *get_by_id.GetUserByIdUseCase
-	SendMessageNotificationUseCase *send_message_notification.SendMessageNotificationUseCase
+	SendMessageNotificationUseCase *send_notification.SendMessageNotificationUseCase
 	Logger                         logger.Logger
 }
 
@@ -33,9 +33,11 @@ func (o SendNotificationObserver) NotifyMessageSaved(msg *entity.ChatDirect) {
 		return
 	}
 
-	err = o.deps.SendMessageNotificationUseCase.Execute(context.Background(), send_message_notification.SendMessageNotificationRequest{
+	err = o.deps.SendMessageNotificationUseCase.Execute(context.Background(), send_notification.SendMessageNotificationRequest{
 		Content:    msg.Content,
 		SenderName: sender.FullName(),
+		SenderId:   msg.SenderId,
+		MessageId:  msg.Id,
 		ReceiverId: msg.GetReceiverId(),
 	})
 	if err != nil {
