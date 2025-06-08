@@ -29,6 +29,10 @@ func (h *CreateChannelHandler) Handle(c *gin.Context) {
 		return
 	}
 
+	if req.Members == nil {
+		req.Members = make([]string, 0)
+	}
+
 	err := h.useCase.Execute(c, &channel_entity.Channel{
 		Name:        req.Name,
 		Topic:       req.Topic,
