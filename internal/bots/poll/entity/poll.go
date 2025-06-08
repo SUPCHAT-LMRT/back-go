@@ -1,8 +1,9 @@
 package entity
 
 import (
-	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"time"
+
+	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
 )
 
 type Poll struct {

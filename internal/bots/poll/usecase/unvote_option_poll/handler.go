@@ -1,9 +1,10 @@
 package unvote_option_poll
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
-	"net/http"
 )
 
 type ErrorResponse struct {
@@ -21,7 +22,7 @@ func NewUnvoteOptionPollHandler(usecase *UnvoteOptionPollUseCase) *UnvoteOptionP
 
 func (h *UnvoteOptionPollHandler) Handle(c *gin.Context) {
 	pollId := c.Param("poll_id")
-	user := c.MustGet("user").(*user_entity.User)
+	user := c.MustGet("user").(*user_entity.User) //nolint:revive
 
 	if pollId == "" {
 		c.JSON(http.StatusBadRequest, ErrorResponse{

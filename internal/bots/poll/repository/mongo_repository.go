@@ -3,12 +3,13 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/bots/poll/entity"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 var (
@@ -53,7 +54,9 @@ func (r *MongoPollRepository) Create(ctx context.Context, poll *entity.Poll) err
 		return err
 	}
 
-	_, err = r.deps.Client.Client.Database(databaseName).Collection(collectionName).InsertOne(ctx, mongoPoll)
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		InsertOne(ctx, mongoPoll)
 	return err
 }
 
@@ -70,7 +73,10 @@ func (r *MongoPollRepository) GetById(ctx context.Context, pollId string) (*enti
 	return r.deps.PollMapper.MapToEntity(&mongoPoll)
 }
 
-func (r *MongoPollRepository) GetAllByWorkspace(ctx context.Context, workspaceId entity2.WorkspaceId) ([]*entity.Poll, error) {
+func (r *MongoPollRepository) GetAllByWorkspace(
+	ctx context.Context,
+	workspaceId entity2.WorkspaceId,
+) ([]*entity.Poll, error) {
 	cursor, err := r.deps.Client.Client.Database(databaseName).
 		Collection(collectionName).
 		Find(ctx, bson.M{"workspace_id": workspaceId}) // Filtrer par workspace
@@ -126,7 +132,11 @@ func (r *MongoPollRepository) Vote(ctx context.Context, poll *entity.Poll) error
 	return nil
 }
 
-func (r *MongoPollRepository) IncrementVote(ctx context.Context, pollId string, optionId string) error {
+func (r *MongoPollRepository) IncrementVote(
+	ctx context.Context,
+	pollId string,
+	optionId string,
+) error {
 	filter := bson.M{"_id": pollId, "options.id": optionId}
 	update := bson.M{"$inc": bson.M{"options.$.votes": 1}}
 

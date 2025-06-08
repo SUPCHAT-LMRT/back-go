@@ -1,10 +1,11 @@
 package create_poll
 
 import (
-	"github.com/gin-gonic/gin"
-	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 )
 
 type CreatePollHandler struct {
@@ -22,7 +23,7 @@ func (h *CreatePollHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	user := c.MustGet("user").(*user_entity.User)
+	user := c.MustGet("user").(*user_entity.User) //nolint:revive
 	if user == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
 		return
@@ -40,7 +41,14 @@ func (h *CreatePollHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	poll, err := h.usecase.Execute(c, req.Question, req.Options, string(user.Id), workspaceId, expiresAt)
+	poll, err := h.usecase.Execute(
+		c,
+		req.Question,
+		req.Options,
+		string(user.Id),
+		workspaceId,
+		expiresAt,
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -50,7 +58,7 @@ func (h *CreatePollHandler) Handle(c *gin.Context) {
 }
 
 type CreatePollRequest struct {
-	Question  string   `json:"question" binding:"required"`
-	Options   []string `json:"options" binding:"required,min=2"`
+	Question  string   `json:"question"  binding:"required"`
+	Options   []string `json:"options"   binding:"required,min=2"`
 	ExpiresAt string   `json:"expiresat" binding:"required"`
 }

@@ -2,6 +2,7 @@ package unvote_option_poll
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/bots/poll/repository"
 )
 
@@ -28,7 +29,11 @@ func NewUnvoteOptionPollUseCase(repo repository.PollRepository) *UnvoteOptionPol
 	return &UnvoteOptionPollUseCase{repo: repo}
 }
 
-func (uc *UnvoteOptionPollUseCase) Execute(ctx context.Context, pollId string, userId string) error {
+func (uc *UnvoteOptionPollUseCase) Execute(
+	ctx context.Context,
+	pollId string,
+	userId string,
+) error {
 	poll, err := uc.repo.GetById(ctx, pollId)
 	if err != nil {
 		return &CustomError{Code: ErrorCodePollNotFound, Message: "Sondage non trouvé"}
@@ -52,12 +57,18 @@ func (uc *UnvoteOptionPollUseCase) Execute(ctx context.Context, pollId string, u
 		}
 	}
 	if !found {
-		return &CustomError{Code: ErrorCodeNotVoted, Message: "Vous n'avez pas voté pour ce sondage"}
+		return &CustomError{
+			Code:    ErrorCodeNotVoted,
+			Message: "Vous n'avez pas voté pour ce sondage",
+		}
 	}
 
 	err = uc.repo.Vote(ctx, poll)
 	if err != nil {
-		return &CustomError{Code: ErrorCodeUpdateFailed, Message: "Erreur lors de la suppression du vote"}
+		return &CustomError{
+			Code:    ErrorCodeUpdateFailed,
+			Message: "Erreur lors de la suppression du vote",
+		}
 	}
 	return nil
 }
