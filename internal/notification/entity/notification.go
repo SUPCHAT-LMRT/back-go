@@ -3,6 +3,7 @@ package entity
 import (
 	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
+	channel_message_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/entity"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"time"
@@ -36,11 +37,11 @@ type DirectMessageNotificationData struct {
 }
 
 type ChannelMessageNotificationData struct {
-	SenderId        entity.UserId
-	SenderAvatarUrl string
-	ChannelId       channel_entity.ChannelId
-	WorkspaceId     workspace_entity.WorkspaceId
-	MessageId       string
+	SenderId entity.UserId
+	//SenderAvatarUrl string
+	ChannelId   channel_entity.ChannelId
+	WorkspaceId workspace_entity.WorkspaceId
+	MessageId   channel_message_entity.ChannelMessageId
 	//MessagePreview string
 }
 

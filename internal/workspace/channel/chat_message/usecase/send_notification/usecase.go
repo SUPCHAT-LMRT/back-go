@@ -4,14 +4,17 @@ import (
 	"context"
 	"github.com/supchat-lmrt/back-go/internal/notification/entity"
 	"github.com/supchat-lmrt/back-go/internal/notification/usecase/create_notification"
-	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
+	channel_message_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/entity"
+	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
+	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	uberdig "go.uber.org/dig"
+	"log"
 )
 
 type SendMessageNotificationUseCaseDeps struct {
 	uberdig.In
-	Channels                  []Channel `group:"send_directmessage_notification_channel"`
+	Channels                  []Channel `group:"send_channelmessage_notification_channel"`
 	CreateNotificationUseCase *create_notification.CreateNotificationUseCase
 }
 
@@ -24,7 +27,9 @@ func NewSendMessageNotificationUseCase(deps SendMessageNotificationUseCaseDeps) 
 }
 
 func (uc *SendMessageNotificationUseCase) Execute(ctx context.Context, req SendMessageNotificationRequest) error {
+	log.Printf("fouf")
 	for _, channel := range uc.deps.Channels {
+		log.Printf("fouf2")
 		if err := channel.SendNotification(ctx, req); err != nil {
 			return err
 		}
@@ -32,11 +37,13 @@ func (uc *SendMessageNotificationUseCase) Execute(ctx context.Context, req SendM
 
 	notification := &entity.Notification{
 		UserId: req.ReceiverId,
-		Type:   entity.NotificationTypeDirectMessage,
+		Type:   entity.NotificationTypeChannelMessage,
 		IsRead: false,
-		DirectMessageData: &entity.DirectMessageNotificationData{
-			SenderId:  req.SenderId,
-			MessageId: req.MessageId,
+		ChannelMessageData: &entity.ChannelMessageNotificationData{
+			SenderId:    req.ReceiverId,
+			ChannelId:   req.ChannelId,
+			WorkspaceId: req.WorkspaceId,
+			MessageId:   req.MessageId,
 		},
 	}
 
@@ -48,9 +55,11 @@ func (uc *SendMessageNotificationUseCase) Execute(ctx context.Context, req SendM
 }
 
 type SendMessageNotificationRequest struct {
-	Content    string
-	SenderName string
-	SenderId   user_entity.UserId
-	MessageId  chat_direct_entity.ChatDirectId
-	ReceiverId user_entity.UserId
+	Content     string
+	SenderName  string
+	SenderId    user_entity.UserId
+	MessageId   channel_message_entity.ChannelMessageId
+	ReceiverId  user_entity.UserId
+	ChannelId   channel_entity.ChannelId
+	WorkspaceId workspace_entity.WorkspaceId
 }

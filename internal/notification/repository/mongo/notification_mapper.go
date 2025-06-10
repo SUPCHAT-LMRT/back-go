@@ -6,6 +6,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/notification/entity"
 	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
+	channel_message_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/entity"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -78,11 +79,11 @@ func (m MongoNotificationMapper) MapFromEntity(notification *entity.Notification
 			return nil, err
 		}
 		mongonotification.ChannelMessageData = &ChannelMessageNotificationData{
-			SenderId:        notificationSenderObjectId,
-			SenderAvatarUrl: notification.ChannelMessageData.SenderAvatarUrl,
-			ChannelId:       notificationChannelObjectId,
-			WorkspaceId:     notificationWorkspaceObjectId,
-			MessageId:       notificationmessageObjectId,
+			SenderId: notificationSenderObjectId,
+			//SenderAvatarUrl: notification.ChannelMessageData.SenderAvatarUrl,
+			ChannelId:   notificationChannelObjectId,
+			WorkspaceId: notificationWorkspaceObjectId,
+			MessageId:   notificationmessageObjectId,
 		}
 	case entity.NotificationTypeWorkspaceInvite:
 		if notification.ChannelMessageData == nil {
@@ -128,11 +129,11 @@ func (m MongoNotificationMapper) MapToEntity(databaseNotification *MongoNotifica
 			return nil, ErrMissingChannelMessageData
 		}
 		notification.ChannelMessageData = &entity.ChannelMessageNotificationData{
-			SenderId:        user_entity.UserId(databaseNotification.ChannelMessageData.SenderId.Hex()),
-			SenderAvatarUrl: databaseNotification.ChannelMessageData.SenderAvatarUrl,
-			ChannelId:       channel_entity.ChannelId(databaseNotification.ChannelMessageData.ChannelId.Hex()),
-			WorkspaceId:     workspace_entity.WorkspaceId(databaseNotification.ChannelMessageData.WorkspaceId.Hex()),
-			MessageId:       databaseNotification.ChannelMessageData.MessageId.Hex(),
+			SenderId: user_entity.UserId(databaseNotification.ChannelMessageData.SenderId.Hex()),
+			//SenderAvatarUrl: databaseNotification.ChannelMessageData.SenderAvatarUrl,
+			ChannelId:   channel_entity.ChannelId(databaseNotification.ChannelMessageData.ChannelId.Hex()),
+			WorkspaceId: workspace_entity.WorkspaceId(databaseNotification.ChannelMessageData.WorkspaceId.Hex()),
+			MessageId:   channel_message_entity.ChannelMessageId(databaseNotification.ChannelMessageData.MessageId.Hex()),
 		}
 	case entity.NotificationTypeWorkspaceInvite:
 		if databaseNotification.WorkspaceInviteData == nil {

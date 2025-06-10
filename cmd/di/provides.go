@@ -2,6 +2,7 @@ package di
 
 import (
 	"fmt"
+	send_notification2 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/send_notification"
 	"log"
 	"os"
 	"reflect"
@@ -114,7 +115,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/join_workspace_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/is_user_in_workspace"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/kick_member"
-	list_workpace_members2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workpace_members"
+	list_workpace_members2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workspace_members"
 	workspace_repository "github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	has_permissions "github.com/supchat-lmrt/back-go/internal/workspace/roles/gin/middlewares"
 	roles_repository "github.com/supchat-lmrt/back-go/internal/workspace/roles/repository"
@@ -227,9 +228,9 @@ func NewDi() *uberdig.Container {
 			uberdig.Group("update_type_workspace_observers"),
 		),
 		dig.NewProvider(
-      update_banner.NewUpdateWorkspaceBannerObserver,
-      uberdig.Group("save_banner_workspace_observers"),
-    ),
+			update_banner.NewUpdateWorkspaceBannerObserver,
+			uberdig.Group("save_banner_workspace_observers"),
+		),
 		// Workspace mappers
 		dig.NewProvider(repository3.NewRedisInviteLinkMapper),
 		// Workspace channels
@@ -321,6 +322,11 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(join_workspace_invite.NewJoinWorkspaceInviteHandler),
 		// Workspace member repository
 		dig.NewProvider(repository.NewMongoWorkspaceMemberRepository),
+		// Workspace notification
+		dig.NewProvider(send_notification2.NewSendMessageNotificationUseCase),
+		dig.NewProvider(send_notification2.NewEmailChannel, uberdig.Group("send_channelmessage_notification_channel")),
+		dig.NewProvider(send_notification2.NewPushChannel, uberdig.Group("send_channelmessage_notification_channel")),
+		dig.NewProvider(save_message.NewSendNotificationObserver, uberdig.Group("save_channel_message_observers")),
 		// User
 		dig.NewProvider(mongo2.NewMongoUserRepository),
 		dig.NewProvider(mongo2.NewMongoUserMapper),
@@ -528,8 +534,8 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(create_notification.NewCreateNotificationUseCase),
 		dig.NewProvider(mongo3.NewMongoNotificationRepository),
 		dig.NewProvider(mongo3.NewMongoNotificationMapper),
-		dig.NewProvider(send_notification.NewEmailChannel, uberdig.Group("send_message_notification_channel")),
-		dig.NewProvider(send_notification.NewPushChannel, uberdig.Group("send_message_notification_channel")),
+		dig.NewProvider(send_notification.NewEmailChannel, uberdig.Group("send_directmessage_notification_channel")),
+		dig.NewProvider(send_notification.NewPushChannel, uberdig.Group("send_directmessage_notification_channel")),
 		dig.NewProvider(send_notification.NewSendMessageNotificationUseCase),
 		dig.NewProvider(permissions2.NewCheckUserPermissionsHandler),
 	}
