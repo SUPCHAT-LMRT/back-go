@@ -12,11 +12,11 @@ type OutboundDirectRoomJoined struct {
 	OtherUserId user_entity.UserId `json:"otherUserId"`
 }
 
-func (m OutboundDirectRoomJoined) GetActionName() messages.Action {
+func (m *OutboundDirectRoomJoined) GetActionName() messages.Action {
 	return messages.OutboundDirectRoomJoinedAction
 }
 
-func (m OutboundDirectRoomJoined) Encode() ([]byte, error) {
+func (m *OutboundDirectRoomJoined) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }

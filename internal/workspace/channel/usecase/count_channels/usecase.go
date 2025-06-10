@@ -11,8 +11,8 @@ type CountChannelsUseCase struct {
 	repository repository.ChannelRepository
 }
 
-func NewCountChannelsUseCase(repository repository.ChannelRepository) *CountChannelsUseCase {
-	return &CountChannelsUseCase{repository: repository}
+func NewCountChannelsUseCase(channelRepository repository.ChannelRepository) *CountChannelsUseCase {
+	return &CountChannelsUseCase{repository: channelRepository}
 }
 
 func (u CountChannelsUseCase) Execute(

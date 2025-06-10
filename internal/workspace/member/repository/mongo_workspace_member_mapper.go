@@ -17,19 +17,19 @@ func NewMongoWorkspaceMemberMapper() mapper.Mapper[*MongoWorkspaceMember, *entit
 }
 
 func (m MongoWorkspaceMemberMapper) MapFromEntity(
-	entity *entity.WorkspaceMember,
+	workspaceMember *entity.WorkspaceMember,
 ) (*MongoWorkspaceMember, error) {
-	memberObjectId, err := bson.ObjectIDFromHex(entity.Id.String())
+	memberObjectId, err := bson.ObjectIDFromHex(workspaceMember.Id.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert workspace member id to object id: %w", err)
 	}
 
-	workspaceObjectId, err := bson.ObjectIDFromHex(entity.WorkspaceId.String())
+	workspaceObjectId, err := bson.ObjectIDFromHex(workspaceMember.WorkspaceId.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert workspace id to object id: %w", err)
 	}
 
-	userObjectId, err := bson.ObjectIDFromHex(entity.UserId.String())
+	userObjectId, err := bson.ObjectIDFromHex(workspaceMember.UserId.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert user id to object id: %w", err)
 	}

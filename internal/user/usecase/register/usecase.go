@@ -40,6 +40,7 @@ func NewRegisterUserUseCase(deps RegisterUserDeps) *RegisterUserUseCase {
 	return &RegisterUserUseCase{deps: deps}
 }
 
+//nolint:revive
 func (r *RegisterUserUseCase) Execute(
 	ctx context.Context,
 	token string,

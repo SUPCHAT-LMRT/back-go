@@ -1,3 +1,4 @@
+//nolint:revive
 package gin
 
 import (
@@ -6,6 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/create_poll"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/delete_poll"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/get_poll_by_id"
+	get_polls_listpackage "github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/get_polls_list"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/unvote_option_poll"
+	"github.com/supchat-lmrt/back-go/internal/bots/poll/usecase/vote_option_poll"
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/usecase/list_recent_chats"
 	validator2 "github.com/supchat-lmrt/back-go/internal/gin/validator"
 	list_group_chat_messages "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/list_messages"
@@ -186,6 +193,13 @@ type GinRouterDeps struct {
 	UnassignJobHandler          *unassign_job.UnassignJobHandler
 	GetJobForUserHandler        *get_job_for_user.GetJobForUserHandler
 	CheckUserPermissionsHandler *permissions.CheckUserPermissionsHandler
+	// poll
+	CreatePollHandler       *create_poll.CreatePollHandler
+	GetPollByIdHandler      *get_poll_by_id.GetPollByIdHandler
+	GetPollsListHandler     *get_polls_listpackage.GetPollsListHandler
+	DeletePollHandler       *delete_poll.DeletePollHandler
+	VoteOptionPollHandler   *vote_option_poll.VoteOptionPollHandler
+	UnvoteOptionPollHandler *unvote_option_poll.UnvoteOptionPollHandler
 }
 
 func NewGinRouter(deps GinRouterDeps) GinRouter {
@@ -210,7 +224,11 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			authMiddleware,
 			d.deps.UpdateAccountPersonalInformationsHandler.Handle,
 		)
-		accountGroup.PUT("/:user_id", authMiddleware, d.deps.UpdateAccountPersonalInformationsHandler.Handle)
+		accountGroup.PUT(
+			"/:user_id",
+			authMiddleware,
+			d.deps.UpdateAccountPersonalInformationsHandler.Handle,
+		)
 		accountGroup.PATCH("/avatar", authMiddleware, d.deps.UpdateUserAvatarHandler.Handle)
 		accountGroup.PATCH("/status", authMiddleware, d.deps.SaveStatusHandler.Handle)
 		accountGroup.GET("/users", authMiddleware, d.deps.GetListUsersHandler.Handle)
@@ -245,11 +263,13 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 
 		inviteLinkGroup := accountGroup.Group("/invite-link")
 		{
-			// inviteLinkGroup.Use(authMiddleware, userInWorkspaceMiddleware, jobPermissionsMiddleware(entity2.VIEW_ADMINISTRATION_PANEL|entity2.CREATE_INVITATION))
-			inviteLinkGroup.POST("", d.deps.CreateInviteLinkHandler.Handle)
-			// inviteLinkGroup.Use(authMiddleware, userInWorkspaceMiddleware, jobPermissionsMiddleware(entity2.DELETE_INVITATION))
 			inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkDataHandler.Handle)
+
+			inviteLinkGroup.Use(authMiddleware, jobPermissionsMiddleware(entity2.VIEW_ADMINISTRATION_PANEL|entity2.CREATE_INVITATION))
+			inviteLinkGroup.POST("", d.deps.CreateInviteLinkHandler.Handle)
 			inviteLinkGroup.GET("", d.deps.GetListInviteLinkHandler.Handle)
+
+			inviteLinkGroup.Use(jobPermissionsMiddleware(entity2.DELETE_INVITATION))
 			inviteLinkGroup.DELETE("/:token", d.deps.DeleteInviteLinkHandler.Handle)
 		}
 
@@ -343,7 +363,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			channelGroup := specificWorkspaceGroup.Group("/channels")
 			{
 				channelGroup.GET("", d.deps.ListChannelsHandler.Handle)
-				channelGroup.GET("/private/:user_id", d.deps.ListPrivateChannelsHandler.Handle)
+				channelGroup.GET("/private", d.deps.ListPrivateChannelsHandler.Handle)
 				// TODO: add middleware to check if the user can access the channel
 				channelGroup.GET("/:channel_id", d.deps.GetChannelHandler.Handle)
 				channelGroup.GET("/:channel_id/messages", d.deps.ListChannelMessagesHandler.Handle)
@@ -364,6 +384,16 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				roleGroup.POST("/assign", d.deps.AssignRoleHandler.Handle)
 				roleGroup.POST("/dessassign", d.deps.DessassignRoleHandler.Handle)
 				roleGroup.GET("/members/:user_id", d.deps.GetRolesForMemberHandler.Handle)
+			}
+
+			pollGroup := specificWorkspaceGroup.Group("/poll")
+			{
+				pollGroup.POST("", d.deps.CreatePollHandler.Handle)
+				pollGroup.GET("/:poll_id", d.deps.GetPollByIdHandler.Handle)
+				pollGroup.GET("", d.deps.GetPollsListHandler.Handle)
+				pollGroup.DELETE("/:poll_id", d.deps.DeletePollHandler.Handle)
+				pollGroup.POST("/:poll_id/vote/:option_id", d.deps.VoteOptionPollHandler.Handle)
+				pollGroup.POST("/:poll_id/unvote/:option_id", d.deps.UnvoteOptionPollHandler.Handle)
 			}
 		}
 	}

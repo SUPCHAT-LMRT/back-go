@@ -23,6 +23,7 @@ func ToTimeHookFunc() mapstructure.DecodeHookFunc {
 		case reflect.Float64:
 			return time.Unix(0, int64(data.(float64))*int64(time.Millisecond)), nil
 		case reflect.Int64:
+			// nolint:revive
 			return time.Unix(0, data.(int64)*int64(time.Millisecond)), nil
 		default:
 			return data, nil

@@ -12,9 +12,9 @@ type CountMessagesByWorkspaceUseCase struct {
 }
 
 func NewCountMessagesUseCase(
-	repository repository.ChannelMessageRepository,
+	channelMessageRepository repository.ChannelMessageRepository,
 ) *CountMessagesByWorkspaceUseCase {
-	return &CountMessagesByWorkspaceUseCase{repository: repository}
+	return &CountMessagesByWorkspaceUseCase{repository: channelMessageRepository}
 }
 
 func (u CountMessagesByWorkspaceUseCase) Execute(

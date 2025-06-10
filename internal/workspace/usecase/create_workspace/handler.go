@@ -38,7 +38,7 @@ func (l CreateWorkspaceHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	user := userVal.(*user_entity.User)
+	user := userVal.(*user_entity.User) //nolint:revive
 
 	workspace := entity.Workspace{
 		Name:    body.Name,

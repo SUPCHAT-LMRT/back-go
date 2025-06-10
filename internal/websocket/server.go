@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/goccy/go-json"
 	"github.com/supchat-lmrt/back-go/internal/event"
@@ -19,6 +18,7 @@ type WsServer struct {
 	backIdentifier string
 }
 
+//nolint:revive
 func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 	backIdentifier, err := deps.GetBackIdentifierUseCase.Execute(context.Background())
 	if err != nil {
@@ -139,15 +139,12 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 	})
 
 	server.Deps.EventBus.Subscribe(event.ChannelCreatedEventType, func(evt event.Event) {
-		fmt.Println("Channel created event received")
 		// Cast the event to ChannelCreatedEvent
 		channelCreatedEvent, ok := evt.(*event.ChannelCreatedEvent)
 		if !ok {
 			server.Deps.Logger.Error().Msg("failed to cast event to ChannelCreatedEvent")
 			return
 		}
-
-		fmt.Println("Channel created event received")
 
 		logg := deps.Logger.With().
 			Str("channelId", channelCreatedEvent.Channel.Id.String()).Logger()

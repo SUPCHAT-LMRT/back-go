@@ -12,11 +12,11 @@ type OutboundAddRecentDirectChat struct {
 	ChatName    string             `json:"chatName"`
 }
 
-func (m OutboundAddRecentDirectChat) GetActionName() messages.Action {
+func (m *OutboundAddRecentDirectChat) GetActionName() messages.Action {
 	return messages.OutboundRecentDirectChatAddedAction
 }
 
-func (m OutboundAddRecentDirectChat) Encode() ([]byte, error) {
+func (m *OutboundAddRecentDirectChat) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }

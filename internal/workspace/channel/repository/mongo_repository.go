@@ -8,6 +8,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	workspace_member_entity "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
@@ -193,7 +194,7 @@ func (m MongoChannelRepository) Delete(ctx context.Context, channelId entity.Cha
 func (m MongoChannelRepository) ListPrivateChannelsByUser(
 	ctx context.Context,
 	workspaceId workspace_entity.WorkspaceId,
-	userId string,
+	memberId workspace_member_entity.WorkspaceMemberId,
 ) ([]*entity.Channel, error) {
 	workspaceObjectId, err := bson.ObjectIDFromHex(string(workspaceId))
 	if err != nil {
@@ -203,7 +204,7 @@ func (m MongoChannelRepository) ListPrivateChannelsByUser(
 	filter := bson.M{
 		"workspace_id": workspaceObjectId,
 		"is_private":   true,
-		"members":      userId,
+		"members":      bson.M{"$in": []string{string(memberId)}},
 	}
 
 	findOptions := options.Find().SetSort(bson.D{{Key: "index", Value: 1}})

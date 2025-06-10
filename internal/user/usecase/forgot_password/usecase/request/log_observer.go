@@ -9,8 +9,8 @@ type LogRequestForgotPasswordObserver struct {
 	logger logger.Logger
 }
 
-func NewLogRequestForgotPasswordObserver(logger logger.Logger) ForgotPasswordRequestObserver {
-	return &LogRequestForgotPasswordObserver{logger: logger}
+func NewLogRequestForgotPasswordObserver(logg logger.Logger) ForgotPasswordRequestObserver {
+	return &LogRequestForgotPasswordObserver{logger: logg}
 }
 
 func (o *LogRequestForgotPasswordObserver) NotifyRequestResetPasswordCreated(

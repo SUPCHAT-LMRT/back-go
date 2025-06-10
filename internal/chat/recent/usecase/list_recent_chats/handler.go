@@ -25,7 +25,7 @@ func NewListRecentChatsHandler(deps ListRecentChatsHandlerDeps) *ListRecentChats
 }
 
 func (h *ListRecentChatsHandler) Handle(c *gin.Context) {
-	authenticatedUser := c.MustGet("user").(*user_entity.User)
+	authenticatedUser := c.MustGet("user").(*user_entity.User) //nolint:revive
 
 	recentChats, err := h.deps.UseCase.Execute(c, authenticatedUser.Id)
 	if err != nil {

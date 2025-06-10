@@ -10,19 +10,19 @@ import (
 
 type GetWorkspaceUseCaseDeps struct {
 	uberdig.In
-	repository.WorkspaceRepository
+	Repository repository.WorkspaceRepository
 }
 type GetWorkspaceUseCase struct {
-	repository repository.WorkspaceRepository
+	deps GetWorkspaceUseCaseDeps
 }
 
-func NewGetWorkspaceUseCase(repository GetWorkspaceUseCaseDeps) *GetWorkspaceUseCase {
-	return &GetWorkspaceUseCase{repository: repository}
+func NewGetWorkspaceUseCase(deps GetWorkspaceUseCaseDeps) *GetWorkspaceUseCase {
+	return &GetWorkspaceUseCase{deps: deps}
 }
 
 func (u GetWorkspaceUseCase) Execute(
 	ctx context.Context,
 	workspaceId entity.WorkspaceId,
 ) (*entity.Workspace, error) {
-	return u.repository.GetById(ctx, workspaceId)
+	return u.deps.Repository.GetById(ctx, workspaceId)
 }

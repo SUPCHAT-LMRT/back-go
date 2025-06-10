@@ -19,10 +19,10 @@ type RedisInviteLinkRepository struct {
 }
 
 func NewRedisInviteLinkRepository(
-	mapper mapper.Mapper[map[string]string, *entity.InviteLink],
+	inviteLinkMapper mapper.Mapper[map[string]string, *entity.InviteLink],
 	client *redis.Client,
 ) InviteLinkRepository {
-	return &RedisInviteLinkRepository{mapper: mapper, client: client}
+	return &RedisInviteLinkRepository{mapper: inviteLinkMapper, client: client}
 }
 
 func (m RedisInviteLinkRepository) GenerateInviteLink(

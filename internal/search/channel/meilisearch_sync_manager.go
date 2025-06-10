@@ -11,16 +11,21 @@ import (
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 )
 
+type (
+	createLruCache = lru.Cache[channel_entity.ChannelId, *SearchChannel]
+	deleteLruCache = lru.Cache[channel_entity.ChannelId, struct{}]
+)
+
 type MeilisearchSearchChannelSyncManager struct {
-	createCache *lru.Cache[channel_entity.ChannelId, *SearchChannel]
-	deleteCache *lru.Cache[channel_entity.ChannelId, struct{}]
+	createCache *createLruCache
+	deleteCache *deleteLruCache
 	client      *meilisearch.MeilisearchClient
 	logger      logger.Logger
 }
 
 func NewMeilisearchSearchChannelSyncManager(
 	client *meilisearch.MeilisearchClient,
-	logger logger.Logger,
+	logg logger.Logger,
 ) (SearchChannelSyncManager, error) {
 	createCache, err := lru.New[channel_entity.ChannelId, *SearchChannel](1000)
 	if err != nil {
@@ -36,10 +41,11 @@ func NewMeilisearchSearchChannelSyncManager(
 		createCache: createCache,
 		deleteCache: deleteCache,
 		client:      client,
-		logger:      logger,
+		logger:      logg,
 	}, nil
 }
 
+//nolint:revive
 func (m MeilisearchSearchChannelSyncManager) CreateIndexIfNotExists(ctx context.Context) error {
 	createdIndexTask, err := m.client.Client.CreateIndexWithContext(ctx, &meilisearch2.IndexConfig{
 		Uid:        "channels",
@@ -116,13 +122,13 @@ func (m MeilisearchSearchChannelSyncManager) CreateIndexIfNotExists(ctx context.
 
 		if task.Status == meilisearch2.TaskStatusSucceeded {
 			return nil
-		} else {
-			m.logger.Error().
-				Str("status", string(updateSettingsTask.Status)).
-				Int("task_uid", int(updateSettingsTask.TaskUID)).
-				Msg("Unable to update settings")
-			return err
 		}
+
+		m.logger.Error().
+			Str("status", string(updateSettingsTask.Status)).
+			Int("task_uid", int(updateSettingsTask.TaskUID)).
+			Msg("Unable to update settings")
+		return err
 	}
 
 	return nil
@@ -153,6 +159,7 @@ func (m MeilisearchSearchChannelSyncManager) RemoveChannel(
 	return nil
 }
 
+//nolint:revive
 func (m MeilisearchSearchChannelSyncManager) Sync(ctx context.Context) {
 	// Handle additions/updates
 	var docs []*SearchChannel
@@ -195,9 +202,9 @@ func (m MeilisearchSearchChannelSyncManager) Sync(ctx context.Context) {
 				Int("task_uid", int(taskInfo.TaskUID)).
 				Msg("Channel sync task failed")
 			return
-		} else {
-			m.createCache.Purge() // Clear only after successful sync
 		}
+
+		m.createCache.Purge() // Clear only after successful sync
 	}
 
 	// Sync deletions
@@ -228,9 +235,9 @@ func (m MeilisearchSearchChannelSyncManager) Sync(ctx context.Context) {
 				Int("task_uid", int(taskInfo.TaskUID)).
 				Msg("Channel deletion task failed")
 			return
-		} else {
-			m.deleteCache.Purge() // Clear only after successful sync
 		}
+
+		m.deleteCache.Purge() // Clear only after successful sync
 	}
 }
 

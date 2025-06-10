@@ -11,8 +11,10 @@ type IsFirstMessageUseCase struct {
 	repository repository.ChatDirectRepository
 }
 
-func NewIsFirstMessageUseCase(repository repository.ChatDirectRepository) *IsFirstMessageUseCase {
-	return &IsFirstMessageUseCase{repository: repository}
+func NewIsFirstMessageUseCase(
+	chatDirectRepository repository.ChatDirectRepository,
+) *IsFirstMessageUseCase {
+	return &IsFirstMessageUseCase{repository: chatDirectRepository}
 }
 
 func (u *IsFirstMessageUseCase) Execute(

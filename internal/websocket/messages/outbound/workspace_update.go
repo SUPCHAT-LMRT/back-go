@@ -13,11 +13,11 @@ type OutboundWorkspaceUpdated struct {
 	Type        string `json:"type"`
 }
 
-func (m OutboundWorkspaceUpdated) GetActionName() messages.Action {
+func (m *OutboundWorkspaceUpdated) GetActionName() messages.Action {
 	return messages.OutboundWorkspaceUpdatedAction
 }
 
-func (m OutboundWorkspaceUpdated) Encode() ([]byte, error) {
+func (m *OutboundWorkspaceUpdated) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }

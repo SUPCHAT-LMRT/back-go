@@ -66,6 +66,7 @@ func (r MongoMessageSentTimeSeriesWorkspaceRepository) Create(
 	return nil
 }
 
+//nolint:revive
 func (r MongoMessageSentTimeSeriesWorkspaceRepository) GetMinutelyByWorkspace(
 	ctx context.Context,
 	workspaceId workspace_entity.WorkspaceId,

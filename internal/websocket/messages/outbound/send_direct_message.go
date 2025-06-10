@@ -23,11 +23,11 @@ type OutboundSendDirectMessageSender struct {
 	LastName  string             `json:"lastName"`
 }
 
-func (m OutboundSendDirectMessage) GetActionName() messages.Action {
+func (m *OutboundSendDirectMessage) GetActionName() messages.Action {
 	return messages.OutboundSendDirectMessageAction
 }
 
-func (m OutboundSendDirectMessage) Encode() ([]byte, error) {
+func (m *OutboundSendDirectMessage) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }

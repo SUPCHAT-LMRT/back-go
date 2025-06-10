@@ -11,16 +11,21 @@ import (
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 )
 
+type (
+	createLruCache = lru.Cache[user_entity.UserId, *SearchUser]
+	deleteLruCache = lru.Cache[user_entity.UserId, struct{}]
+)
+
 type MeilisearchSearchUserSyncManager struct {
-	createCache *lru.Cache[user_entity.UserId, *SearchUser]
-	deleteCache *lru.Cache[user_entity.UserId, struct{}]
+	createCache *createLruCache
+	deleteCache *deleteLruCache
 	client      *meilisearch.MeilisearchClient
 	logger      logger.Logger
 }
 
 func NewMeilisearchSearchUserSyncManager(
 	client *meilisearch.MeilisearchClient,
-	logger logger.Logger,
+	logg logger.Logger,
 ) (SearchUserSyncManager, error) {
 	createCache, err := lru.New[user_entity.UserId, *SearchUser](1000)
 	if err != nil {
@@ -36,10 +41,11 @@ func NewMeilisearchSearchUserSyncManager(
 		createCache: createCache,
 		deleteCache: deleteCache,
 		client:      client,
-		logger:      logger,
+		logger:      logg,
 	}, nil
 }
 
+//nolint:revive
 func (m MeilisearchSearchUserSyncManager) CreateIndexIfNotExists(ctx context.Context) error {
 	createdIndexTask, err := m.client.Client.CreateIndexWithContext(ctx, &meilisearch2.IndexConfig{
 		Uid:        "users",
@@ -149,6 +155,7 @@ func (m MeilisearchSearchUserSyncManager) RemoveUser(ctx context.Context, user *
 	return nil
 }
 
+//nolint:revive
 func (m MeilisearchSearchUserSyncManager) Sync(ctx context.Context) {
 	// Handle additions/updates
 	var docs []*SearchUser

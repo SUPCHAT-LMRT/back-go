@@ -13,28 +13,28 @@ func NewMongoChannelMapper() mapper.Mapper[*MongoChannel, *entity.Channel] {
 	return &MongoChannelMapper{}
 }
 
-func (m MongoChannelMapper) MapFromEntity(entity *entity.Channel) (*MongoChannel, error) {
-	channelObjectId, err := bson.ObjectIDFromHex(string(entity.Id))
+func (m MongoChannelMapper) MapFromEntity(channel *entity.Channel) (*MongoChannel, error) {
+	channelObjectId, err := bson.ObjectIDFromHex(string(channel.Id))
 	if err != nil {
 		return nil, err
 	}
 
-	workspaceObjectId, err := bson.ObjectIDFromHex(string(entity.WorkspaceId))
+	workspaceObjectId, err := bson.ObjectIDFromHex(string(channel.WorkspaceId))
 	if err != nil {
 		return nil, err
 	}
 
 	return &MongoChannel{
 		Id:          channelObjectId,
-		Name:        entity.Name,
-		Topic:       entity.Topic,
-		Kind:        entity.Kind.String(),
-		IsPrivate:   entity.IsPrivate,
-		Members:     entity.Members,
+		Name:        channel.Name,
+		Topic:       channel.Topic,
+		Kind:        channel.Kind.String(),
+		IsPrivate:   channel.IsPrivate,
+		Members:     channel.Members,
 		WorkspaceId: workspaceObjectId,
-		CreatedAt:   entity.CreatedAt,
-		UpdatedAt:   entity.UpdatedAt,
-		Index:       entity.Index,
+		CreatedAt:   channel.CreatedAt,
+		UpdatedAt:   channel.UpdatedAt,
+		Index:       channel.Index,
 	}, nil
 }
 

@@ -12,8 +12,8 @@ type ListChannelsUseCase struct {
 	repository repository.ChannelRepository
 }
 
-func NewListChannelsUseCase(repository repository.ChannelRepository) *ListChannelsUseCase {
-	return &ListChannelsUseCase{repository: repository}
+func NewListChannelsUseCase(channelRepository repository.ChannelRepository) *ListChannelsUseCase {
+	return &ListChannelsUseCase{repository: channelRepository}
 }
 
 func (u *ListChannelsUseCase) Execute(

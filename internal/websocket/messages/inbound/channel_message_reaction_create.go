@@ -12,11 +12,11 @@ type InboundChannelMessageReactionToggle struct {
 	Reaction  string `json:"reaction"`
 }
 
-func (i InboundChannelMessageReactionToggle) GetActionName() messages.Action {
+func (i *InboundChannelMessageReactionToggle) GetActionName() messages.Action {
 	return messages.InboundChannelMessageReactionToggle
 }
 
-func (i InboundChannelMessageReactionToggle) Encode() ([]byte, error) {
+func (i *InboundChannelMessageReactionToggle) Encode() ([]byte, error) {
 	i.DefaultMessage = messages.NewDefaultMessage(i.GetActionName())
 	return json.Marshal(i)
 }

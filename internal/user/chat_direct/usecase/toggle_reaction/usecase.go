@@ -13,9 +13,9 @@ type ToggleReactionDirectMessageUseCase struct {
 }
 
 func NewToggleReactionDirectMessageUseCase(
-	repository repository.ChatDirectRepository,
+	chatDirectRepository repository.ChatDirectRepository,
 ) *ToggleReactionDirectMessageUseCase {
-	return &ToggleReactionDirectMessageUseCase{repository: repository}
+	return &ToggleReactionDirectMessageUseCase{repository: chatDirectRepository}
 }
 
 func (u *ToggleReactionDirectMessageUseCase) Execute(

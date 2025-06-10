@@ -41,29 +41,29 @@ type ChannelReorderMessage struct {
 	NewOrder  int              `json:"newOrder"`
 }
 
-func (m OutboundChannelCreated) GetActionName() messages.Action {
+func (m *OutboundChannelCreated) GetActionName() messages.Action {
 	return messages.OutboundChannelCreatedAction
 }
 
-func (m OutboundChannelCreated) Encode() ([]byte, error) {
+func (m *OutboundChannelCreated) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }
 
-func (m OutboundChannelsDeleted) GetActionName() messages.Action {
+func (m *OutboundChannelsDeleted) GetActionName() messages.Action {
 	return messages.OutboundChannelsDeletedAction
 }
 
-func (m OutboundChannelsDeleted) Encode() ([]byte, error) {
+func (m *OutboundChannelsDeleted) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }
 
-func (m OutboundChannelsReordered) GetActionName() messages.Action {
+func (m *OutboundChannelsReordered) GetActionName() messages.Action {
 	return messages.OutboundChannelsReorderedAction
 }
 
-func (m OutboundChannelsReordered) Encode() ([]byte, error) {
+func (m *OutboundChannelsReordered) Encode() ([]byte, error) {
 	m.DefaultMessage = messages.NewDefaultMessage(m.GetActionName())
 	return json.Marshal(m)
 }

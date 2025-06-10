@@ -2,6 +2,8 @@ package add_member
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/entity"
@@ -10,7 +12,6 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/get_workspace"
 	uberdig "go.uber.org/dig"
-	"net/http"
 )
 
 type AddMemberHandlerDeps struct {
@@ -28,7 +29,7 @@ func NewAddMemberHandler(deps AddMemberHandlerDeps) *AddMemberHandler {
 }
 
 func (h *AddMemberHandler) Handle(c *gin.Context) {
-	user := c.MustGet("user").(*user_entity.User)
+	user := c.MustGet("user").(*user_entity.User) //nolint:revive
 	workspaceId := c.Param("workspace_id")
 
 	workspace, err := h.deps.GetWorkspaceUseCase.Execute(c, entity.WorkspaceId(workspaceId))
@@ -46,13 +47,20 @@ func (h *AddMemberHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	err = h.deps.AddMemberUseCase.Execute(c, entity.WorkspaceId(workspaceId), &workspace_entity.WorkspaceMember{
-		WorkspaceId: entity.WorkspaceId(workspaceId),
-		UserId:      user.Id,
-	})
+	err = h.deps.AddMemberUseCase.Execute(
+		c,
+		entity.WorkspaceId(workspaceId),
+		&workspace_entity.WorkspaceMember{
+			WorkspaceId: entity.WorkspaceId(workspaceId),
+			UserId:      user.Id,
+		},
+	)
 	if err != nil {
 		if errors.Is(err, repository2.ErrWorkspaceMemberExists) {
-			c.JSON(http.StatusConflict, gin.H{"displayError": "Vous êtes déjà membre de cet espace de travail"})
+			c.JSON(
+				http.StatusConflict,
+				gin.H{"displayError": "Vous êtes déjà membre de cet espace de travail"},
+			)
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

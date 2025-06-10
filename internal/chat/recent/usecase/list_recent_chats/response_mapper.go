@@ -19,10 +19,12 @@ func (r ResponseMapper) MapFromEntity(response *RecentChatResponse) (*entity.Rec
 	}, nil
 }
 
-func (r ResponseMapper) MapToEntity(entity *entity.RecentChat) (*RecentChatResponse, error) {
+func (r ResponseMapper) MapToEntity(
+	entityRecentChat *entity.RecentChat,
+) (*RecentChatResponse, error) {
 	return &RecentChatResponse{
-		Id:   entity.Id,
-		Kind: entity.Kind,
-		Name: entity.Name,
+		Id:   entityRecentChat.Id,
+		Kind: entityRecentChat.Kind,
+		Name: entityRecentChat.Name,
 	}, nil
 }

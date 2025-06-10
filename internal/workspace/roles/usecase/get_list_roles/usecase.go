@@ -2,7 +2,7 @@ package get_list_roles
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/repository"
@@ -21,7 +21,7 @@ func (u *GetListRolesUseCase) Execute(
 	workspaceId string,
 ) ([]*entity.Role, error) {
 	if workspaceId == "" {
-		return nil, fmt.Errorf("workspaceId is required")
+		return nil, errors.New("workspaceId is required")
 	}
 
 	roles, err := u.roleRepository.GetList(ctx, workspaceId)

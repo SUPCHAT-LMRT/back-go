@@ -27,17 +27,17 @@ func (m GroupChatMessageMapper) MapToEntity(
 }
 
 func (m GroupChatMessageMapper) MapFromEntity(
-	entity *entity.GroupChatMessage,
+	entityGroupChatMessage *entity.GroupChatMessage,
 ) (*MongoGroupChatMessage, error) {
-	messageObjectId, err := bson.ObjectIDFromHex(string(entity.Id))
+	messageObjectId, err := bson.ObjectIDFromHex(string(entityGroupChatMessage.Id))
 	if err != nil {
 		return nil, err
 	}
-	groupObjectId, err := bson.ObjectIDFromHex(string(entity.GroupId))
+	groupObjectId, err := bson.ObjectIDFromHex(string(entityGroupChatMessage.GroupId))
 	if err != nil {
 		return nil, err
 	}
-	authorObjectId, err := bson.ObjectIDFromHex(string(entity.AuthorId))
+	authorObjectId, err := bson.ObjectIDFromHex(string(entityGroupChatMessage.AuthorId))
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (m GroupChatMessageMapper) MapFromEntity(
 		Id:        messageObjectId,
 		GroupId:   groupObjectId,
 		AuthorId:  authorObjectId,
-		Content:   entity.Content,
-		CreatedAt: entity.CreatedAt,
+		Content:   entityGroupChatMessage.Content,
+		CreatedAt: entityGroupChatMessage.CreatedAt,
 	}, nil
 }

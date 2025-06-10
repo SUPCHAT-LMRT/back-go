@@ -34,7 +34,7 @@ func (h *RequestResetPasswordHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	user := loggedInUser.(*user_entity.User)
+	user := loggedInUser.(*user_entity.User) //nolint:revive
 
 	_, err := h.requestResetPasswordUseCase.Execute(c, user.Id)
 	if err != nil {

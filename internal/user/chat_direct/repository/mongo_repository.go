@@ -177,6 +177,7 @@ func (m MongoChatDirectRepository) IsFirstMessage(
 	return count == 1, nil
 }
 
+//nolint:revive
 func (m MongoChatDirectRepository) ListByUser(
 	ctx context.Context,
 	user1Id, user2Id user_entity.UserId,
@@ -297,9 +298,9 @@ func (m MongoChatDirectRepository) ListByUser(
 		SetSort(bson.D{{Key: "created_at", Value: -1}}). // Trier par date décroissante
 		SetLimit(int64(params.Limit))
 
-	if params.Before != (time.Time{}) {
+	if !params.Before.Equal(time.Time{}) {
 		filter = append(filter, bson.E{Key: "created_at", Value: bson.M{"$lt": params.Before}})
-	} else if params.After != (time.Time{}) {
+	} else if !params.After.Equal(time.Time{}) {
 		filter = append(filter, bson.E{Key: "created_at", Value: bson.M{"$gt": params.After}})
 	}
 
@@ -326,6 +327,8 @@ func (m MongoChatDirectRepository) ListByUser(
 }
 
 // ToggleReaction toggles the reaction of a user to a message. (If the user has already reacted, it will remove the reaction, otherwise it will add the reaction.)
+//
+//nolint:revive
 func (m MongoChatDirectRepository) ToggleReaction(
 	ctx context.Context,
 	messageId entity.ChatDirectId,

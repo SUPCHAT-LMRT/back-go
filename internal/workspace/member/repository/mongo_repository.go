@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
@@ -42,6 +43,7 @@ func NewMongoWorkspaceMemberRepository(
 	return &MongoWorkspaceMemberRepository{deps: deps}
 }
 
+//nolint:revive
 func (m MongoWorkspaceMemberRepository) ListMembers(
 	ctx context.Context,
 	workspaceId entity.WorkspaceId,

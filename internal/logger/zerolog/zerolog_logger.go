@@ -15,7 +15,8 @@ type ZerologLogger struct {
 
 // NewZerologLogger creates a new ZerologLogger instance.
 func NewZerologLogger() logger.Logger {
-	zerolog.LevelColors[zerolog.DebugLevel] = 35 // colorMagenta = iota + 30 + 1 * 5 (https://en.wikipedia.org/wiki/ANSI_escape_code#Colors)
+	// colorMagenta = iota + 30 + 1 * 5 (https://en.wikipedia.org/wiki/ANSI_escape_code#Colors)
+	zerolog.LevelColors[zerolog.DebugLevel] = 35
 
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "02/01/2006 - 15:04:05"}
 

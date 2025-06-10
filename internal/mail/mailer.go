@@ -20,17 +20,17 @@ import (
 
 type Mailer struct {
 	Host string
-	Tls  bool
+	TLS  bool
 	Port int
 	From string
 	smtp.Auth
 }
 
-func NewMailer(host string, tls bool, port int, username, password string) func() *Mailer {
+func NewMailer(host string, enableTLS bool, port int, username, password string) func() *Mailer {
 	return func() *Mailer {
 		return &Mailer{
 			Host: host,
-			Tls:  tls,
+			TLS:  enableTLS,
 			Port: port,
 			From: username,
 			Auth: smtp.PlainAuth("", username, password, host),
@@ -38,49 +38,50 @@ func NewMailer(host string, tls bool, port int, username, password string) func(
 	}
 }
 
-func (m *Mailer) Send(payload *Message) (err error) {
+//nolint:revive
+func (m *Mailer) Send(payload *Message) error {
 	// Set GMAIL Message-ID header
 	payload.AddHeader("Message-ID", "<"+uuid.New().String()+"@"+m.Host+">")
 
 	// Connect to the SMTP Server
 	conn, err := m.createConnection()
 	if err != nil {
-		return
+		return err
 	}
 
 	c, err := smtp.NewClient(conn, m.Host)
 	if err != nil {
-		return
+		return err
 	}
 
 	// Auth
 	if err = c.Auth(m.Auth); err != nil {
-		return
+		return err
 	}
 
 	// To && From
 	if err = c.Mail(payload.From); err != nil {
-		return
+		return err
 	}
 
 	if err = c.Rcpt(strings.Join(payload.To, ",")); err != nil {
-		return
+		return err
 	}
 
 	// Data
 	w, err := c.Data()
 	if err != nil {
-		return
+		return err
 	}
 
 	_, err = w.Write(payload.Bytes())
 	if err != nil {
-		return
+		return err
 	}
 
 	err = w.Close()
 	if err != nil {
-		return
+		return err
 	}
 
 	return c.Quit()
@@ -97,7 +98,7 @@ func (m *Mailer) SendAsync(payload *Message) chan<- error {
 }
 
 func (m *Mailer) createConnection() (net.Conn, error) {
-	if m.Tls {
+	if m.TLS {
 		tlsconfig := tls.Config{
 			InsecureSkipVerify: true,
 			ServerName:         m.Host,
@@ -135,7 +136,7 @@ type Message struct {
 	Attachments     map[string]*Attachment
 }
 
-func (m *Message) attach(filePath string, inline bool) error {
+func (m *Message) attachInline(filePath string, inline bool) error {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return err
@@ -184,12 +185,12 @@ func (m *Message) AttachBuffer(filename string, buf []byte, inline bool) error {
 
 // Attach attaches a file.
 func (m *Message) Attach(filePath string) error {
-	return m.attach(filePath, false)
+	return m.attachInline(filePath, false)
 }
 
 // Inline includes a file as an inline attachment.
 func (m *Message) Inline(filePath string) error {
-	return m.attach(filePath, true)
+	return m.attachInline(filePath, true)
 }
 
 // Ads a Header to message
@@ -207,8 +208,8 @@ func newMessage(subject string, body string, bodyContentType string) *Message {
 	return m
 }
 
-// NewMessage returns a new Message that can compose an email with attachments
-func NewMessage(subject string, body string) *Message {
+// NewTextPlainMessage returns a new Message that can compose an email with attachments
+func NewTextPlainMessage(subject string, body string) *Message {
 	return newMessage(subject, body, "text/plain")
 }
 
@@ -240,15 +241,17 @@ func (m *Message) Tolist() []string {
 }
 
 // Bytes returns the mail data
+//
+//nolint:revive
 func (m *Message) Bytes() []byte {
 	buf := bytes.NewBuffer(nil)
 
-	buf.WriteString("From: " + m.From + "\r\n")
+	_, _ = buf.WriteString("From: " + m.From + "\r\n")
 
 	t := time.Now()
-	buf.WriteString("Date: " + t.Format(time.RFC1123Z) + "\r\n")
+	_, _ = buf.WriteString("Date: " + t.Format(time.RFC1123Z) + "\r\n")
 
-	buf.WriteString("To: " + strings.Join(m.To, ",") + "\r\n")
+	_, _ = buf.WriteString("To: " + strings.Join(m.To, ",") + "\r\n")
 	if len(m.Cc) > 0 {
 		buf.WriteString("Cc: " + strings.Join(m.Cc, ",") + "\r\n")
 	}
@@ -267,7 +270,7 @@ func (m *Message) Bytes() []byte {
 	// Add custom headers
 	if len(m.Headers) > 0 {
 		for _, header := range m.Headers {
-			fmt.Fprintf(buf, "%s: %s\r\n", header.Key, header.Value)
+			_, _ = fmt.Fprintf(buf, "%s: %s\r\n", header.Key, header.Value)
 		}
 	}
 
@@ -298,8 +301,8 @@ func (m *Message) Bytes() []byte {
 				ext := filepath.Ext(attachment.Filename)
 				mimetype := mime.TypeByExtension(ext)
 				if mimetype != "" {
-					mime := fmt.Sprintf("Content-Type: %s\r\n", mimetype)
-					buf.WriteString(mime)
+					contentType := fmt.Sprintf("Content-Type: %s\r\n", mimetype)
+					buf.WriteString(contentType)
 				} else {
 					buf.WriteString("Content-Type: application/octet-stream\r\n")
 				}
@@ -314,7 +317,12 @@ func (m *Message) Bytes() []byte {
 
 				// write base64 content in lines of up to 76 chars (RFC 2045)
 				for i, l := 0, len(b); i < l; i++ {
-					buf.WriteByte(b[i])
+					err := buf.WriteByte(b[i])
+					if err != nil {
+						return nil
+					}
+
+					// add a line break every 76 characters
 					if (i+1)%76 == 0 {
 						buf.WriteString("\r\n")
 					}
@@ -331,10 +339,13 @@ func (m *Message) Bytes() []byte {
 }
 
 // ref: https://stackoverflow.com/questions/11065913/send-email-through-unencrypted-connection
+//
+//nolint:unused
 type unencryptedAuth struct {
 	smtp.Auth
 }
 
+//nolint:unused
 func (a unencryptedAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
 	s := *server
 	s.TLS = true

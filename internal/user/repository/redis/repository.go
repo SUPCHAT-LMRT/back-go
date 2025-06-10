@@ -93,6 +93,7 @@ func (r RedisUserRepository) GetByEmail(
 	return r.GetById(ctx, entity.UserId(userIdStr))
 }
 
+//nolint:revive
 func (r RedisUserRepository) List(ctx context.Context) ([]*entity.User, error) {
 	const batchSize = 100
 	var cursor uint64

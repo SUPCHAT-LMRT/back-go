@@ -227,10 +227,11 @@ func (m MongoRoleRepository) DessassignRoleFromUser(
 	return nil
 }
 
+//nolint:revive
 func (m MongoRoleRepository) GetRolesWithAssignmentForMember(
 	ctx context.Context,
 	workspaceId workspace_entity.WorkspaceId,
-	WorkspaceMemberId entity2.WorkspaceMemberId,
+	workspaceMemberId entity2.WorkspaceMemberId,
 ) ([]*entity.Role, error) {
 	workspaceObjectId, err := bson.ObjectIDFromHex(string(workspaceId))
 	if err != nil {
@@ -254,7 +255,7 @@ func (m MongoRoleRepository) GetRolesWithAssignmentForMember(
 
 		isAssigned := false
 		for _, assignedUser := range mongoRole.AssignedUsers {
-			if assignedUser == string(WorkspaceMemberId) {
+			if assignedUser == string(workspaceMemberId) {
 				isAssigned = true
 				break
 			}

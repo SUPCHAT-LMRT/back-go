@@ -16,19 +16,19 @@ func NewMongoGroupMemberMapper() mapper.Mapper[*MongoGroupMember, *entity.GroupM
 }
 
 func (m MongoGroupMemberMapper) MapFromEntity(
-	entity *entity.GroupMember,
+	entityGroupMember *entity.GroupMember,
 ) (*MongoGroupMember, error) {
-	memberObjectId, err := bson.ObjectIDFromHex(entity.Id.String())
+	memberObjectId, err := bson.ObjectIDFromHex(entityGroupMember.Id.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert group member id to object id: %w", err)
 	}
 
-	userObjectId, err := bson.ObjectIDFromHex(entity.UserId.String())
+	userObjectId, err := bson.ObjectIDFromHex(entityGroupMember.UserId.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert user id to object id: %w", err)
 	}
 
-	groupObjectId, err := bson.ObjectIDFromHex(entity.GroupId.String())
+	groupObjectId, err := bson.ObjectIDFromHex(entityGroupMember.GroupId.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert group id to object id: %w", err)
 	}

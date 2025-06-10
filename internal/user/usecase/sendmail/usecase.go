@@ -12,11 +12,11 @@ func NewSendMailUseCase(mailer *mail.Mailer) *SendMailUseCase {
 	return &SendMailUseCase{mailer: mailer}
 }
 
-func (u *SendMailUseCase) Execute(mail *mail.Message) error {
-	if mail.From == "" {
-		mail.From = u.mailer.From
+func (u *SendMailUseCase) Execute(message *mail.Message) error {
+	if message.From == "" {
+		message.From = u.mailer.From
 	}
-	return u.mailer.Send(mail)
+	return u.mailer.Send(message)
 }
 
 func (u *SendMailUseCase) Outros() []string {

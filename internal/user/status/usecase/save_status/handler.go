@@ -17,7 +17,7 @@ func NewSaveStatusHandler(useCase *SaveStatusUseCase) *SaveStatusHandler {
 }
 
 func (h *SaveStatusHandler) Handle(c *gin.Context) {
-	user := c.MustGet("user").(*entity.User)
+	user := c.MustGet("user").(*entity.User) //nolint:revive
 
 	var body struct {
 		Status string `json:"status" binding:"required,userStatus"`

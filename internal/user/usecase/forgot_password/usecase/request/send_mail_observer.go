@@ -17,10 +17,10 @@ type SendMailRequestForgotPasswordObserver struct {
 }
 
 func NewSendMailRequestForgotPasswordObserver(
-	logger logger.Logger,
+	logg logger.Logger,
 	sendMailUseCase *sendmail.SendMailUseCase,
 ) ForgotPasswordRequestObserver {
-	return &SendMailRequestForgotPasswordObserver{logger: logger, sendMailUseCase: sendMailUseCase}
+	return &SendMailRequestForgotPasswordObserver{logger: logg, sendMailUseCase: sendMailUseCase}
 }
 
 func (o *SendMailRequestForgotPasswordObserver) NotifyRequestResetPasswordCreated(

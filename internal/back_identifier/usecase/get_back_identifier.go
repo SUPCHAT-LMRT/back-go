@@ -6,7 +6,9 @@ type GetBackIdentifierUseCase struct {
 	strategy BackIdentifierStrategy
 }
 
-func NewGetBackIdentifierUseCase(strategy BackIdentifierStrategy) *GetBackIdentifierUseCase {
+func NewGetBackIdentifierUseCase(
+	strategy BackIdentifierStrategy,
+) *GetBackIdentifierUseCase {
 	return &GetBackIdentifierUseCase{strategy: strategy}
 }
 

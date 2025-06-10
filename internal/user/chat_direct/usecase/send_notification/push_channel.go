@@ -25,8 +25,8 @@ func (c *PushChannel) SendNotification(
 	req SendMessageNotificationRequest,
 ) error {
 	// get receiver notification preferences
-	//if !receiver.NotificationPreferences.Push {
+	// if !receiver.NotificationPreferences.Push {
 	//	return nil
-	//}
+	// }
 	return nil
 }

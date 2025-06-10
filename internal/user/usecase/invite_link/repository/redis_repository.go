@@ -26,10 +26,10 @@ type RedisInviteLinkRepository struct {
 }
 
 func NewRedisInviteLinkRepository(
-	mapper mapper.Mapper[map[string]string, *entity.InviteLink],
+	inviteLinkMapper mapper.Mapper[map[string]string, *entity.InviteLink],
 	client *redis.Client,
 ) InviteLinkRepository {
-	return &RedisInviteLinkRepository{mapper: mapper, client: client}
+	return &RedisInviteLinkRepository{mapper: inviteLinkMapper, client: client}
 }
 
 func (m RedisInviteLinkRepository) GenerateInviteLink(
@@ -136,10 +136,11 @@ func (m RedisInviteLinkRepository) DeleteInviteLink(ctx context.Context, token s
 	return nil
 }
 
+//nolint:revive
 func (m RedisInviteLinkRepository) GetAllInviteLinks(
 	ctx context.Context,
 ) ([]*entity.InviteLink, error) {
-	keys, err := m.client.Client.Keys(ctx, "invite_link_workspace:*").Result()
+	keys, err := m.client.Client.Keys(ctx, buildInviteLinkRedisKey("*")).Result()
 	if err != nil {
 		return nil, err
 	}

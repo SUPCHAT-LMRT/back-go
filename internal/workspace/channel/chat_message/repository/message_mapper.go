@@ -43,24 +43,25 @@ func (m ChannelMessageMapper) MapToEntity(
 	}, nil
 }
 
+//nolint:revive
 func (m ChannelMessageMapper) MapFromEntity(
-	entity *entity.ChannelMessage,
+	channelMessage *entity.ChannelMessage,
 ) (*MongoChannelMessage, error) {
-	messageObjectId, err := bson.ObjectIDFromHex(string(entity.Id))
+	messageObjectId, err := bson.ObjectIDFromHex(string(channelMessage.Id))
 	if err != nil {
 		return nil, err
 	}
-	channelObjectId, err := bson.ObjectIDFromHex(string(entity.ChannelId))
+	channelObjectId, err := bson.ObjectIDFromHex(string(channelMessage.ChannelId))
 	if err != nil {
 		return nil, err
 	}
-	authorObjectId, err := bson.ObjectIDFromHex(string(entity.AuthorId))
+	authorObjectId, err := bson.ObjectIDFromHex(string(channelMessage.AuthorId))
 	if err != nil {
 		return nil, err
 	}
 
-	reactions := make([]*MongoChannelMessageReaction, len(entity.Reactions))
-	for i, reaction := range entity.Reactions {
+	reactions := make([]*MongoChannelMessageReaction, len(channelMessage.Reactions))
+	for i, reaction := range channelMessage.Reactions {
 		reactionUsers := make([]bson.ObjectID, len(reaction.UserIds))
 		for j, user := range reaction.UserIds {
 			userObjectId, err := bson.ObjectIDFromHex(string(user))
@@ -87,8 +88,8 @@ func (m ChannelMessageMapper) MapFromEntity(
 		Id:        messageObjectId,
 		ChannelId: channelObjectId,
 		AuthorId:  authorObjectId,
-		Content:   entity.Content,
-		CreatedAt: entity.CreatedAt,
+		Content:   channelMessage.Content,
+		CreatedAt: channelMessage.CreatedAt,
 		Reactions: reactions,
 	}, nil
 }
