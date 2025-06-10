@@ -265,10 +265,11 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		{
 			inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkDataHandler.Handle)
 
-			inviteLinkGroup.Use(authMiddleware, userInWorkspaceMiddleware, jobPermissionsMiddleware(entity2.VIEW_ADMINISTRATION_PANEL|entity2.CREATE_INVITATION))
+			inviteLinkGroup.Use(authMiddleware, jobPermissionsMiddleware(entity2.VIEW_ADMINISTRATION_PANEL|entity2.CREATE_INVITATION))
 			inviteLinkGroup.POST("", d.deps.CreateInviteLinkHandler.Handle)
-			inviteLinkGroup.Use(authMiddleware, userInWorkspaceMiddleware, jobPermissionsMiddleware(entity2.DELETE_INVITATION))
 			inviteLinkGroup.GET("", d.deps.GetListInviteLinkHandler.Handle)
+
+			inviteLinkGroup.Use(jobPermissionsMiddleware(entity2.DELETE_INVITATION))
 			inviteLinkGroup.DELETE("/:token", d.deps.DeleteInviteLinkHandler.Handle)
 		}
 
