@@ -6,6 +6,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	workspace_member_entity "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 )
 
 type GetPrivateChannelsUseCase struct {
@@ -21,7 +22,7 @@ func NewGetPrivateChannelsUseCase(
 func (u *GetPrivateChannelsUseCase) Execute(
 	ctx context.Context,
 	workspaceId workspace_entity.WorkspaceId,
-	userId string,
+	workspaceMemberId workspace_member_entity.WorkspaceMemberId,
 ) ([]*entity.Channel, error) {
-	return u.repository.ListPrivateChannelsByUser(ctx, workspaceId, userId)
+	return u.repository.ListPrivateChannelsByUser(ctx, workspaceId, workspaceMemberId)
 }

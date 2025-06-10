@@ -22,6 +22,10 @@ name = "line-length-limit"
 disabled = true
 
 [[linters.settings.revive.rules]]
+name = "cognitive-complexity"
+disabled = true
+
+[[linters.settings.revive.rules]]
 name = "function-length"
 arguments = [0, 100]
 
