@@ -58,7 +58,7 @@ import (
 	get_data_token_invite2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/join_workspace_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/kick_member"
-	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workpace_members"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workspace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/entity"
 	middlewares2 "github.com/supchat-lmrt/back-go/internal/workspace/roles/gin/middlewares"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/assign_role"
@@ -108,7 +108,7 @@ type GinRouterDeps struct {
 	CreateWorkspaceHandler            *create_workspace.CreateWorkspaceHandler
 	UpdateWorkspaceIconHandler        *update_icon.UpdateWorkspaceIconHandler
 	UpdateWorkspaceBannerHandler      *update_banner.UpdateWorkspaceBannerHandler
-	ListWorkspaceMembersHandler       *list_workpace_members.ListWorkspaceMembersHandler
+	ListWorkspaceMembersHandler       *list_workspace_members.ListWorkspaceMembersHandler
 	UpdateWorkspaceInfosHandler       *update_info_workspaces.UpdateInfoWorkspacesHandler
 	UpdateWorkspaceTypeHandler        *update_type_workspace.UpdateTypeWorkspaceHandler
 	GetWorkspaceHandler               *get_workspace.GetWorkspaceHandler
