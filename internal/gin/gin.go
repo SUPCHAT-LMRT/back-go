@@ -2,6 +2,7 @@
 package gin
 
 import (
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_user_private_channel"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -128,13 +129,14 @@ type GinRouterDeps struct {
 	KickMemberHandler                 *kick_member.KickMemberHandler
 	GetMemberIdHandler                *get_member_id.GetMemberIdHandler
 	// Workspaces channels
-	ListChannelsHandler        *list_channels.ListChannelsHandler
-	ListPrivateChannelsHandler *list_private_channels.GetPrivateChannelsHandler
-	CreateChannelHandler       *create_channel.CreateChannelHandler
-	ReorderChannelHandler      *reoder_channels.ReorderChannelHandler
-	ListChannelMessagesHandler *list_messages.ListChannelMessagesHandler
-	GetChannelHandler          *get_channel.GetChannelHandler
-	DeleteChannelHandler       *delete_channels.DeleteChannelHandler
+	ListChannelsHandler              *list_channels.ListChannelsHandler
+	ListPrivateChannelsHandler       *list_private_channels.GetPrivateChannelsHandler
+	CreateChannelHandler             *create_channel.CreateChannelHandler
+	ReorderChannelHandler            *reoder_channels.ReorderChannelHandler
+	ListChannelMessagesHandler       *list_messages.ListChannelMessagesHandler
+	GetChannelHandler                *get_channel.GetChannelHandler
+	DeleteChannelHandler             *delete_channels.DeleteChannelHandler
+	ListPrivateChannelMembersHandler *list_user_private_channel.ListPrivateChannelMembersHandler
 	// Workspace roles
 	CreateRoleHandler        *create_role.CreateRoleHandler
 	GetRoleHandler           *get_role.GetRoleHandler
@@ -369,6 +371,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
 				channelGroup.POST("/reorder", d.deps.ReorderChannelHandler.Handle)
 				channelGroup.DELETE("/:channel_id", d.deps.DeleteChannelHandler.Handle)
+				channelGroup.GET("/:channel_id/members", d.deps.ListPrivateChannelMembersHandler.Handle)
 			}
 
 			roleGroup := specificWorkspaceGroup.Group("/roles")

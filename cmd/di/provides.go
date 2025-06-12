@@ -2,6 +2,8 @@ package di
 
 import (
 	"fmt"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_user_private_channel"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_user_by_workspace_member_id"
 	"log"
 	"os"
 	"reflect"
@@ -261,6 +263,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(dessassign_role.NewDessassignRoleFromUserHandler),
 		dig.NewProvider(get_roles_for_member.NewGetRolesForMemberHandler),
 		dig.NewProvider(check_permissions.NewCheckPermissionsHandler),
+		dig.NewProvider(list_user_private_channel.NewListPrivateChannelMembersHandler),
 		// Workspace channels usecases
 		dig.NewProvider(list_channels.NewListChannelsUseCase),
 		dig.NewProvider(list_private_channels.NewGetPrivateChannelsUseCase),
@@ -273,6 +276,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(dessassign_role.NewDessassignRoleFromUserUsecase),
 		dig.NewProvider(get_roles_for_member.NewGetRolesForMemberUsecase),
 		dig.NewProvider(permissions.NewCheckPermissionUseCase),
+		dig.NewProvider(list_user_private_channel.NewListPrivateChannelMembersUseCase),
 		// Workspaces channels observers
 		dig.NewProvider(
 			create_channel.NewCreateChannelObserver,
@@ -322,6 +326,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(add_member2.NewAddMemberUseCase),
 		dig.NewProvider(add_member2.NewAddMemberHandler),
 		dig.NewProvider(delete3.NewDeleteInviteLinkWorkspaceUseCase),
+		dig.NewProvider(get_user_by_workspace_member_id.NewGetUserByWorkspaceMemberIdUseCase),
 		// Workspace member handlers
 		dig.NewProvider(join_workspace_invite.NewJoinWorkspaceInviteUseCase),
 		dig.NewProvider(join_workspace_invite.NewJoinWorkspaceInviteHandler),

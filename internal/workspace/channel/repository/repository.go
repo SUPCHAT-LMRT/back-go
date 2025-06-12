@@ -20,4 +20,5 @@ type ChannelRepository interface {
 		workspaceId workspace_entity.WorkspaceId,
 		memberId workspace_member_entity.WorkspaceMemberId,
 	) ([]*entity.Channel, error)
+	ListMembersOfPrivateChannel(ctx context.Context, channelId entity.ChannelId) ([]workspace_member_entity.WorkspaceMemberId, error)
 }

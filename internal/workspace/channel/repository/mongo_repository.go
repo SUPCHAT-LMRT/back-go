@@ -235,3 +235,28 @@ func (m MongoChannelRepository) ListPrivateChannelsByUser(
 
 	return channels, nil
 }
+
+func (m MongoChannelRepository) ListMembersOfPrivateChannel(
+	ctx context.Context,
+	channelId entity.ChannelId,
+) ([]workspace_member_entity.WorkspaceMemberId, error) {
+	objectId, err := bson.ObjectIDFromHex(string(channelId))
+	if err != nil {
+		return nil, err
+	}
+
+	var mongoChannel MongoChannel
+	err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, bson.M{"_id": objectId, "is_private": true}).
+		Decode(&mongoChannel)
+	if err != nil {
+		return nil, err
+	}
+
+	members := make([]workspace_member_entity.WorkspaceMemberId, len(mongoChannel.Members))
+	for i, memberId := range mongoChannel.Members {
+		members[i] = workspace_member_entity.WorkspaceMemberId(memberId)
+	}
+	return members, nil
+}

@@ -283,3 +283,27 @@ func (m MongoWorkspaceMemberRepository) RemoveMember(
 
 	return nil
 }
+
+func (m MongoWorkspaceMemberRepository) GetMemberById(
+	ctx context.Context,
+	memberId entity2.WorkspaceMemberId,
+) (*entity2.WorkspaceMember, error) {
+	memberObjectId, err := bson.ObjectIDFromHex(memberId.String())
+	if err != nil {
+		return nil, err
+	}
+
+	var mongoWorkspaceMember MongoWorkspaceMember
+	err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, bson.M{"_id": memberObjectId}).
+		Decode(&mongoWorkspaceMember)
+	if err != nil {
+		if errors.Is(err, mongo2.ErrNoDocuments) {
+			return nil, ErrWorkspaceMemberNotFound
+		}
+		return nil, err
+	}
+
+	return m.deps.WorkspaceMemberMapper.MapToEntity(&mongoWorkspaceMember)
+}

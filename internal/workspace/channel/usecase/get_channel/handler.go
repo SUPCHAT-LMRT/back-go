@@ -1,10 +1,9 @@
 package get_channel
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
-	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
+	"net/http"
 )
 
 type GetChannelHandler struct {
@@ -17,22 +16,22 @@ func NewGetChannelHandler(useCase *GetChannelUseCase) *GetChannelHandler {
 
 func (h *GetChannelHandler) Handle(c *gin.Context) {
 	channelId := c.Param("channel_id")
-
-	channel, err := h.useCase.Execute(c, channel_entity.ChannelId(channelId))
+	channel, err := h.useCase.Execute(c.Request.Context(), entity.ChannelId(channelId))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, ChannelResponse{
-		Id:          channel.Id.String(),
-		Name:        channel.Name,
-		Topic:       channel.Topic,
-		WorkspaceId: channel.WorkspaceId.String(),
-		CreatedAt:   channel.CreatedAt.String(),
-		UpdatedAt:   channel.UpdatedAt.String(),
+	c.JSON(http.StatusOK, gin.H{
+		"id":         channel.Id,
+		"name":       channel.Name,
+		"topic":      channel.Topic,
+		"kind":       channel.Kind,
+		"isPrivate":  channel.IsPrivate,
+		"members":    channel.Members,
+		"workspace":  channel.WorkspaceId,
+		"created_at": channel.CreatedAt,
+		"updated_at": channel.UpdatedAt,
+		"index":      channel.Index,
 	})
 }
 
