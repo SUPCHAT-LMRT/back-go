@@ -12,6 +12,7 @@ type ChatDirectRepository interface {
 	Create(ctx context.Context, chatDirect *entity.ChatDirect) error
 	ListRecentChats(ctx context.Context, userId user_entity.UserId) ([]*entity.ChatDirect, error)
 	IsFirstMessage(ctx context.Context, user1Id, user2Id user_entity.UserId) (bool, error)
+	GetLastMessage(ctx context.Context, user1Id, user2Id user_entity.UserId) (*entity.ChatDirect, error)
 	// ListByUser returns all direct chats between user1 and user2
 	ListByUser(
 		ctx context.Context,

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/supchat-lmrt/back-go/internal/mapper"
@@ -175,6 +176,43 @@ func (m MongoChatDirectRepository) IsFirstMessage(
 	}
 
 	return count == 1, nil
+}
+
+func (m MongoChatDirectRepository) GetLastMessage(ctx context.Context, user1Id, user2Id user_entity.UserId) (*entity.ChatDirect, error) {
+	user1IdHex, err := bson.ObjectIDFromHex(string(user1Id))
+	if err != nil {
+		return nil, err
+	}
+
+	user2IdHex, err := bson.ObjectIDFromHex(string(user2Id))
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.D{
+		{
+			Key: "$or", Value: bson.A{
+				bson.D{{Key: "user1Id", Value: user1IdHex}, {Key: "user2Id", Value: user2IdHex}},
+				bson.D{{Key: "user1Id", Value: user2IdHex}, {Key: "user2Id", Value: user1IdHex}},
+			},
+		},
+	}
+
+	opts := options.FindOne().
+		SetSort(bson.D{{Key: "created_at", Value: -1}}) // Dernier message
+
+	var mongoChatDirect MongoChatDirect
+	err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, filter, opts).Decode(&mongoChatDirect)
+	if err != nil {
+		if errors.Is(err, mongo2.ErrNoDocuments) {
+			return nil, nil // Pas de messages trouvés
+		}
+		return nil, err
+	}
+
+	return m.deps.Mapper.MapToEntity(&mongoChatDirect)
 }
 
 //nolint:revive
