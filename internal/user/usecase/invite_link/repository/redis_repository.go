@@ -140,7 +140,7 @@ func (m RedisInviteLinkRepository) DeleteInviteLink(ctx context.Context, token s
 func (m RedisInviteLinkRepository) GetAllInviteLinks(
 	ctx context.Context,
 ) ([]*entity.InviteLink, error) {
-	keys, err := m.client.Client.Keys(ctx, "invite_link_workspace:*").Result()
+	keys, err := m.client.Client.Keys(ctx, buildInviteLinkRedisKey("*")).Result()
 	if err != nil {
 		return nil, err
 	}

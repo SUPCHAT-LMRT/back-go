@@ -1,0 +1,54 @@
+name: "CI - Merge Dev → Main"
+
+on:
+  workflow_call:
+    inputs:
+      head_branch:
+        type: string
+        default: dev
+      base_branch:
+        type: string
+        default: main
+    secrets:
+      ORG_READ_TOKEN:
+        required: true
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: merge-${{ github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  approval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.ORG_READ_TOKEN }}
+          approvers: dev
+          minimum-approvals: 1
+          exclude-workflow-initiator-as-approver: false
+          timeout-minutes: 1440
+
+  merge:
+    needs: approval
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+
+      - name: Merge ${{ inputs.head_branch }} → ${{ inputs.base_branch }}
+        run: |
+          git checkout "${{ inputs.base_branch }}"
+          git merge --no-ff "${{ inputs.head_branch }}" \
+            -m "Merge automatique ${{ inputs.head_branch }} → ${{ inputs.base_branch }}"
+          git push origin "${{ inputs.base_branch }}"

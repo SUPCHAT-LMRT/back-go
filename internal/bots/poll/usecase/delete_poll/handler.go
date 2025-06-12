@@ -1,8 +1,9 @@
 package delete_poll
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type DeletePollHandler struct {

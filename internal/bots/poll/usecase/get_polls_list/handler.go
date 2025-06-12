@@ -24,7 +24,7 @@ func (h *GetPollsListHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	user := c.MustGet("user").(*user_entity.User)
+	user := c.MustGet("user").(*user_entity.User) //nolint:revive
 	userId := string(user.Id)
 
 	polls, err := h.usecase.Execute(c, workspace_entity.WorkspaceId(workspaceId))

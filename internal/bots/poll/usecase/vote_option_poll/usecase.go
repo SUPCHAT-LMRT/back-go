@@ -2,6 +2,7 @@ package vote_option_poll
 
 import (
 	"context"
+
 	"github.com/supchat-lmrt/back-go/internal/bots/poll/repository"
 )
 
@@ -29,7 +30,12 @@ func NewVoteOptionPollUseCase(repo repository.PollRepository) *VoteOptionPollUse
 	return &VoteOptionPollUseCase{repo: repo}
 }
 
-func (uc *VoteOptionPollUseCase) Execute(ctx context.Context, pollId string, optionId string, userId string) error {
+func (uc *VoteOptionPollUseCase) Execute(
+	ctx context.Context,
+	pollId string,
+	optionId string,
+	userId string,
+) error {
 	poll, err := uc.repo.GetById(ctx, pollId)
 	if err != nil {
 		return &CustomError{Code: ErrorCodePollNotFound, Message: "Sondage non trouvé"}
@@ -38,7 +44,10 @@ func (uc *VoteOptionPollUseCase) Execute(ctx context.Context, pollId string, opt
 	for _, opt := range poll.Options {
 		for _, voter := range opt.Voters {
 			if voter == userId {
-				return &CustomError{Code: ErrorCodeAlreadyVoted, Message: "Vous avez déjà voté pour ce sondage"}
+				return &CustomError{
+					Code:    ErrorCodeAlreadyVoted,
+					Message: "Vous avez déjà voté pour ce sondage",
+				}
 			}
 		}
 	}
@@ -58,7 +67,10 @@ func (uc *VoteOptionPollUseCase) Execute(ctx context.Context, pollId string, opt
 
 	err = uc.repo.Vote(ctx, poll)
 	if err != nil {
-		return &CustomError{Code: ErrorCodeUpdateFailed, Message: "Erreur lors de l'enregistrement du vote"}
+		return &CustomError{
+			Code:    ErrorCodeUpdateFailed,
+			Message: "Erreur lors de l'enregistrement du vote",
+		}
 	}
 
 	return nil

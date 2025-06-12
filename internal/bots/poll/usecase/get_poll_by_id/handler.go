@@ -1,8 +1,9 @@
 package get_poll_by_id
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type GetPollByIdHandler struct {

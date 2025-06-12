@@ -1,0 +1,31 @@
+name: "Pipeline CI"
+
+on:
+  push:
+    branches: [ test ]
+  pull_request:
+    branches: [ test ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  run-tests:
+    uses: ./.github/workflows/ci-test.yml
+
+  lint:
+    needs: run-tests
+    uses: ./.github/workflows/ci-linter.yml
+
+  merge:
+    needs:
+      - run-tests
+      - lint
+    uses: ./.github/workflows/ci-merge.yml
+    with:
+      head_branch: test
+      base_branch: main
+    secrets:
+      ORG_READ_TOKEN: ${{ secrets.ORG_READ_TOKEN }}

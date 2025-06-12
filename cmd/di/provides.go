@@ -2,6 +2,7 @@ package di
 
 import (
 	"fmt"
+	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/get_last_message"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_user_private_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_user_by_workspace_member_id"
 	"log"
@@ -425,6 +426,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(user_chat_direct_repository.NewChatDirectMapper),
 		// User chat direct usecases
 		dig.NewProvider(list_recent_chats_direct.NewListRecentChatDirectUseCase),
+		dig.NewProvider(get_last_message.NewGetLastDirectChatMessageUseCase),
 		dig.NewProvider(save_direct_message.NewSaveDirectMessageUseCase),
 		dig.NewProvider(is_first_message.NewIsFirstMessageUseCase),
 		dig.NewProvider(list_direct_messages.NewListDirectMessagesUseCase),

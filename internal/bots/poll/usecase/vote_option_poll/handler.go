@@ -1,9 +1,10 @@
 package vote_option_poll
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
-	"net/http"
 )
 
 type VoteOptionPollHandler struct {
@@ -22,7 +23,7 @@ type ErrorResponse struct {
 func (h *VoteOptionPollHandler) Handle(c *gin.Context) {
 	pollId := c.Param("poll_id")
 	optionId := c.Param("option_id")
-	user := c.MustGet("user").(*user_entity.User)
+	user := c.MustGet("user").(*user_entity.User) //nolint:revive
 
 	if pollId == "" || optionId == "" {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
