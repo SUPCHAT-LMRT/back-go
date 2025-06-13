@@ -29,4 +29,5 @@ type WorkspaceRepository interface {
 		workspaceId entity.WorkspaceId,
 		userId user_entity.UserId,
 	) (entity2.WorkspaceMemberId, error)
+	ListAllWorkspacesByUser(ctx context.Context, userId user_entity.UserId) ([]*entity.Workspace, error)
 }

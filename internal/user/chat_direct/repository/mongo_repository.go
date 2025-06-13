@@ -162,9 +162,9 @@ func (m MongoChatDirectRepository) IsFirstMessage(
 	filter := bson.D{
 		{
 			Key: "$or", Value: bson.A{
-				bson.D{{Key: "user1Id", Value: user1IdHex}, {Key: "user2Id", Value: user2IdHex}},
-				bson.D{{Key: "user1Id", Value: user2IdHex}, {Key: "user2Id", Value: user1IdHex}},
-			},
+			bson.D{{Key: "user1Id", Value: user1IdHex}, {Key: "user2Id", Value: user2IdHex}},
+			bson.D{{Key: "user1Id", Value: user2IdHex}, {Key: "user2Id", Value: user1IdHex}},
+		},
 		},
 	}
 
@@ -195,9 +195,9 @@ func (m MongoChatDirectRepository) GetLastMessage(
 	filter := bson.D{
 		{
 			Key: "$or", Value: bson.A{
-				bson.D{{Key: "user1Id", Value: user1IdHex}, {Key: "user2Id", Value: user2IdHex}},
-				bson.D{{Key: "user1Id", Value: user2IdHex}, {Key: "user2Id", Value: user1IdHex}},
-			},
+			bson.D{{Key: "user1Id", Value: user1IdHex}, {Key: "user2Id", Value: user2IdHex}},
+			bson.D{{Key: "user1Id", Value: user2IdHex}, {Key: "user2Id", Value: user1IdHex}},
+		},
 		},
 	}
 
@@ -238,9 +238,9 @@ func (m MongoChatDirectRepository) ListByUser(
 	filter := bson.D{
 		{
 			Key: "$or", Value: bson.A{
-				bson.D{{Key: "user1Id", Value: user1IdHex}, {Key: "user2Id", Value: user2IdHex}},
-				bson.D{{Key: "user1Id", Value: user2IdHex}, {Key: "user2Id", Value: user1IdHex}},
-			},
+			bson.D{{Key: "user1Id", Value: user1IdHex}, {Key: "user2Id", Value: user2IdHex}},
+			bson.D{{Key: "user1Id", Value: user2IdHex}, {Key: "user2Id", Value: user1IdHex}},
+		},
 		},
 	}
 
@@ -445,4 +445,39 @@ func (m MongoChatDirectRepository) ToggleReaction(
 	}
 
 	return !removed, nil
+}
+
+func (m *MongoChatDirectRepository) ListAllMessagesByUser(ctx context.Context, userId user_entity.UserId) ([]*entity.ChatDirect, error) {
+	userIdHex, err := bson.ObjectIDFromHex(string(userId))
+	if err != nil {
+		return nil, err
+	}
+
+	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
+	filter := bson.M{
+		"$or": []bson.M{
+			{"user1Id": userIdHex},
+			{"user2Id": userIdHex},
+		},
+	}
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var mongoChatDirects []*MongoChatDirect
+	if err := cursor.All(ctx, &mongoChatDirects); err != nil {
+		return nil, err
+	}
+
+	chatDirects := make([]*entity.ChatDirect, len(mongoChatDirects))
+	for i, mongoChatDirect := range mongoChatDirects {
+		chatDirect, err := m.deps.Mapper.MapToEntity(mongoChatDirect)
+		if err != nil {
+			return nil, err
+		}
+		chatDirects[i] = chatDirect
+	}
+	return chatDirects, nil
 }

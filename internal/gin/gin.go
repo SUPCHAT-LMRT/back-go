@@ -2,6 +2,7 @@
 package gin
 
 import (
+	"github.com/supchat-lmrt/back-go/internal/data/usecase/export_all_user_data"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/create_group"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/group_info"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/leave_group"
@@ -163,6 +164,7 @@ type GinRouterDeps struct {
 	GetPublicProfileHandler                  *public_profile.GetPublicProfileHandler
 	DeleteUserHandler                        *delete_user.DeleteUserHandler
 	GetListUsersHandler                      *list_all_users.ListUserHandler
+	ExportAllUserDataHandler                 *export_all_user_data.ExportAllUserDataHandler
 	// User forgot password
 	RequestForgotPasswordHandler  *request_forgot_password.RequestForgotPasswordHandler
 	ValidateForgotPasswordHandler *validate_forgot_password.ValidateForgotPasswordHandler
@@ -228,6 +230,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	accountGroup := apiGroup.Group("/account")
 	{
 		accountGroup.GET("/me", authMiddleware, d.deps.GetMyAccountHandler.Handle)
+		accountGroup.GET("/export-data", authMiddleware, d.deps.ExportAllUserDataHandler.Handle)
 		accountGroup.PUT(
 			"/personal-informations",
 			authMiddleware,

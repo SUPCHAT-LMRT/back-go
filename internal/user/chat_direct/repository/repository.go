@@ -28,6 +28,7 @@ type ChatDirectRepository interface {
 		userId user_entity.UserId,
 		reaction string,
 	) (added bool, err error)
+	ListAllMessagesByUser(ctx context.Context, userId user_entity.UserId) ([]*entity.ChatDirect, error)
 }
 
 type ListByUserQueryParams struct {
