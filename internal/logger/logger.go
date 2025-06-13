@@ -65,3 +65,28 @@ type LogEntry interface {
 	// Logger returns a new logger with the fields added to the log entry.
 	Logger() Logger
 }
+
+type LogLevel int8
+
+const (
+	// LogLevelDebug defines debug log level.
+	LogLevelDebug LogLevel = iota
+	// LogLevelInfo defines info log level.
+	LogLevelInfo
+	// LogLevelWarn defines warn log level.
+	LogLevelWarn
+	// LogLevelError defines error log level.
+	LogLevelError
+	// LogLevelFatal defines fatal log level.
+	LogLevelFatal
+	// LogLevelPanic defines panic log level.
+	LogLevelPanic
+	// LogLevelNo defines an absent log level.
+	LogLevelNo
+	// LogLevelDisabled disables the logger.
+	LogLevelDisabled
+
+	// LogLevelTrace defines trace log level.
+	LogLevelTrace LogLevel = -1
+	// Values less than LogLevelTrace are handled as numbers.
+)

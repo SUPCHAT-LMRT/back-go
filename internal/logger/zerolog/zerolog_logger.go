@@ -14,14 +14,32 @@ type ZerologLogger struct {
 }
 
 // NewZerologLogger creates a new ZerologLogger instance.
-func NewZerologLogger() logger.Logger {
+func NewZerologLogger(options ...logger.CreateLoggerOption) func() logger.Logger {
+	opts := &logger.CreateLoggerOptions{
+		MinLevel: logger.LogLevelInfo, // Default minimum log level
+	}
+
+	for _, opt := range options {
+		opt(opts)
+	}
+
 	// colorMagenta = iota + 30 + 1 * 5 (https://en.wikipedia.org/wiki/ANSI_escape_code#Colors)
 	zerolog.LevelColors[zerolog.DebugLevel] = 35
 
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "02/01/2006 - 15:04:05"}
 
-	return &ZerologLogger{
-		logger: zerolog.New(output).With().CallerWithSkipFrameCount(3).Timestamp().Logger(),
+	skipFrameCount := 3 // Skip the zerolog package frames
+	logg := &ZerologLogger{
+		logger: zerolog.New(output).
+			Level(zerolog.Level(opts.MinLevel)).
+			With().
+			CallerWithSkipFrameCount(skipFrameCount).
+			Timestamp().
+			Logger(),
+	}
+
+	return func() logger.Logger {
+		return logg
 	}
 }
 

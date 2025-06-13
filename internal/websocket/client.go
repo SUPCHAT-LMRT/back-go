@@ -76,7 +76,7 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 	message.SetCreatedAt(time.Now())
 	// message.SetEmittedBy(c)
 
-	c.wsServer.Deps.Logger.Info().
+	c.wsServer.Deps.Logger.Debug().
 		Str("action", string(message.Action)).
 		Str("id", message.TransportMessageId).
 		Str("emittedBy", c.UserId.String()).

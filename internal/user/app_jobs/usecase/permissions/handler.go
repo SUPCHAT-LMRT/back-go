@@ -1,6 +1,7 @@
 package permissions
 
 import (
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -32,7 +33,7 @@ func (h *CheckUserPermissionsHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	hasPermission, err := h.checkPermissionUseCase.Execute(c, userId, request.Permissions)
+	hasPermission, err := h.checkPermissionUseCase.Execute(c, user_entity.UserId(userId), request.Permissions)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return

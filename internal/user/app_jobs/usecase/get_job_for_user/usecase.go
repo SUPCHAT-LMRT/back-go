@@ -2,6 +2,7 @@ package get_job_for_user
 
 import (
 	"context"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"sort"
 
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
@@ -16,7 +17,7 @@ func NewGetJobForUserUseCase(jobRepo repository.JobRepository) *GetJobForUserUse
 	return &GetJobForUserUseCase{jobRepo: jobRepo}
 }
 
-func (u *GetJobForUserUseCase) Execute(ctx context.Context, userId string) ([]*entity.Job, error) {
+func (u *GetJobForUserUseCase) Execute(ctx context.Context, userId user_entity.UserId) ([]*entity.Job, error) {
 	allJobs, err := u.jobRepo.FindAll(ctx)
 	if err != nil {
 		return nil, err

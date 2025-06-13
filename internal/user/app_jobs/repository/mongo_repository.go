@@ -278,9 +278,9 @@ func (r *MongoJobRepository) EnsureManagerJobExists(ctx context.Context) (*entit
 //nolint:revive
 func (r *MongoJobRepository) FindByUserId(
 	ctx context.Context,
-	userId string,
+	userId user_entity.UserId,
 ) ([]*entity.Job, error) {
-	filter := bson.M{"assigned_users": userId}
+	filter := bson.M{"assigned_users": userId.String()}
 
 	cursor, err := r.deps.Client.Client.Database(databaseName).
 		Collection(collectionName).
@@ -299,7 +299,7 @@ func (r *MongoJobRepository) FindByUserId(
 
 		isAssigned := false
 		for _, assignedUser := range mongoJob.AssignedUsers {
-			if assignedUser == userId {
+			if assignedUser == userId.String() {
 				isAssigned = true
 				break
 			}

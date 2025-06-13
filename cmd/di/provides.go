@@ -2,6 +2,7 @@ package di
 
 import (
 	"fmt"
+	"github.com/supchat-lmrt/back-go/internal/logger"
 	"log"
 	"os"
 	"reflect"
@@ -26,7 +27,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/group/strategies"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/add_member"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/list_recent_groups"
-	logger "github.com/supchat-lmrt/back-go/internal/logger/zerolog"
+	"github.com/supchat-lmrt/back-go/internal/logger/zerolog"
 	"github.com/supchat-lmrt/back-go/internal/mail"
 	"github.com/supchat-lmrt/back-go/internal/meilisearch"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
@@ -151,10 +152,14 @@ import (
 
 //nolint:revive
 func NewDi() *uberdig.Container {
+	isProd := os.Getenv("ENV") == "production"
+
 	di := uberdig.New()
 	providers := []dig.Provider{
 		// Logger
-		dig.NewProvider(logger.NewZerologLogger),
+		dig.NewProvider(zerolog.NewZerologLogger(
+			logger.WithMinLevel(utils.IfThenElse(isProd, logger.LogLevelInfo, logger.LogLevelTrace)),
+		)),
 		// Gin
 		dig.NewProvider(gin.NewGinRouter),
 		// Mongo
