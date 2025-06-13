@@ -5,33 +5,53 @@ import (
 	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/group/repository"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
+	uberdig "go.uber.org/dig"
 	"time"
 )
 
-type CreateGroupUseCase struct {
-	groupRepository repository.GroupRepository
+type CreateGroupUseCaseDeps struct {
+	uberdig.In
+	GroupRepository repository.GroupRepository
+	Observers       []GroupCreatedObserver `group:"group_created_observer"`
 }
 
-func NewCreateGroupUseCase(groupRepository repository.GroupRepository) *CreateGroupUseCase {
-	return &CreateGroupUseCase{groupRepository: groupRepository}
+type CreateGroupUseCase struct {
+	deps CreateGroupUseCaseDeps
+}
+
+func NewCreateGroupUseCase(deps CreateGroupUseCaseDeps) *CreateGroupUseCase {
+	return &CreateGroupUseCase{deps: deps}
 }
 
 func (uc *CreateGroupUseCase) Execute(ctx context.Context, input CreateGroupInput) (*group_entity.Group, error) {
 	now := time.Now()
 	group := group_entity.Group{
-		Name:        input.GroupName,
-		OwnerUserId: input.OwnerUserId,
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		Name:      input.GroupName,
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 
-	err := uc.groupRepository.Create(ctx, &group)
+	err := uc.deps.GroupRepository.Create(ctx, &group, input.OwnerUserId)
 	if err != nil {
 		return nil, err
 	}
 
+	for _, id := range input.UsersIds {
+		if id == input.OwnerUserId {
+			// Skip adding the owner as a member, they are already the owner
+			continue
+		}
+
+		err = uc.deps.GroupRepository.AddMember(ctx, group.Id, id)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// TODO impl meilisearch
-	// TODO impl sync recent chats
+	for _, observer := range uc.deps.Observers {
+		observer.NotifyGroupMemberAdded(&group)
+	}
 
 	return &group, nil
 }

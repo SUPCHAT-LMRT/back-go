@@ -6,7 +6,10 @@ import (
 	is_first_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/is_first_message"
 	toggle_reaction2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/toggle_reaction"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/create_group"
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/get_member_by_user"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/group_info"
+	kick_member2 "github.com/supchat-lmrt/back-go/internal/group/usecase/kick_member"
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/leave_group"
 	list_members "github.com/supchat-lmrt/back-go/internal/group/usecase/list_members_users"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"log"
@@ -230,7 +233,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkWorkspaceDataHandler),
 		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesHandler),
 		dig.NewProvider(update_type_workspace.NewUpdateTypeWorkspaceHandler),
-		dig.NewProvider(kick_member.NewKickMemberHandler),
+		dig.NewProvider(kick_member.NewKickGroupMemberHandler),
 		dig.NewProvider(get_member_id.NewGetMemberIdHandler),
 		// Workspace observers
 		dig.NewProvider(
@@ -505,10 +508,17 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(create_group.NewCreateGroupUseCase),
 		dig.NewProvider(list_members.NewListGroupMembersUseCase),
 		dig.NewProvider(group_info.NewGetGroupInfoUseCase),
+		dig.NewProvider(kick_member2.NewKickMemberUseCase),
+		dig.NewProvider(create_group.NewSyncRecentChatObserver, uberdig.Group("group_created_observer")),
+		dig.NewProvider(add_member.NewSyncRecentChatObserver, uberdig.Group("add_group_member_observer")),
+		dig.NewProvider(kick_member2.NewSyncRecentChatObserver, uberdig.Group("kick_group_member_observer")),
+		dig.NewProvider(get_member_by_user.NewGetMemberByUserUseCase),
 		// Group handlers
 		dig.NewProvider(add_member.NewAddMemberToGroupHandler),
 		dig.NewProvider(create_group.NewCreateGroupHandler),
 		dig.NewProvider(group_info.NewGetGroupInfoHandler),
+		dig.NewProvider(leave_group.NewLeaveGroupHandler),
+		dig.NewProvider(kick_member2.NewKickMemberHandler),
 		// Group chats
 		// Group chats repository
 		dig.NewProvider(group_chat_message_repository.NewMongoGroupChatRepository),

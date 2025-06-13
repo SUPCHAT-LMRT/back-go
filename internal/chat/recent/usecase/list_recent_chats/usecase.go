@@ -38,8 +38,7 @@ func (u *ListRecentChatsUseCase) Execute(
 ) ([]*ListRecentChatsUseCaseOutput, error) {
 	// Call the ListRecentGroupsUseCase and ListRecentChatDirectUseCase and sort by updated_at
 
-	// TODO impl groups
-	groups, err := u.deps.ListRecentGroupsUseCase.Execute(ctx)
+	groups, err := u.deps.ListRecentGroupsUseCase.Execute(ctx, currentUserId)
 	if err != nil {
 		return nil, err
 	}

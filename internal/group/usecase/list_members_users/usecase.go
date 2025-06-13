@@ -56,7 +56,7 @@ func (uc *ListGroupMembersUseCase) Execute(ctx context.Context, groupId group_en
 			UserId:       user.Id,
 			UserName:     user.FullName(),
 			Email:        user.Email,
-			IsGroupOwner: group.OwnerUserId == user.Id,
+			IsGroupOwner: group.OwnerMemberId == member.Id,
 			Status:       status,
 		}
 

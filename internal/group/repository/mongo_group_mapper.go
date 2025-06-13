@@ -5,7 +5,6 @@ import (
 
 	"github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
-	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -21,7 +20,7 @@ func (m MongoGroupMapper) MapFromEntity(entityGroup *entity.Group) (*MongoGroup,
 		return nil, fmt.Errorf("unable to convert group id to object id: %w", err)
 	}
 
-	ownerObjectId, err := bson.ObjectIDFromHex(entityGroup.OwnerUserId.String())
+	ownerObjectId, err := bson.ObjectIDFromHex(entityGroup.OwnerMemberId.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert owner id to object id: %w", err)
 	}
@@ -37,10 +36,10 @@ func (m MongoGroupMapper) MapFromEntity(entityGroup *entity.Group) (*MongoGroup,
 
 func (m MongoGroupMapper) MapToEntity(mongo *MongoGroup) (*entity.Group, error) {
 	return &entity.Group{
-		Id:          entity.GroupId(mongo.Id.Hex()),
-		Name:        mongo.Name,
-		OwnerUserId: user_entity.UserId(mongo.OwnerId.Hex()),
-		CreatedAt:   mongo.CreatedAt,
-		UpdatedAt:   mongo.UpdatedAt,
+		Id:            entity.GroupId(mongo.Id.Hex()),
+		Name:          mongo.Name,
+		OwnerMemberId: entity.GroupMemberId(mongo.OwnerId.Hex()),
+		CreatedAt:     mongo.CreatedAt,
+		UpdatedAt:     mongo.UpdatedAt,
 	}, nil
 }

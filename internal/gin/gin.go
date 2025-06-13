@@ -4,6 +4,7 @@ package gin
 import (
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/create_group"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/group_info"
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/leave_group"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -128,7 +129,7 @@ type GinRouterDeps struct {
 	GetMinutelyMessageSentHandler     *get_minutely.GetMinutelyMessageSentHandler
 	CreateInviteLinkWorkspaceHandler  *workspace_invite_link_generate.CreateInviteLinkHandler
 	GetInviteLinkWorkspaceDataHandler *get_data_token_invite2.GetInviteLinkWorkspaceDataHandler
-	KickMemberHandler                 *kick_member.KickMemberHandler
+	KickMemberHandler                 *kick_member.KickGroupMemberHandler
 	GetMemberIdHandler                *get_member_id.GetMemberIdHandler
 	// Workspaces channels
 	ListChannelsHandler              *list_channels.ListChannelsHandler
@@ -186,6 +187,8 @@ type GinRouterDeps struct {
 	CreateGroupHandler      *create_group.CreateGroupHandler
 	AddMemberToGroupHandler *add_member.AddMemberToGroupHandler
 	GetGroupInfoHandler     *group_info.GetGroupInfoHandler
+	LeaveGroupHandler       *leave_group.LeaveGroupHandler
+	KickGroupMemberHandler  *kick_member.KickGroupMemberHandler
 	// Group chat
 	ListGroupChatMessagesHandler *list_group_chat_messages.ListGroupChatMessagesHandler
 	// Search
@@ -307,6 +310,8 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			authMiddleware,
 			d.deps.ListGroupChatMessagesHandler.Handle,
 		)
+		groupGroup.DELETE("/:group_id", authMiddleware, d.deps.LeaveGroupHandler.Handle)
+		groupGroup.DELETE("/:group_id/members", authMiddleware, d.deps.KickMemberHandler.Handle)
 	}
 
 	// job app

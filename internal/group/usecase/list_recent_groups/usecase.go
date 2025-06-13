@@ -2,6 +2,7 @@ package list_recent_groups
 
 import (
 	"context"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 
 	"github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/group/repository"
@@ -21,6 +22,6 @@ func NewListRecentGroupsUseCase(deps ListRecentGroupsUseCaseDeps) *ListRecentGro
 	return &ListRecentGroupsUseCase{deps: deps}
 }
 
-func (u *ListRecentGroupsUseCase) Execute(ctx context.Context) ([]*entity.Group, error) {
-	return u.deps.Repository.ListRecentGroups(ctx)
+func (u *ListRecentGroupsUseCase) Execute(ctx context.Context, userId user_entity.UserId) ([]*entity.Group, error) {
+	return u.deps.Repository.ListRecentGroups(ctx, userId)
 }
