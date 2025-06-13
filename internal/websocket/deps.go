@@ -24,6 +24,7 @@ type WebSocketDeps struct {
 	GetUserByIdUseCase                  *get_by_id.GetUserByIdUseCase
 	SendChannelMessageObservers         []SendChannelMessageObserver `group:"send_channel_message_observers"`
 	SendDirectMessageObservers          []SendDirectMessageObserver  `group:"send_direct_message_observers"`
+	SendGroupMessageObservers           []SendGroupMessageObserver   `group:"send_group_message_observers"`
 	ToggleReactionChannelMessageUseCase *toggle_channel_message_reaction.ToggleReactionChannelMessageUseCase
 	ToggleReactionDirectMessageUseCase  *toggle_direct_message_reaction.ToggleReactionDirectMessageUseCase
 	SaveStatusUseCase                   *save_status.SaveStatusUseCase

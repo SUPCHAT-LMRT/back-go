@@ -2,6 +2,12 @@ package di
 
 import (
 	"fmt"
+	get_last_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/get_last_message"
+	is_first_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/is_first_message"
+	toggle_reaction2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/toggle_reaction"
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/create_group"
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/group_info"
+	list_members "github.com/supchat-lmrt/back-go/internal/group/usecase/list_members_users"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"log"
 	"os"
@@ -24,7 +30,6 @@ import (
 	list_group_chat_messages "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/list_messages"
 	save_group_chat_message "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/save_message"
 	group_repository "github.com/supchat-lmrt/back-go/internal/group/repository"
-	"github.com/supchat-lmrt/back-go/internal/group/strategies"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/add_member"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/list_recent_groups"
 	"github.com/supchat-lmrt/back-go/internal/logger/zerolog"
@@ -495,19 +500,26 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(group_repository.NewMongoGroupMapper),
 		dig.NewProvider(group_repository.NewMongoGroupMemberMapper),
 		// Group strategies
-		dig.NewProvider(strategies.NewMembersNamesGroupNameStrategy),
 		// Group usecases
 		dig.NewProvider(add_member.NewAddMemberToGroupUseCase),
+		dig.NewProvider(create_group.NewCreateGroupUseCase),
+		dig.NewProvider(list_members.NewListGroupMembersUseCase),
+		dig.NewProvider(group_info.NewGetGroupInfoUseCase),
 		// Group handlers
 		dig.NewProvider(add_member.NewAddMemberToGroupHandler),
+		dig.NewProvider(create_group.NewCreateGroupHandler),
+		dig.NewProvider(group_info.NewGetGroupInfoHandler),
 		// Group chats
 		// Group chats repository
-		dig.NewProvider(group_chat_message_repository.NewMongoGroupChatMessageRepository),
-		dig.NewProvider(group_chat_message_repository.NewGroupChatMessageMapper),
+		dig.NewProvider(group_chat_message_repository.NewMongoGroupChatRepository),
+		dig.NewProvider(group_chat_message_repository.NewMongoGroupChatMessageMapper),
 		// Group chats usecases
 		dig.NewProvider(list_recent_groups.NewListRecentGroupsUseCase),
 		dig.NewProvider(list_group_chat_messages.NewListGroupChatMessagesUseCase),
 		dig.NewProvider(save_group_chat_message.NewSaveGroupChatMessageUseCase),
+		dig.NewProvider(get_last_message2.NewGetLastGroupChatMessageUseCase),
+		dig.NewProvider(is_first_message2.NewIsFirstGroupChatMessageUseCase),
+		dig.NewProvider(toggle_reaction2.NewToggleGroupChatReactionUseCase),
 		// Group chats handlers
 		dig.NewProvider(list_group_chat_messages.NewListGroupChatMessagesHandler),
 		// Search

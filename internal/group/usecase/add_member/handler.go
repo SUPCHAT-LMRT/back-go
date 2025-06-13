@@ -25,6 +25,7 @@ func NewAddMemberToGroupHandler(deps AddMemberToGroupHandlerDeps) *AddMemberToGr
 }
 
 func (h *AddMemberToGroupHandler) Handle(c *gin.Context) {
+	groupId := c.Param("group_id")
 	var req AddMemberToGroupRequest
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -44,16 +45,15 @@ func (h *AddMemberToGroupHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	group, err := h.deps.UseCase.Execute(c, req.GroupId, inviter.Id, invitee.Id)
+	err = h.deps.UseCase.Execute(c, group_entity.GroupId(groupId), invitee.Id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusAccepted, group)
+	c.Status(http.StatusAccepted)
 }
 
 type AddMemberToGroupRequest struct {
-	GroupId       *group_entity.GroupId `json:"groupId"`
-	InviteeUserId user_entity.UserId    `json:"inviteeUserId" binding:"required"`
+	InviteeUserId user_entity.UserId `json:"inviteeUserId" binding:"required"`
 }

@@ -2,14 +2,14 @@ package entity
 
 import user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 
-type DirectMessageReactionId string
+type MessageReactionId string
 
-type DirectMessageReaction struct {
-	Id       DirectMessageReactionId
+type MessageReaction struct {
+	Id       MessageReactionId
 	UserIds  []user_entity.UserId
 	Reaction string
 }
 
-func (id DirectMessageReactionId) String() string {
+func (id MessageReactionId) String() string {
 	return string(id)
 }

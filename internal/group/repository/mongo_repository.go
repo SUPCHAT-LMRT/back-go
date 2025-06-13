@@ -40,9 +40,8 @@ type MongoGroup struct {
 }
 
 type MongoGroupMember struct {
-	Id      bson.ObjectID `bson:"_id"`
-	UserId  bson.ObjectID `bson:"user_id"`
-	GroupId bson.ObjectID `bson:"group_id"`
+	Id     bson.ObjectID `bson:"_id"`
+	UserId bson.ObjectID `bson:"user_id"`
 }
 
 func NewMongoGroupRepository(deps MongoGroupRepositoryDeps) GroupRepository {
@@ -52,7 +51,6 @@ func NewMongoGroupRepository(deps MongoGroupRepositoryDeps) GroupRepository {
 func (r MongoGroupRepository) Create(
 	ctx context.Context,
 	group *entity.Group,
-	ownerMember *entity.GroupMember,
 ) error {
 	group.Id = entity.GroupId(bson.NewObjectID().Hex())
 	group.CreatedAt = time.Now()
@@ -78,7 +76,10 @@ func (r MongoGroupRepository) Create(
 		}
 
 		// Add the owner as a member
-		err = r.unsafeAddMember(sessionContext, group.Id, ownerMember)
+		err = r.unsafeAddMember(sessionContext, group.Id, &entity.GroupMember{
+			Id:     entity.GroupMemberId(bson.NewObjectID().Hex()),
+			UserId: group.OwnerUserId,
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -274,7 +275,6 @@ func (r MongoGroupRepository) unsafeAddMember(
 	member *entity.GroupMember,
 ) error {
 	member.Id = entity.GroupMemberId(bson.NewObjectID().Hex())
-	member.GroupId = groupId
 
 	workspaceObjectId, err := bson.ObjectIDFromHex(groupId.String())
 	if err != nil {

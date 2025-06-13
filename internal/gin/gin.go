@@ -2,6 +2,8 @@
 package gin
 
 import (
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/create_group"
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/group_info"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -181,7 +183,9 @@ type GinRouterDeps struct {
 	// Chat
 	ListRecentChatsHandler *list_recent_chats.ListRecentChatsHandler
 	// Group
+	CreateGroupHandler      *create_group.CreateGroupHandler
 	AddMemberToGroupHandler *add_member.AddMemberToGroupHandler
+	GetGroupInfoHandler     *group_info.GetGroupInfoHandler
 	// Group chat
 	ListGroupChatMessagesHandler *list_group_chat_messages.ListGroupChatMessagesHandler
 	// Search
@@ -294,7 +298,10 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 
 	groupGroup := apiGroup.Group("/groups")
 	{
-		groupGroup.POST("/members", authMiddleware, d.deps.AddMemberToGroupHandler.Handle)
+		groupGroup.POST("", authMiddleware, d.deps.CreateGroupHandler.Handle)
+
+		groupGroup.POST("/:group_id/members", authMiddleware, d.deps.AddMemberToGroupHandler.Handle)
+		groupGroup.GET("/:group_id", authMiddleware, d.deps.GetGroupInfoHandler.Handle)
 		groupGroup.GET(
 			"/:group_id/messages",
 			authMiddleware,

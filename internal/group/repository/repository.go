@@ -14,7 +14,7 @@ var (
 )
 
 type GroupRepository interface {
-	Create(ctx context.Context, group *entity.Group, ownerMember *entity.GroupMember) error
+	Create(ctx context.Context, group *entity.Group) error
 	GetGroup(ctx context.Context, groupId entity.GroupId) (*entity.Group, error)
 	ListRecentGroups(ctx context.Context) ([]*entity.Group, error)
 	Exists(ctx context.Context, groupId entity.GroupId) (bool, error)

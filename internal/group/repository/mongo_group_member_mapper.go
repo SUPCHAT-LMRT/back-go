@@ -28,22 +28,15 @@ func (m MongoGroupMemberMapper) MapFromEntity(
 		return nil, fmt.Errorf("unable to convert user id to object id: %w", err)
 	}
 
-	groupObjectId, err := bson.ObjectIDFromHex(entityGroupMember.GroupId.String())
-	if err != nil {
-		return nil, fmt.Errorf("unable to convert group id to object id: %w", err)
-	}
-
 	return &MongoGroupMember{
-		Id:      memberObjectId,
-		UserId:  userObjectId,
-		GroupId: groupObjectId,
+		Id:     memberObjectId,
+		UserId: userObjectId,
 	}, nil
 }
 
 func (m MongoGroupMemberMapper) MapToEntity(mongo *MongoGroupMember) (*entity.GroupMember, error) {
 	return &entity.GroupMember{
-		Id:      entity.GroupMemberId(mongo.Id.Hex()),
-		UserId:  user_entity.UserId(mongo.UserId.Hex()),
-		GroupId: entity.GroupId(mongo.GroupId.Hex()),
+		Id:     entity.GroupMemberId(mongo.Id.Hex()),
+		UserId: user_entity.UserId(mongo.UserId.Hex()),
 	}, nil
 }

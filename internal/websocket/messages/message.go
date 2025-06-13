@@ -12,13 +12,17 @@ type Action string
 const (
 	OutboundSendChannelMessageAction            Action = "send-channel-message"
 	OutboundSendDirectMessageAction             Action = "send-direct-message"
+	OutboundSendGroupMessageAction              Action = "send-group-message"
 	OutboundChannelRoomJoinedAction             Action = "channel-room-joined"
 	OutboundDirectRoomJoinedAction              Action = "direct-room-joined"
+	OutboundGroupRoomJoinedAction               Action = "group-room-joined"
 	OutboundChannelCreatedAction                Action = "channel-created"
 	OutboundChannelMessageReactionAddedAction   Action = "channel-message-reaction-added"
 	OutboundChannelMessageReactionRemovedAction Action = "channel-message-reaction-removed"
 	OutboundDirectMessageReactionAddedAction    Action = "direct-message-reaction-added"
 	OutboundDirectMessageReactionRemovedAction  Action = "direct-message-reaction-removed"
+	OutboundGroupMessageReactionAddedAction     Action = "group-message-reaction-added"
+	OutboundGroupMessageReactionRemovedAction   Action = "group-message-reaction-removed"
 	OutboundRecentDirectChatAddedAction         Action = "recent-direct-chat-added"
 	OutboundUserStatusUpdatedAction             Action = "user-status-updated"
 	OutboundSelfStatusUpdatedAction             Action = "self-status-updated"
@@ -31,6 +35,7 @@ const (
 const (
 	InboundSendChannelMessageAction     Action = "send-channel-message"
 	InboundSendDirectMessageAction      Action = "send-direct-message"
+	InboundSendGroupMessageAction       Action = "send-group-message"
 	InboundJoinDirectRoomAction         Action = "join-direct-room"
 	InboundJoinGroupRoomAction          Action = "join-group-room"
 	InboundJoinChannelRoomAction        Action = "join-channel-room"
@@ -39,6 +44,7 @@ const (
 	InboundSelectWorkspaceAction        Action = "select-workspace"
 	InboundChannelMessageReactionToggle Action = "channel-message-reaction-toggle"
 	InboundDirectMessageReactionToggle  Action = "direct-message-reaction-toggle"
+	InboundGroupMessageReactionToggle   Action = "group-message-reaction-toggle"
 )
 
 type Message interface {
