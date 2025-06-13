@@ -32,7 +32,7 @@ type MongoGroupChatMessage struct {
 
 type MongoMessageReaction struct {
 	Id       bson.ObjectID   `bson:"_id"`
-	Users    []bson.ObjectID `bson:"user_ids"`
+	Users    []bson.ObjectID `bson:"users"`
 	Reaction string          `bson:"reaction"`
 }
 
@@ -140,19 +140,7 @@ func (m MongoGroupChatRepository) ListMessages(
 	}
 
 	filter := bson.D{{"group_id", groupObjId}}
-	var filterTime bson.D
 
-	if !params.Before.IsZero() {
-		filterTime = append(filterTime, bson.E{Key: "created_at", Value: bson.D{{"$lt", params.Before}}})
-	}
-	if !params.After.IsZero() {
-		filterTime = append(filterTime, bson.E{Key: "created_at", Value: bson.D{{"$gt", params.After}}})
-	}
-	if len(filterTime) > 0 {
-		filter = append(filter, filterTime...)
-	}
-
-	var findOptions *options.FindOptionsBuilder
 	if params.AroundMessageId != "" {
 		// Handle around message logic
 		messageId, err := bson.ObjectIDFromHex(params.AroundMessageId.String())
@@ -173,13 +161,15 @@ func (m MongoGroupChatRepository) ListMessages(
 		// Fetch messages around the target message's timestamp
 		halfLimit := params.Limit / 2
 
+		beforeFilter := append(
+			filter,
+			bson.E{Key: "created_at", Value: bson.M{"$lt": message.CreatedAt}},
+		)
+
 		// Get messages before the target
 		beforeCursor, err := m.deps.Client.Client.Database(databaseName).
 			Collection(collectionName).
-			Find(ctx, bson.D{
-				{"group_id", groupObjId},
-				{"created_at", bson.D{{"$lte", message.CreatedAt}}},
-			}, options.Find().
+			Find(ctx, beforeFilter, options.Find().
 				SetSort(bson.D{{"created_at", -1}}).
 				SetLimit(int64(halfLimit)))
 		if err != nil {
@@ -187,13 +177,15 @@ func (m MongoGroupChatRepository) ListMessages(
 		}
 		defer beforeCursor.Close(ctx)
 
+		afterFilter := append(
+			filter,
+			bson.E{Key: "created_at", Value: bson.M{"gt": message.CreatedAt}},
+		)
+
 		// Get messages after the target
 		afterCursor, err := m.deps.Client.Client.Database(databaseName).
 			Collection(collectionName).
-			Find(ctx, bson.D{
-				{"group_id", groupObjId},
-				{"created_at", bson.D{{"$gt", message.CreatedAt}}},
-			}, options.Find().
+			Find(ctx, afterFilter, options.Find().
 				SetSort(bson.D{{"created_at", 1}}).
 				SetLimit(int64(halfLimit)))
 		if err != nil {
@@ -238,9 +230,15 @@ func (m MongoGroupChatRepository) ListMessages(
 		return results, nil
 	} else {
 		// Standard pagination logic
-		findOptions = options.Find().
+		findOptions := options.Find().
 			SetSort(bson.D{{Key: "created_at", Value: -1}}).
 			SetLimit(int64(params.Limit))
+
+		if !params.Before.Equal(time.Time{}) {
+			filter = append(filter, bson.E{Key: "created_at", Value: bson.M{"$lt": params.Before}})
+		} else if !params.After.Equal(time.Time{}) {
+			filter = append(filter, bson.E{Key: "created_at", Value: bson.M{"$gt": params.After}})
+		}
 
 		cursor, err := m.deps.Client.Client.Database(databaseName).
 			Collection(collectionName).
@@ -250,17 +248,18 @@ func (m MongoGroupChatRepository) ListMessages(
 		}
 		defer cursor.Close(ctx)
 
-		var results []*entity.GroupChatMessage
-		for cursor.Next(ctx) {
-			var mongoMsg MongoGroupChatMessage
-			if err := cursor.Decode(&mongoMsg); err != nil {
-				return nil, err
-			}
-			entityMsg, err := m.deps.Mapper.MapToEntity(&mongoMsg)
+		var mongoGroupChatMessages []*MongoGroupChatMessage
+		if err = cursor.All(ctx, &mongoGroupChatMessages); err != nil {
+			return nil, err
+		}
+
+		results := make([]*entity.GroupChatMessage, len(mongoGroupChatMessages))
+		for i, mongoGroupChatMessage := range mongoGroupChatMessages {
+			entityMsg, err := m.deps.Mapper.MapToEntity(mongoGroupChatMessage)
 			if err != nil {
 				return nil, err
 			}
-			results = append(results, entityMsg)
+			results[i] = entityMsg
 		}
 
 		return results, nil

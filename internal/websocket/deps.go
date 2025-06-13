@@ -3,6 +3,7 @@ package websocket
 import (
 	"github.com/supchat-lmrt/back-go/internal/back_identifier/usecase"
 	"github.com/supchat-lmrt/back-go/internal/event"
+	"github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/toggle_reaction"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/get_member_by_user"
 	list_members "github.com/supchat-lmrt/back-go/internal/group/usecase/list_members_users"
 	"github.com/supchat-lmrt/back-go/internal/logger"
@@ -30,6 +31,7 @@ type WebSocketDeps struct {
 	SendGroupMessageObservers           []SendGroupMessageObserver   `group:"send_group_message_observers"`
 	ToggleReactionChannelMessageUseCase *toggle_channel_message_reaction.ToggleReactionChannelMessageUseCase
 	ToggleReactionDirectMessageUseCase  *toggle_direct_message_reaction.ToggleReactionDirectMessageUseCase
+	ToggleGroupChatReactionUseCase      *toggle_reaction.ToggleGroupChatReactionUseCase
 	SaveStatusUseCase                   *save_status.SaveStatusUseCase
 	Logger                              logger.Logger
 	RedisClient                         *redis.Client

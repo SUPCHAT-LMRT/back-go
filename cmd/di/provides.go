@@ -479,6 +479,10 @@ func NewDi() *uberdig.Container {
 			uberdig.Group("send_direct_message_observers"),
 		),
 		dig.NewProvider(
+			websocket.NewSaveGroupMessageObserver,
+			uberdig.Group("send_group_message_observers"),
+		),
+		dig.NewProvider(
 			save_direct_message.NewSyncRecentChatObserver,
 			uberdig.Group("save_direct_chat_message_observers"),
 		),

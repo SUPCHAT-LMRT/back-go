@@ -49,7 +49,7 @@ func (h *ListGroupChatMessagesHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	channelMessages, err := h.deps.UseCase.Execute(c, group_entity.GroupId(groupId), QueryParams{
+	groupChatMessages, err := h.deps.UseCase.Execute(c, group_entity.GroupId(groupId), QueryParams{
 		Limit:           query.Limit,
 		Before:          query.Before,
 		After:           query.After,
@@ -60,23 +60,51 @@ func (h *ListGroupChatMessagesHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	response := make([]GroupChatMessageResponse, len(channelMessages))
-	for i, message := range channelMessages {
+	response := make([]GroupChatMessageResponse, len(groupChatMessages))
+	for i, message := range groupChatMessages {
+		reactions := make([]GroupMessageReactionResponse, len(message.Reactions))
+		for j, reaction := range message.Reactions {
+			reactionUsers := make([]GroupMessageReactionUserResponse, len(reaction.UserIds))
+			for k, userId := range reaction.UserIds {
+				userReacted, err := h.deps.GetUserByIdUseCase.Execute(c, userId)
+				if err != nil {
+					continue
+				}
+
+				reactionUsers[k] = GroupMessageReactionUserResponse{
+					Id:   userId.String(),
+					Name: userReacted.FullName(),
+				}
+			}
+
+			reactions[j] = GroupMessageReactionResponse{
+				Id:       reaction.Id.String(),
+				Users:    reactionUsers,
+				Reaction: reaction.Reaction,
+			}
+		}
+
 		response[i] = GroupChatMessageResponse{
 			Id:        message.Id.String(),
 			GroupId:   message.GroupId.String(),
 			Content:   message.Content,
-			Author:    GroupMessageAuthorResponse{},
+			Reactions: reactions,
 			CreatedAt: message.CreatedAt,
 		}
 
 		user, err := h.deps.GetUserByIdUseCase.Execute(c, message.AuthorId)
 		if err != nil {
-			continue
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   err.Error(),
+				"message": "failed to get user by id",
+			})
+			return
 		}
 
 		response[i].Author = GroupMessageAuthorResponse{
-			UserId: user.Id.String(),
+			UserId:    user.Id.String(),
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
 		}
 	}
 
@@ -84,13 +112,27 @@ func (h *ListGroupChatMessagesHandler) Handle(c *gin.Context) {
 }
 
 type GroupChatMessageResponse struct {
-	Id        string                     `json:"id"`
-	GroupId   string                     `json:"groupId"`
-	Content   string                     `json:"content"`
-	Author    GroupMessageAuthorResponse `json:"author"`
-	CreatedAt time.Time                  `json:"createdAt"`
+	Id        string                         `json:"id"`
+	GroupId   string                         `json:"groupId"`
+	Content   string                         `json:"content"`
+	Author    GroupMessageAuthorResponse     `json:"author"`
+	Reactions []GroupMessageReactionResponse `json:"reactions"`
+	CreatedAt time.Time                      `json:"createdAt"`
 }
 
 type GroupMessageAuthorResponse struct {
-	UserId string `json:"userId"`
+	UserId    string `json:"userId"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+}
+
+type GroupMessageReactionResponse struct {
+	Id       string                             `json:"id"`
+	Users    []GroupMessageReactionUserResponse `json:"users"`
+	Reaction string                             `json:"reaction"`
+}
+
+type GroupMessageReactionUserResponse struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
