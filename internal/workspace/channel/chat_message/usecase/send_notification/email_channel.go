@@ -39,7 +39,7 @@ func (c *EmailChannel) SendNotification(
 	//	return nil
 	//}
 
-	message := mail.NewMessage(
+	message := mail.NewHTMLMessage(
 		"Nouveau message privé",
 		fmt.Sprintf(
 			"Vous avez reçu un message de %s avec le contenu %s",

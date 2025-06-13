@@ -71,9 +71,9 @@ func (o SendNotificationObserver) NotifyMessageSaved(msg *entity.ChannelMessage)
 
 	// Envoyer une notification à chaque destinataire sauf l'auteur
 	for _, recipientId := range recipients {
-		//if recipientId == string(msg.AuthorId) {
-		//	continue
-		//}
+		if recipientId == string(msg.AuthorId) {
+			continue
+		}
 		err = o.deps.SendMessageNotificationUseCase.Execute(context.Background(), send_notification.SendMessageNotificationRequest{
 			Content:     msg.Content,
 			SenderName:  sender.FullName(),
