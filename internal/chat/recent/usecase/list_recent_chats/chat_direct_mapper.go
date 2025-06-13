@@ -21,11 +21,15 @@ func NewDirectChatMapper(
 	return &DirectChatMapper{getUserByIdUseCase: getUserByIdUseCase}
 }
 
-func (g DirectChatMapper) MapFromEntity(recentChat *ListRecentChatsUseCaseOutput) (*ChatDirectMapping, error) {
+func (g DirectChatMapper) MapFromEntity(
+	recentChat *ListRecentChatsUseCaseOutput,
+) (*ChatDirectMapping, error) {
 	return nil, nil
 }
 
-func (g DirectChatMapper) MapToEntity(chatDirect *ChatDirectMapping) (*ListRecentChatsUseCaseOutput, error) {
+func (g DirectChatMapper) MapToEntity(
+	chatDirect *ChatDirectMapping,
+) (*ListRecentChatsUseCaseOutput, error) {
 	otherUserId := chatDirect.ChatDirect.User1Id
 	if chatDirect.ChatDirect.User1Id == chatDirect.CurrentUserId {
 		otherUserId = chatDirect.ChatDirect.User2Id

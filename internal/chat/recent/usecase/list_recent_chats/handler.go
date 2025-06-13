@@ -1,13 +1,14 @@
 package list_recent_chats
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/entity"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	uberdig "go.uber.org/dig"
-	"net/http"
-	"time"
 )
 
 type ListRecentChatsHandlerDeps struct {

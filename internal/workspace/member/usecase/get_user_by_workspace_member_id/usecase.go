@@ -2,6 +2,7 @@ package get_user_by_workspace_member_id
 
 import (
 	"context"
+
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/entity"

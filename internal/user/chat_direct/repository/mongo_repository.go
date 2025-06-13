@@ -178,7 +178,10 @@ func (m MongoChatDirectRepository) IsFirstMessage(
 	return count == 1, nil
 }
 
-func (m MongoChatDirectRepository) GetLastMessage(ctx context.Context, user1Id, user2Id user_entity.UserId) (*entity.ChatDirect, error) {
+func (m MongoChatDirectRepository) GetLastMessage(
+	ctx context.Context,
+	user1Id, user2Id user_entity.UserId,
+) (*entity.ChatDirect, error) {
 	user1IdHex, err := bson.ObjectIDFromHex(string(user1Id))
 	if err != nil {
 		return nil, err

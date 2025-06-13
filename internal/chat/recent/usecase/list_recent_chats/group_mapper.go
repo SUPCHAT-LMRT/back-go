@@ -1,11 +1,12 @@
 package list_recent_chats
 
 import (
+	"time"
+
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/entity"
 	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
-	"time"
 )
 
 type GroupMapper struct{}
@@ -14,7 +15,9 @@ func NewGroupMapper() mapper.Mapper[*GroupMapping, *ListRecentChatsUseCaseOutput
 	return &GroupMapper{}
 }
 
-func (g GroupMapper) MapFromEntity(recentChat *ListRecentChatsUseCaseOutput) (*GroupMapping, error) {
+func (g GroupMapper) MapFromEntity(
+	recentChat *ListRecentChatsUseCaseOutput,
+) (*GroupMapping, error) {
 	return nil, nil
 }
 

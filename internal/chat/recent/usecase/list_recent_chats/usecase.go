@@ -2,13 +2,13 @@ package list_recent_chats
 
 import (
 	"context"
-	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/get_last_message"
 	"sort"
 	"time"
 
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/entity"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/list_recent_groups"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
+	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/get_last_message"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_recent_direct_chats"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	uberdig "go.uber.org/dig"
@@ -73,7 +73,11 @@ func (u *ListRecentChatsUseCase) Execute(
 	}
 
 	for _, direct := range directs {
-		lastMessage, err := u.deps.GetLastDirectChatMessageUseCase.Execute(ctx, direct.User1Id, direct.User2Id)
+		lastMessage, err := u.deps.GetLastDirectChatMessageUseCase.Execute(
+			ctx,
+			direct.User1Id,
+			direct.User2Id,
+		)
 		if err != nil {
 			return nil, err
 		}

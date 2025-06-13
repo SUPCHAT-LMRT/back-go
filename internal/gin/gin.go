@@ -2,7 +2,6 @@
 package gin
 
 import (
-	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_user_private_channel"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -59,6 +58,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_private_channels"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_user_private_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/reoder_channels"
 	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
 	add_workspace_member "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/add_member"
@@ -267,7 +267,12 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		{
 			inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkDataHandler.Handle)
 
-			inviteLinkGroup.Use(authMiddleware, jobPermissionsMiddleware(entity2.VIEW_ADMINISTRATION_PANEL|entity2.CREATE_INVITATION))
+			inviteLinkGroup.Use(
+				authMiddleware,
+				jobPermissionsMiddleware(
+					entity2.VIEW_ADMINISTRATION_PANEL|entity2.CREATE_INVITATION,
+				),
+			)
 			inviteLinkGroup.POST("", d.deps.CreateInviteLinkHandler.Handle)
 			inviteLinkGroup.GET("", d.deps.GetListInviteLinkHandler.Handle)
 
@@ -373,7 +378,10 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
 				channelGroup.POST("/reorder", d.deps.ReorderChannelHandler.Handle)
 				channelGroup.DELETE("/:channel_id", d.deps.DeleteChannelHandler.Handle)
-				channelGroup.GET("/:channel_id/members", d.deps.ListPrivateChannelMembersHandler.Handle)
+				channelGroup.GET(
+					"/:channel_id/members",
+					d.deps.ListPrivateChannelMembersHandler.Handle,
+				)
 			}
 
 			roleGroup := specificWorkspaceGroup.Group("/roles")

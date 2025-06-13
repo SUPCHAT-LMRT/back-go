@@ -10,7 +10,9 @@ func NewResponseMapper() mapper.Mapper[*ListRecentChatsUseCaseOutput, *RecentCha
 	return &ResponseMapper{}
 }
 
-func (r ResponseMapper) MapFromEntity(response *RecentChatResponse) (*ListRecentChatsUseCaseOutput, error) {
+func (r ResponseMapper) MapFromEntity(
+	response *RecentChatResponse,
+) (*ListRecentChatsUseCaseOutput, error) {
 	return &ListRecentChatsUseCaseOutput{
 		Id:   response.Id,
 		Kind: response.Kind,

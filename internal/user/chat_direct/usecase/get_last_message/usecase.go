@@ -2,11 +2,12 @@ package get_last_message
 
 import (
 	"context"
+	"time"
+
 	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	uberdig "go.uber.org/dig"
-	"time"
 )
 
 type GetLastDirectChatMessageUseCaseDeps struct {
@@ -18,11 +19,16 @@ type GetLastDirectChatMessageUseCase struct {
 	deps GetLastDirectChatMessageUseCaseDeps
 }
 
-func NewGetLastDirectChatMessageUseCase(deps GetLastDirectChatMessageUseCaseDeps) *GetLastDirectChatMessageUseCase {
+func NewGetLastDirectChatMessageUseCase(
+	deps GetLastDirectChatMessageUseCaseDeps,
+) *GetLastDirectChatMessageUseCase {
 	return &GetLastDirectChatMessageUseCase{deps: deps}
 }
 
-func (uc *GetLastDirectChatMessageUseCase) Execute(ctx context.Context, user1Id, user2Id user_entity.UserId) (*LastMessageResponse, error) {
+func (uc *GetLastDirectChatMessageUseCase) Execute(
+	ctx context.Context,
+	user1Id, user2Id user_entity.UserId,
+) (*LastMessageResponse, error) {
 	lastMessage, err := uc.deps.ChatDirectRepository.GetLastMessage(ctx, user1Id, user2Id)
 	if err != nil {
 		return nil, err
