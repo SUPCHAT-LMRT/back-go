@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"context"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/repository"
 )
@@ -18,7 +19,7 @@ func NewCheckPermissionJobUseCase(
 
 func (u *CheckPermissionJobUseCase) Execute(
 	ctx context.Context,
-	userId string,
+	userId user_entity.UserId,
 	permission uint64,
 ) (bool, error) {
 	jobs, err := u.jobRepository.FindByUserId(ctx, userId)

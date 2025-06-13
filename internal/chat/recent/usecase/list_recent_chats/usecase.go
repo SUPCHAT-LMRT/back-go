@@ -3,11 +3,12 @@ package list_recent_chats
 import (
 	"context"
 	"sort"
+	"time"
 
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/entity"
-	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/list_recent_groups"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
+	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/get_last_message"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_recent_direct_chats"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	uberdig "go.uber.org/dig"
@@ -15,10 +16,11 @@ import (
 
 type ListRecentChatsUseCaseDeps struct {
 	uberdig.In
-	ListRecentGroupsUseCase     *list_recent_groups.ListRecentGroupsUseCase
-	ListRecentChatDirectUseCase *list_recent_direct_chats.ListRecentChatDirectUseCase
-	GroupMapper                 mapper.Mapper[*group_entity.Group, *entity.RecentChat]
-	DirectMapper                mapper.Mapper[*ChatDirectMapping, *entity.RecentChat]
+	ListRecentGroupsUseCase         *list_recent_groups.ListRecentGroupsUseCase
+	ListRecentChatDirectUseCase     *list_recent_direct_chats.ListRecentChatDirectUseCase
+	GetLastDirectChatMessageUseCase *get_last_message.GetLastDirectChatMessageUseCase
+	GroupMapper                     mapper.Mapper[*GroupMapping, *ListRecentChatsUseCaseOutput]
+	DirectMapper                    mapper.Mapper[*ChatDirectMapping, *ListRecentChatsUseCaseOutput]
 }
 
 type ListRecentChatsUseCase struct {
@@ -33,11 +35,10 @@ func NewListRecentChatsUseCase(deps ListRecentChatsUseCaseDeps) *ListRecentChats
 func (u *ListRecentChatsUseCase) Execute(
 	ctx context.Context,
 	currentUserId user_entity.UserId,
-) ([]*entity.RecentChat, error) {
+) ([]*ListRecentChatsUseCaseOutput, error) {
 	// Call the ListRecentGroupsUseCase and ListRecentChatDirectUseCase and sort by updated_at
 
-	// TODO impl groups
-	groups, err := u.deps.ListRecentGroupsUseCase.Execute(ctx)
+	groups, err := u.deps.ListRecentGroupsUseCase.Execute(ctx, currentUserId)
 	if err != nil {
 		return nil, err
 	}
@@ -48,10 +49,21 @@ func (u *ListRecentChatsUseCase) Execute(
 	}
 
 	// Sort by updated_at
-	var recentChats []*entity.RecentChat
+	var recentChats []*ListRecentChatsUseCaseOutput
 
 	for _, group := range groups {
-		fromEntity, err := u.deps.GroupMapper.MapToEntity(group)
+		// TODO implement last message for groups
+		// lastMessage, err := u.deps.GetLastDirectChatMessageUseCase.Execute(ctx, direct.User1Id, direct.User2Id)
+		// if err != nil {
+		// 	return nil, err
+		// }
+
+		fromEntity, err := u.deps.GroupMapper.MapToEntity(&GroupMapping{
+			Group: group,
+			// LastMessageContent:   lastMessage.Content,
+			// LastMessageCreatedAt: lastMessage.CreatedAt,
+			// LastMessageSenderId:  lastMessage.AuthorId,
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -60,8 +72,24 @@ func (u *ListRecentChatsUseCase) Execute(
 	}
 
 	for _, direct := range directs {
+		lastMessage, err := u.deps.GetLastDirectChatMessageUseCase.Execute(
+			ctx,
+			direct.User1Id,
+			direct.User2Id,
+		)
+		if err != nil {
+			return nil, err
+		}
+
 		fromEntity, err := u.deps.DirectMapper.MapToEntity(
-			&ChatDirectMapping{ChatDirect: direct, CurrentUserId: currentUserId},
+			&ChatDirectMapping{
+				ChatDirect:           direct,
+				CurrentUserId:        currentUserId,
+				LastMessageId:        lastMessage.ChatId,
+				LastMessageContent:   lastMessage.Content,
+				LastMessageCreatedAt: lastMessage.CreatedAt,
+				LastMessageSenderId:  lastMessage.AuthorId,
+			},
 		)
 		if err != nil {
 			return nil, err
@@ -76,4 +104,20 @@ func (u *ListRecentChatsUseCase) Execute(
 	})
 
 	return recentChats, nil
+}
+
+type ListRecentChatsUseCaseOutput struct {
+	Id          entity.RecentChatId
+	Kind        entity.RecentChatKind
+	Name        string
+	UpdatedAt   time.Time
+	LastMessage *RecentChatLastMessage
+}
+
+type RecentChatLastMessage struct {
+	Id         entity.RecentChatId
+	Content    string
+	CreatedAt  time.Time
+	AuthorId   user_entity.UserId
+	AuthorName string
 }

@@ -3,6 +3,7 @@ package websocket
 import (
 	"context"
 	"fmt"
+	group_chat_entity "github.com/supchat-lmrt/back-go/internal/group/chat_message/entity"
 	"log"
 	"reflect"
 	"strings"
@@ -76,7 +77,7 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 	message.SetCreatedAt(time.Now())
 	// message.SetEmittedBy(c)
 
-	c.wsServer.Deps.Logger.Info().
+	c.wsServer.Deps.Logger.Debug().
 		Str("action", string(message.Action)).
 		Str("id", message.TransportMessageId).
 		Str("emittedBy", c.UserId.String()).
@@ -112,6 +113,13 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 			return
 		}
 		c.handleSendDirectMessage(&sendMessage)
+	case messages.InboundSendGroupMessageAction:
+		sendMessage := inbound.InboundSendGroupMessage{DefaultMessage: message}
+		if err := json.Unmarshal(jsonMessage, &sendMessage); err != nil {
+			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
+			return
+		}
+		c.handleSendGroupMessage(&sendMessage)
 	case messages.InboundSelectWorkspaceAction:
 		selectWorkspaceMessage := inbound.InboundSelectWorkspace{DefaultMessage: message}
 		if err := json.Unmarshal(jsonMessage, &selectWorkspaceMessage); err != nil {
@@ -234,6 +242,46 @@ func (c *Client) handleSendDirectMessage(message *inbound.InboundSendDirectMessa
 		// Notify observers
 		for _, observer := range c.wsServer.Deps.SendDirectMessageObservers {
 			observer.OnSendMessage(message, chat_direct_entity.ChatDirectId(messageId), c.UserId)
+		}
+	}
+}
+
+//nolint:revive
+func (c *Client) handleSendGroupMessage(message *inbound.InboundSendGroupMessage) {
+	if strings.TrimSpace(message.Content) == "" {
+		return
+	}
+
+	roomId := message.GroupId
+	foundRoom := c.wsServer.findRoomById(roomId)
+	if foundRoom == nil {
+		return
+	}
+
+	messageSender, err := c.toOutboundGroupMessageSender()
+	if err != nil {
+		c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on creating sender")
+		return
+	}
+
+	// Use the ChatServer method to find the room, and if found, broadcast!
+	if foundRoom = c.wsServer.findRoomById(roomId); foundRoom != nil {
+		messageId := bson.NewObjectID().Hex()
+		err = foundRoom.SendMessage(&outbound.OutboundSendGroupMessage{
+			MessageId: messageId,
+			Content:   message.Content,
+			GroupId:   message.GroupId,
+			Sender:    messageSender,
+			CreatedAt: message.TransportMessageCreatedAt,
+		})
+		if err != nil {
+			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+			return
+		}
+
+		// Notify observers
+		for _, observer := range c.wsServer.Deps.SendGroupMessageObservers {
+			observer.OnSendMessage(message, group_chat_entity.GroupChatMessageId(messageId), c.UserId)
 		}
 	}
 }
@@ -646,6 +694,19 @@ func (c *Client) toOutboundDirectMessageSender() (*outbound.OutboundSendDirectMe
 	}
 
 	return &outbound.OutboundSendDirectMessageSender{
+		UserId:    user.Id,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+	}, nil
+}
+
+func (c *Client) toOutboundGroupMessageSender() (*outbound.OutboundSendGroupMessageSender, error) {
+	user, err := c.wsServer.Deps.GetUserByIdUseCase.Execute(context.Background(), c.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &outbound.OutboundSendGroupMessageSender{
 		UserId:    user.Id,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,

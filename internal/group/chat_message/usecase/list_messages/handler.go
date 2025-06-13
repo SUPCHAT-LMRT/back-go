@@ -1,6 +1,7 @@
 package list_messages
 
 import (
+	"github.com/supchat-lmrt/back-go/internal/group/chat_message/entity"
 	"net/http"
 	"time"
 
@@ -28,6 +29,13 @@ func NewListGroupChatMessagesHandler(
 	return &ListGroupChatMessagesHandler{deps: deps}
 }
 
+type MessageQuery struct {
+	Limit           int       `form:"limit,default=20,max=100"`
+	Before          time.Time `form:"before"`
+	After           time.Time `form:"after"`
+	AroundMessageId string    `form:"aroundMessageId"`
+}
+
 func (h *ListGroupChatMessagesHandler) Handle(c *gin.Context) {
 	groupId := c.Param("group_id")
 	if groupId == "" {
@@ -35,7 +43,18 @@ func (h *ListGroupChatMessagesHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	channelMessages, err := h.deps.UseCase.Execute(c, group_entity.GroupId(groupId))
+	var query MessageQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	channelMessages, err := h.deps.UseCase.Execute(c, group_entity.GroupId(groupId), QueryParams{
+		Limit:           query.Limit,
+		Before:          query.Before,
+		After:           query.After,
+		AroundMessageId: entity.GroupChatMessageId(query.AroundMessageId),
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return

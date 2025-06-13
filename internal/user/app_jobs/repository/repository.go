@@ -18,5 +18,5 @@ type JobRepository interface {
 	UnassignFromUser(ctx context.Context, jobId entity.JobId, userId user_entity.UserId) error
 	EnsureAdminJobExists(ctx context.Context) (*entity.Job, error)
 	EnsureManagerJobExists(ctx context.Context) (*entity.Job, error)
-	FindByUserId(ctx context.Context, userId string) ([]*entity.Job, error)
+	FindByUserId(ctx context.Context, userId user_entity.UserId) ([]*entity.Job, error)
 }

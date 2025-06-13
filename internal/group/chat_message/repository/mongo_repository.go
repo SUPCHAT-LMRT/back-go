@@ -8,90 +8,372 @@ import (
 	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	mongo2 "go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
 )
 
 var (
 	databaseName   = "supchat"
-	collectionName = "group_messages"
+	collectionName = "group_chat_messages"
 )
 
-type MongoChatMessageRepositoryDeps struct {
-	uberdig.In
-	Client *mongo.Client
-	Mapper mapper.Mapper[*MongoGroupChatMessage, *entity.GroupChatMessage]
-}
-
-type MongoGroupChatMessageRepository struct {
-	deps MongoChatMessageRepositoryDeps
-}
-
 type MongoGroupChatMessage struct {
-	Id        bson.ObjectID `bson:"_id"`
-	GroupId   bson.ObjectID `bson:"group_id"`
-	AuthorId  bson.ObjectID `bson:"user_id"`
-	Content   string        `bson:"content"`
-	CreatedAt time.Time     `bson:"created_at"`
+	Id        bson.ObjectID           `bson:"_id"`
+	GroupId   bson.ObjectID           `bson:"group_id"`
+	SenderId  bson.ObjectID           `bson:"sender_id"`
+	Content   string                  `bson:"content"`
+	Reactions []*MongoMessageReaction `bson:"reactions"`
+	CreatedAt time.Time               `bson:"created_at"`
+	UpdatedAt time.Time               `bson:"updated_at"`
 }
 
-func NewMongoGroupChatMessageRepository(
-	deps MongoChatMessageRepositoryDeps,
-) GroupChatMessageRepository {
-	return &MongoGroupChatMessageRepository{deps: deps}
+type MongoMessageReaction struct {
+	Id       bson.ObjectID   `bson:"_id"`
+	Users    []bson.ObjectID `bson:"user_ids"`
+	Reaction string          `bson:"reaction"`
 }
 
-func (m MongoGroupChatMessageRepository) Create(
+type MongoGroupChatRepositoryDeps struct {
+	uberdig.In
+	Mapper mapper.Mapper[*MongoGroupChatMessage, *entity.GroupChatMessage]
+	Client *mongo.Client
+}
+
+type MongoGroupChatRepository struct {
+	deps MongoGroupChatRepositoryDeps
+}
+
+func NewMongoGroupChatRepository(deps MongoGroupChatRepositoryDeps) ChatMessageRepository {
+	return &MongoGroupChatRepository{deps: deps}
+}
+
+func (m MongoGroupChatRepository) Create(
 	ctx context.Context,
-	message *entity.GroupChatMessage,
+	chatMessage *entity.GroupChatMessage,
 ) error {
-	message.Id = entity.GroupChatMessageId(bson.NewObjectID().Hex())
-	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
+	if chatMessage.Id == "" {
+		chatMessage.Id = entity.GroupChatMessageId(bson.NewObjectID().Hex())
+	}
+	now := time.Now()
+	if chatMessage.CreatedAt.IsZero() {
+		chatMessage.CreatedAt = now
+		chatMessage.UpdatedAt = now
+	}
+	if chatMessage.UpdatedAt.IsZero() {
+		chatMessage.UpdatedAt = now
+	}
 
-	mongoMessage, err := m.deps.Mapper.MapFromEntity(message)
+	mongoMessage, err := m.deps.Mapper.MapFromEntity(chatMessage)
 	if err != nil {
 		return err
 	}
 
-	_, err = collection.InsertOne(ctx, mongoMessage)
-	if err != nil {
-		return err
-	}
+	_, err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		InsertOne(ctx, mongoMessage)
 
-	return nil
+	return err
 }
 
-func (m MongoGroupChatMessageRepository) ListByGroupId(
+func (m MongoGroupChatRepository) GetLastMessage(
 	ctx context.Context,
 	groupId group_entity.GroupId,
+) (*entity.GroupChatMessage, error) {
+	groupObjId, err := bson.ObjectIDFromHex(groupId.String())
+	if err != nil {
+		return nil, err
+	}
+
+	findOptions := options.Find().
+		SetSort(bson.D{{"created_at", -1}}).
+		SetLimit(1)
+
+	cursor, err := m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		Find(ctx, bson.D{{"group_id", groupObjId}}, findOptions)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var mongoMessage MongoGroupChatMessage
+	if !cursor.Next(ctx) {
+		return nil, mongo2.ErrNoDocuments
+	}
+	if err := cursor.Decode(&mongoMessage); err != nil {
+		return nil, err
+	}
+
+	return m.deps.Mapper.MapToEntity(&mongoMessage)
+}
+
+func (m MongoGroupChatRepository) IsFirstMessage(
+	ctx context.Context,
+	groupId group_entity.GroupId,
+) (bool, error) {
+	groupObjId, err := bson.ObjectIDFromHex(groupId.String())
+	if err != nil {
+		return false, err
+	}
+
+	count, err := m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		CountDocuments(ctx, bson.D{{"group_id", groupObjId}})
+	if err != nil {
+		return false, err
+	}
+
+	return count == 0, nil
+}
+
+func (m MongoGroupChatRepository) ListMessages(
+	ctx context.Context,
+	groupId group_entity.GroupId,
+	params ListMessagesQueryParams,
 ) ([]*entity.GroupChatMessage, error) {
-	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
-
-	groupObjectId, err := bson.ObjectIDFromHex(string(groupId))
+	groupObjId, err := bson.ObjectIDFromHex(groupId.String())
 	if err != nil {
 		return nil, err
 	}
 
-	cursor, err := collection.Find(ctx, bson.M{"group_id": groupObjectId})
+	filter := bson.D{{"group_id", groupObjId}}
+	var filterTime bson.D
+
+	if !params.Before.IsZero() {
+		filterTime = append(filterTime, bson.E{Key: "created_at", Value: bson.D{{"$lt", params.Before}}})
+	}
+	if !params.After.IsZero() {
+		filterTime = append(filterTime, bson.E{Key: "created_at", Value: bson.D{{"$gt", params.After}}})
+	}
+	if len(filterTime) > 0 {
+		filter = append(filter, filterTime...)
+	}
+
+	var findOptions *options.FindOptionsBuilder
+	if params.AroundMessageId != "" {
+		// Handle around message logic
+		messageId, err := bson.ObjectIDFromHex(params.AroundMessageId.String())
+		if err != nil {
+			return nil, err
+		}
+
+		// Get the message to find its timestamp
+		var message MongoGroupChatMessage
+		err = m.deps.Client.Client.Database(databaseName).
+			Collection(collectionName).
+			FindOne(ctx, bson.D{{"_id", messageId}}).
+			Decode(&message)
+		if err != nil {
+			return nil, err
+		}
+
+		// Fetch messages around the target message's timestamp
+		halfLimit := params.Limit / 2
+
+		// Get messages before the target
+		beforeCursor, err := m.deps.Client.Client.Database(databaseName).
+			Collection(collectionName).
+			Find(ctx, bson.D{
+				{"group_id", groupObjId},
+				{"created_at", bson.D{{"$lte", message.CreatedAt}}},
+			}, options.Find().
+				SetSort(bson.D{{"created_at", -1}}).
+				SetLimit(int64(halfLimit)))
+		if err != nil {
+			return nil, err
+		}
+		defer beforeCursor.Close(ctx)
+
+		// Get messages after the target
+		afterCursor, err := m.deps.Client.Client.Database(databaseName).
+			Collection(collectionName).
+			Find(ctx, bson.D{
+				{"group_id", groupObjId},
+				{"created_at", bson.D{{"$gt", message.CreatedAt}}},
+			}, options.Find().
+				SetSort(bson.D{{"created_at", 1}}).
+				SetLimit(int64(halfLimit)))
+		if err != nil {
+			return nil, err
+		}
+		defer afterCursor.Close(ctx)
+
+		var results []*entity.GroupChatMessage
+
+		// Process messages before
+		var beforeMessages []*entity.GroupChatMessage
+		for beforeCursor.Next(ctx) {
+			var mongoMsg MongoGroupChatMessage
+			if err := beforeCursor.Decode(&mongoMsg); err != nil {
+				return nil, err
+			}
+			entityMsg, err := m.deps.Mapper.MapToEntity(&mongoMsg)
+			if err != nil {
+				return nil, err
+			}
+			beforeMessages = append(beforeMessages, entityMsg)
+		}
+
+		// Reverse before messages to maintain chronological order
+		for i := len(beforeMessages) - 1; i >= 0; i-- {
+			results = append(results, beforeMessages[i])
+		}
+
+		// Process messages after
+		for afterCursor.Next(ctx) {
+			var mongoMsg MongoGroupChatMessage
+			if err := afterCursor.Decode(&mongoMsg); err != nil {
+				return nil, err
+			}
+			entityMsg, err := m.deps.Mapper.MapToEntity(&mongoMsg)
+			if err != nil {
+				return nil, err
+			}
+			results = append(results, entityMsg)
+		}
+
+		return results, nil
+	} else {
+		// Standard pagination logic
+		findOptions = options.Find().
+			SetSort(bson.D{{Key: "created_at", Value: -1}}).
+			SetLimit(int64(params.Limit))
+
+		cursor, err := m.deps.Client.Client.Database(databaseName).
+			Collection(collectionName).
+			Find(ctx, filter, findOptions)
+		if err != nil {
+			return nil, err
+		}
+		defer cursor.Close(ctx)
+
+		var results []*entity.GroupChatMessage
+		for cursor.Next(ctx) {
+			var mongoMsg MongoGroupChatMessage
+			if err := cursor.Decode(&mongoMsg); err != nil {
+				return nil, err
+			}
+			entityMsg, err := m.deps.Mapper.MapToEntity(&mongoMsg)
+			if err != nil {
+				return nil, err
+			}
+			results = append(results, entityMsg)
+		}
+
+		return results, nil
+	}
+}
+
+func (m MongoGroupChatRepository) ToggleReaction(
+	ctx context.Context,
+	messageId entity.GroupChatMessageId,
+	userId user_entity.UserId,
+	reaction string,
+) (bool, error) {
+	messageObjId, err := bson.ObjectIDFromHex(messageId.String())
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
-	var messages []*entity.GroupChatMessage
-	for cursor.Next(ctx) {
-		var mongoMessage MongoGroupChatMessage
-		err = cursor.Decode(&mongoMessage)
-		if err != nil {
-			return nil, err
-		}
-
-		message, err := m.deps.Mapper.MapToEntity(&mongoMessage)
-		if err != nil {
-			return nil, err
-		}
-
-		messages = append(messages, message)
+	userObjId, err := bson.ObjectIDFromHex(userId.String())
+	if err != nil {
+		return false, err
 	}
 
-	return messages, nil
+	// Check if reaction already exists
+	filter := bson.D{
+		{"_id", messageObjId},
+		{"reactions.reaction", reaction},
+	}
+
+	// Try to add the user to the existing reaction
+	update := bson.D{
+		{"$addToSet", bson.D{
+			{"reactions.$.users", userObjId},
+		}},
+	}
+
+	result, err := m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, filter, update)
+
+	if err != nil {
+		return false, err
+	}
+
+	// If user was added to the reaction
+	if result.ModifiedCount > 0 {
+		return true, nil
+	}
+
+	// Check if the user already reacted with this emoji
+	filter = bson.D{
+		{"_id", messageObjId},
+		{"reactions.reaction", reaction},
+		{"reactions.users", userObjId},
+	}
+
+	count, err := m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		CountDocuments(ctx, filter)
+
+	if err != nil {
+		return false, err
+	}
+
+	// If user already reacted, remove the reaction
+	if count > 0 {
+		update = bson.D{
+			{"$pull", bson.D{
+				{"reactions.$.users", userObjId},
+			}},
+		}
+
+		_, err := m.deps.Client.Client.Database(databaseName).
+			Collection(collectionName).
+			UpdateOne(ctx, bson.D{
+				{"_id", messageObjId},
+				{"reactions.reaction", reaction},
+			}, update)
+
+		if err != nil {
+			return false, err
+		}
+
+		// Clean up empty reactions
+		cleanup := bson.D{
+			{"$pull", bson.D{
+				{"reactions", bson.D{
+					{"users", bson.D{{"$size", 0}}},
+				}},
+			}},
+		}
+
+		_, err = m.deps.Client.Client.Database(databaseName).
+			Collection(collectionName).
+			UpdateOne(ctx, bson.D{{"_id", messageObjId}}, cleanup)
+
+		return false, err
+	}
+
+	// If reaction doesn't exist yet, create a new one
+	reactionId := bson.NewObjectID()
+	update = bson.D{
+		{"$push", bson.D{
+			{"reactions", bson.D{
+				{"_id", reactionId},
+				{"users", bson.A{userObjId}},
+				{"reaction", reaction},
+			}},
+		}},
+	}
+
+	_, err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, bson.D{{"_id", messageObjId}}, update)
+
+	return err == nil, err
 }

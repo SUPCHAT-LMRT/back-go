@@ -3,6 +3,8 @@ package public_profile
 import (
 	"context"
 	"fmt"
+	job_entity "github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
+	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/get_job_for_user"
 
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
@@ -15,6 +17,7 @@ type GetPublicUserProfileUseCaseDeps struct {
 	uberdig.In
 	UserRepository         repository.UserRepository
 	GetPublicStatusUseCase *get_public_status.GetPublicStatusUseCase
+	GetJobForUserUseCase   *get_job_for_user.GetJobForUserUseCase
 }
 
 type GetPublicUserProfileUseCase struct {
@@ -41,12 +44,18 @@ func (u GetPublicUserProfileUseCase) Execute(
 		return nil, fmt.Errorf("unable to get user status: %w", err)
 	}
 
+	jobs, err := u.deps.GetJobForUserUseCase.Execute(ctx, userId)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get user job: %w", err)
+	}
+
 	return &PublicUserProfile{
 		Id:        user.Id,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
 		Status:    status,
+		Jobs:      jobs,
 	}, nil
 }
 
@@ -56,4 +65,5 @@ type PublicUserProfile struct {
 	LastName  string
 	Email     string
 	Status    entity.Status
+	Jobs      []*job_entity.Job
 }

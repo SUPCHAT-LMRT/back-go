@@ -2,6 +2,9 @@
 package gin
 
 import (
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/create_group"
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/group_info"
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/leave_group"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -58,6 +61,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_private_channels"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_user_private_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/reoder_channels"
 	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
 	add_workspace_member "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/add_member"
@@ -125,16 +129,17 @@ type GinRouterDeps struct {
 	GetMinutelyMessageSentHandler     *get_minutely.GetMinutelyMessageSentHandler
 	CreateInviteLinkWorkspaceHandler  *workspace_invite_link_generate.CreateInviteLinkHandler
 	GetInviteLinkWorkspaceDataHandler *get_data_token_invite2.GetInviteLinkWorkspaceDataHandler
-	KickMemberHandler                 *kick_member.KickMemberHandler
+	KickMemberHandler                 *kick_member.KickGroupMemberHandler
 	GetMemberIdHandler                *get_member_id.GetMemberIdHandler
 	// Workspaces channels
-	ListChannelsHandler        *list_channels.ListChannelsHandler
-	ListPrivateChannelsHandler *list_private_channels.GetPrivateChannelsHandler
-	CreateChannelHandler       *create_channel.CreateChannelHandler
-	ReorderChannelHandler      *reoder_channels.ReorderChannelHandler
-	ListChannelMessagesHandler *list_messages.ListChannelMessagesHandler
-	GetChannelHandler          *get_channel.GetChannelHandler
-	DeleteChannelHandler       *delete_channels.DeleteChannelHandler
+	ListChannelsHandler              *list_channels.ListChannelsHandler
+	ListPrivateChannelsHandler       *list_private_channels.GetPrivateChannelsHandler
+	CreateChannelHandler             *create_channel.CreateChannelHandler
+	ReorderChannelHandler            *reoder_channels.ReorderChannelHandler
+	ListChannelMessagesHandler       *list_messages.ListChannelMessagesHandler
+	GetChannelHandler                *get_channel.GetChannelHandler
+	DeleteChannelHandler             *delete_channels.DeleteChannelHandler
+	ListPrivateChannelMembersHandler *list_user_private_channel.ListPrivateChannelMembersHandler
 	// Workspace roles
 	CreateRoleHandler        *create_role.CreateRoleHandler
 	GetRoleHandler           *get_role.GetRoleHandler
@@ -179,7 +184,11 @@ type GinRouterDeps struct {
 	// Chat
 	ListRecentChatsHandler *list_recent_chats.ListRecentChatsHandler
 	// Group
+	CreateGroupHandler      *create_group.CreateGroupHandler
 	AddMemberToGroupHandler *add_member.AddMemberToGroupHandler
+	GetGroupInfoHandler     *group_info.GetGroupInfoHandler
+	LeaveGroupHandler       *leave_group.LeaveGroupHandler
+	KickGroupMemberHandler  *kick_member.KickGroupMemberHandler
 	// Group chat
 	ListGroupChatMessagesHandler *list_group_chat_messages.ListGroupChatMessagesHandler
 	// Search
@@ -265,7 +274,12 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		{
 			inviteLinkGroup.GET("/:token", d.deps.GetInviteLinkDataHandler.Handle)
 
-			inviteLinkGroup.Use(authMiddleware, jobPermissionsMiddleware(entity2.VIEW_ADMINISTRATION_PANEL|entity2.CREATE_INVITATION))
+			inviteLinkGroup.Use(
+				authMiddleware,
+				jobPermissionsMiddleware(
+					entity2.VIEW_ADMINISTRATION_PANEL|entity2.CREATE_INVITATION,
+				),
+			)
 			inviteLinkGroup.POST("", d.deps.CreateInviteLinkHandler.Handle)
 			inviteLinkGroup.GET("", d.deps.GetListInviteLinkHandler.Handle)
 
@@ -287,12 +301,17 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 
 	groupGroup := apiGroup.Group("/groups")
 	{
-		groupGroup.POST("/members", authMiddleware, d.deps.AddMemberToGroupHandler.Handle)
+		groupGroup.POST("", authMiddleware, d.deps.CreateGroupHandler.Handle)
+
+		groupGroup.POST("/:group_id/members", authMiddleware, d.deps.AddMemberToGroupHandler.Handle)
+		groupGroup.GET("/:group_id", authMiddleware, d.deps.GetGroupInfoHandler.Handle)
 		groupGroup.GET(
 			"/:group_id/messages",
 			authMiddleware,
 			d.deps.ListGroupChatMessagesHandler.Handle,
 		)
+		groupGroup.DELETE("/:group_id", authMiddleware, d.deps.LeaveGroupHandler.Handle)
+		groupGroup.DELETE("/:group_id/members", authMiddleware, d.deps.KickMemberHandler.Handle)
 	}
 
 	// job app
@@ -371,6 +390,10 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
 				channelGroup.POST("/reorder", d.deps.ReorderChannelHandler.Handle)
 				channelGroup.DELETE("/:channel_id", d.deps.DeleteChannelHandler.Handle)
+				channelGroup.GET(
+					"/:channel_id/members",
+					d.deps.ListPrivateChannelMembersHandler.Handle,
+				)
 			}
 
 			roleGroup := specificWorkspaceGroup.Group("/roles")

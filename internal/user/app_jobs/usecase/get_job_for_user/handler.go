@@ -1,6 +1,7 @@
 package get_job_for_user
 
 import (
+	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +22,7 @@ func (h *GetJobForUserHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	jobs, err := h.useCase.Execute(c.Request.Context(), userId)
+	jobs, err := h.useCase.Execute(c.Request.Context(), user_entity.UserId(userId))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return

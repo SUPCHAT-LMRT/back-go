@@ -24,10 +24,9 @@ func (m ChatDirectMapper) MapToEntity(
 		}
 
 		reactions[i] = &chat_direct_entity.DirectMessageReaction{
-			Id:        chat_direct_entity.DirectMessageReactionId(reaction.Id.Hex()),
-			MessageId: chat_direct_entity.ChatDirectId(mongo.Id.Hex()),
-			UserIds:   reactionUsers,
-			Reaction:  reaction.Reaction,
+			Id:       chat_direct_entity.DirectMessageReactionId(reaction.Id.Hex()),
+			UserIds:  reactionUsers,
+			Reaction: reaction.Reaction,
 		}
 	}
 

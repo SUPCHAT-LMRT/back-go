@@ -2,6 +2,7 @@ package list_recent_chats
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/entity"
@@ -13,7 +14,7 @@ import (
 type ListRecentChatsHandlerDeps struct {
 	uberdig.In
 	UseCase        *ListRecentChatsUseCase
-	ResponseMapper mapper.Mapper[*entity.RecentChat, *RecentChatResponse]
+	ResponseMapper mapper.Mapper[*ListRecentChatsUseCaseOutput, *RecentChatResponse]
 }
 
 type ListRecentChatsHandler struct {
@@ -52,7 +53,16 @@ func (h *ListRecentChatsHandler) Handle(c *gin.Context) {
 }
 
 type RecentChatResponse struct {
-	Id   entity.RecentChatId   `json:"id"`
-	Kind entity.RecentChatKind `json:"kind"`
-	Name string                `json:"name"`
+	Id          entity.RecentChatId           `json:"id"`
+	Kind        entity.RecentChatKind         `json:"kind"`
+	Name        string                        `json:"name"`
+	LastMessage RecentChatLastMessageResponse `json:"lastMessage"`
+}
+
+type RecentChatLastMessageResponse struct {
+	Id         entity.RecentChatId `json:"id"`
+	Content    string              `json:"content"`
+	CreatedAt  time.Time           `json:"createdAt"`
+	AuthorId   user_entity.UserId  `json:"authorId"`
+	AuthorName string              `json:"authorName"`
 }
