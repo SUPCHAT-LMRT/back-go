@@ -11,6 +11,7 @@ import (
 var (
 	ErrMemberAlreadyInGroup = errors.New("member already in group")
 	ErrGroupNotFound        = errors.New("group not found")
+	ErrMemberNotFound       = errors.New("member not found")
 )
 
 type GroupRepository interface {
@@ -25,4 +26,5 @@ type GroupRepository interface {
 	ListMembers(ctx context.Context, groupId entity.GroupId) ([]*entity.GroupMember, error)
 	UpdateGroupName(ctx context.Context, groupId entity.GroupId, name string) error
 	TransferOwnership(ctx context.Context, groupId entity.GroupId, newOwnerMemberId entity.GroupMemberId) error
+	IsMember(ctx context.Context, groupId entity.GroupId, memberId entity.GroupMemberId) (bool, error)
 }

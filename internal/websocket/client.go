@@ -174,6 +174,20 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 			return
 		}
 		c.handleGroupMessageReactionToggleMessage(&reactionMessage)
+	case messages.InboundGroupMessageContentEdit:
+		editMessage := inbound.InboundGroupMessageContentEdit{DefaultMessage: message}
+		if err := json.Unmarshal(jsonMessage, &editMessage); err != nil {
+			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
+			return
+		}
+		c.handleGroupMessageContentEdit(&editMessage)
+	case messages.InboundGroupMessageDelete:
+		deleteMessage := inbound.InboundGroupMessageDelete{DefaultMessage: message}
+		if err := json.Unmarshal(jsonMessage, &deleteMessage); err != nil {
+			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
+			return
+		}
+		c.handleGroupMessageDelete(&deleteMessage)
 	default:
 		log.Printf("Unknown action %s", message.Action)
 	}
@@ -521,6 +535,56 @@ func (c *Client) handleGroupMessageReactionToggleMessage(
 				c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
 				return
 			}
+		}
+	}
+}
+
+func (c *Client) handleGroupMessageContentEdit(
+	message *inbound.InboundGroupMessageContentEdit,
+) {
+	roomId := message.GroupId.String()
+	foundRoom := c.wsServer.findRoomById(roomId)
+	if foundRoom == nil {
+		return
+	}
+
+	// Use the ChatServer method to find the room, and if found, broadcast!
+	if foundRoom = c.wsServer.findRoomById(roomId); foundRoom != nil {
+		err := foundRoom.SendMessage(&outbound.OutboundGroupMessageContentEdited{
+			MessageId:  message.MessageId,
+			NewContent: message.NewContent,
+			GroupId:    message.GroupId,
+		})
+		if err != nil {
+			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+			return
+		}
+	}
+}
+
+func (c *Client) handleGroupMessageDelete(
+	message *inbound.InboundGroupMessageDelete,
+) {
+	roomId := message.GroupId.String()
+	foundRoom := c.wsServer.findRoomById(roomId)
+	if foundRoom == nil {
+		return
+	}
+
+	// Use the ChatServer method to find the room, and if found, broadcast!
+	if foundRoom = c.wsServer.findRoomById(roomId); foundRoom != nil {
+		err := foundRoom.SendMessage(&outbound.OutboundGroupMessageDeleted{
+			MessageId: message.MessageId,
+			GroupId:   message.GroupId,
+		})
+		if err != nil {
+			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+			return
+		}
+
+		// Notify observers
+		for _, observer := range c.wsServer.Deps.DeleteGroupMessageObservers {
+			observer.OnDeleteMessage(message)
 		}
 	}
 }

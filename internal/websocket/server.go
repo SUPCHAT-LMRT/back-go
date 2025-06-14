@@ -300,6 +300,45 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 		}
 	})
 
+	server.Deps.EventBus.Subscribe(event.GroupTransferOwnershipEventType, func(evt event.Event) {
+		groupTransferOwnershipEvent, ok := evt.(*event.GroupTransferOwnershipEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to GroupTransferOwnershipEvent")
+			return
+		}
+
+		logg := deps.Logger.With().
+			Str("groupId", groupTransferOwnershipEvent.Group.Id.String()).
+			Str("newOwnerId", groupTransferOwnershipEvent.NewOwnerId.String()).Logger()
+
+		// Broadcast the ownership transfer to all group members
+		groupMembers, err := server.Deps.ListGroupMembersUseCase.Execute(context.Background(), groupTransferOwnershipEvent.Group.Id)
+		if err != nil {
+			logg.Error().Err(err).
+				Msg("failed to list group members")
+			return
+		}
+
+		for _, member := range groupMembers {
+			client := server.findClientByUserId(member.UserId)
+			if client == nil {
+				logg.Warn().Str("userId", member.UserId.String()).
+					Msg("client not found for group member, skipping")
+				continue
+			}
+
+			err = client.SendMessage(&outbound.OutboundGroupOwnershipTransferer{
+				GroupId:    groupTransferOwnershipEvent.Group.Id,
+				NewOwnerId: groupTransferOwnershipEvent.NewOwnerId,
+			})
+			if err != nil {
+				logg.Error().Err(err).
+					Msg("failed to send ownership transfer message to group member")
+				return
+			}
+		}
+	})
+
 	server.Deps.EventBus.Subscribe(event.UserStatusSavedEventType, func(evt event.Event) {
 		userStatusSavedEvent, ok := evt.(*event.UserStatusSavedEvent)
 		if !ok {

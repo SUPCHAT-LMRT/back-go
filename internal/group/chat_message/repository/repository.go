@@ -24,6 +24,7 @@ type ChatMessageRepository interface {
 		userId user_entity.UserId,
 		reaction string,
 	) (added bool, err error)
+	DeleteMessage(ctx context.Context, messageId entity.GroupChatMessageId) error
 }
 
 type ListMessagesQueryParams struct {

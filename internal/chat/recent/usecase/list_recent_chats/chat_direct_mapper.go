@@ -40,18 +40,23 @@ func (g DirectChatMapper) MapToEntity(
 		return nil, err
 	}
 
-	return &ListRecentChatsUseCaseOutput{
-		Id:        entity.RecentChatId(otherUserId),
-		Kind:      entity.RecentChatKindDirect,
-		Name:      otherUser.FullName(),
-		UpdatedAt: chatDirect.ChatDirect.UpdatedAt,
-		LastMessage: &RecentChatLastMessage{
+	lastMessage := RecentChatLastMessage{}
+	if chatDirect.LastMessageId != "" {
+		lastMessage = RecentChatLastMessage{
 			Id:         entity.RecentChatId(chatDirect.LastMessageId),
 			Content:    chatDirect.LastMessageContent,
 			CreatedAt:  chatDirect.LastMessageCreatedAt,
 			AuthorId:   chatDirect.LastMessageSenderId,
 			AuthorName: otherUser.FullName(),
-		},
+		}
+	}
+
+	return &ListRecentChatsUseCaseOutput{
+		Id:          entity.RecentChatId(otherUserId),
+		Kind:        entity.RecentChatKindDirect,
+		Name:        otherUser.FullName(),
+		UpdatedAt:   chatDirect.ChatDirect.UpdatedAt,
+		LastMessage: &lastMessage,
 	}, nil
 }
 

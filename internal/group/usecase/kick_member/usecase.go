@@ -4,6 +4,8 @@ import (
 	"context"
 	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/group/repository"
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/transfer_ownership"
+	"github.com/supchat-lmrt/back-go/internal/search/group"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	uberdig "go.uber.org/dig"
 	"math/rand/v2"
@@ -11,8 +13,10 @@ import (
 
 type KickMemberUseCaseDeps struct {
 	uberdig.In
-	GroupRepository repository.GroupRepository
-	Observers       []KickGroupMemberObserver `group:"kick_group_member_observer"`
+	GroupRepository               repository.GroupRepository
+	TransferGroupOwnershipUseCase *transfer_ownership.TransferGroupOwnershipUseCase
+	SearchGroupSyncManager        group.SearchGroupSyncManager
+	Observers                     []KickGroupMemberObserver `group:"kick_group_member_observer"`
 }
 
 type KickMemberUseCase struct {
@@ -26,7 +30,7 @@ func NewKickMemberUseCase(deps KickMemberUseCaseDeps) *KickMemberUseCase {
 }
 
 func (uc *KickMemberUseCase) Execute(ctx context.Context, memberIdLeft group_entity.GroupMemberId, groupId group_entity.GroupId) error {
-	group, err := uc.deps.GroupRepository.GetGroup(ctx, groupId)
+	groupResult, err := uc.deps.GroupRepository.GetGroup(ctx, groupId)
 	if err != nil {
 		return err
 	}
@@ -51,15 +55,20 @@ func (uc *KickMemberUseCase) Execute(ctx context.Context, memberIdLeft group_ent
 			return err
 		}
 
+		err = uc.deps.SearchGroupSyncManager.RemoveGroup(ctx, groupResult.Id)
+		if err != nil {
+			return err
+		}
+
 		for _, observer := range uc.deps.Observers {
-			observer.NotifyGroupMemberKicked(group, memberIdLeft, userLeftId)
+			observer.NotifyGroupMemberKicked(groupResult, memberIdLeft, userLeftId)
 		}
 
 		return nil
 	}
 
 	// If the member leaving is the owner, we need to handle ownership transfer.
-	if group.OwnerMemberId == memberIdLeft {
+	if groupResult.OwnerMemberId == memberIdLeft {
 		// Filter out the member that is leaving
 		var potentialOwners []*group_entity.GroupMember
 		for _, member := range groupMembers {
@@ -73,12 +82,10 @@ func (uc *KickMemberUseCase) Execute(ctx context.Context, memberIdLeft group_ent
 			potentialOwners[i], potentialOwners[j] = potentialOwners[j], potentialOwners[i]
 		})
 
-		err = uc.deps.GroupRepository.TransferOwnership(ctx, groupId, potentialOwners[0].Id)
+		err = uc.deps.TransferGroupOwnershipUseCase.Execute(ctx, groupId, potentialOwners[0].Id)
 		if err != nil {
 			return err
 		}
-
-		// TODO impl ws to notify the members that the ownership has been transferred
 	}
 
 	// We just remove the member.
@@ -88,7 +95,7 @@ func (uc *KickMemberUseCase) Execute(ctx context.Context, memberIdLeft group_ent
 	}
 
 	for _, observer := range uc.deps.Observers {
-		observer.NotifyGroupMemberKicked(group, memberIdLeft, userLeftId)
+		observer.NotifyGroupMemberKicked(groupResult, memberIdLeft, userLeftId)
 	}
 
 	return nil

@@ -413,3 +413,27 @@ func (r MongoGroupRepository) TransferOwnership(
 
 	return nil
 }
+
+func (r MongoGroupRepository) IsMember(
+	ctx context.Context,
+	groupId entity.GroupId,
+	memberId entity.GroupMemberId,
+) (bool, error) {
+	groupObjectId, err := bson.ObjectIDFromHex(groupId.String())
+	if err != nil {
+		return false, err
+	}
+	memberObjectId, err := bson.ObjectIDFromHex(memberId.String())
+	if err != nil {
+		return false, err
+	}
+
+	count, err := r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		CountDocuments(ctx, bson.M{"_id": groupObjectId, "members._id": memberObjectId})
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}

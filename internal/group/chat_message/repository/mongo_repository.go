@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"errors"
+	mongo2 "go.mongodb.org/mongo-driver/v2/mongo"
 	"time"
 
 	"github.com/supchat-lmrt/back-go/internal/group/chat_message/entity"
@@ -10,7 +12,6 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/mongo"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	mongo2 "go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	uberdig "go.uber.org/dig"
 )
@@ -87,23 +88,18 @@ func (m MongoGroupChatRepository) GetLastMessage(
 		return nil, err
 	}
 
-	findOptions := options.Find().
-		SetSort(bson.D{{"created_at", -1}}).
-		SetLimit(1)
-
-	cursor, err := m.deps.Client.Client.Database(databaseName).
-		Collection(collectionName).
-		Find(ctx, bson.D{{"group_id", groupObjId}}, findOptions)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
+	findOptions := options.FindOne().
+		SetSort(bson.D{{"created_at", -1}})
 
 	var mongoMessage MongoGroupChatMessage
-	if !cursor.Next(ctx) {
-		return nil, mongo2.ErrNoDocuments
-	}
-	if err := cursor.Decode(&mongoMessage); err != nil {
+	err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, bson.D{{"group_id", groupObjId}}, findOptions).Decode(&mongoMessage)
+	if err != nil {
+		if errors.Is(err, mongo2.ErrNoDocuments) {
+			// No messages found for this group
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -375,4 +371,20 @@ func (m MongoGroupChatRepository) ToggleReaction(
 		UpdateOne(ctx, bson.D{{"_id", messageObjId}}, update)
 
 	return err == nil, err
+}
+
+func (m MongoGroupChatRepository) DeleteMessage(
+	ctx context.Context,
+	messageId entity.GroupChatMessageId,
+) error {
+	messageObjId, err := bson.ObjectIDFromHex(messageId.String())
+	if err != nil {
+		return err
+	}
+
+	_, err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		DeleteOne(ctx, bson.D{{"_id", messageObjId}})
+
+	return err
 }

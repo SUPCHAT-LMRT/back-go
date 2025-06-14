@@ -1,6 +1,7 @@
 package message
 
 import (
+	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"time"
 
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
@@ -38,5 +39,5 @@ type SearchMessageDirectData struct {
 }
 
 type SearchMessageGroupData struct {
-	GroupId string
+	GroupId group_entity.GroupId
 }
