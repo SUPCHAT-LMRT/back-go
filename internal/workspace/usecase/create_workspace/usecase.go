@@ -54,7 +54,6 @@ func (u *CreateWorkspaceUseCase) Execute(
 		Color:       "#f97316",
 		Permissions: entity3.PermissionManageChannels |
 			entity3.PermissionManageMessages |
-			entity3.PermissionManageInvites |
 			entity3.PermissionSendMessages |
 			entity3.PermissionAttachFiles |
 			entity3.PermissionMentionEveryone |
