@@ -37,7 +37,7 @@ func (h *CreateGroupHandler) Handle(c *gin.Context) {
 		OwnerUserId: user.Id,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create group"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create group: " + err.Error()})
 		return
 	}
 

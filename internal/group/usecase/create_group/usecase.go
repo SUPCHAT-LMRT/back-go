@@ -2,6 +2,7 @@ package create_group
 
 import (
 	"context"
+	"fmt"
 	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/group/repository"
 	"github.com/supchat-lmrt/back-go/internal/search/group"
@@ -35,7 +36,7 @@ func (uc *CreateGroupUseCase) Execute(ctx context.Context, input CreateGroupInpu
 
 	err := uc.deps.GroupRepository.Create(ctx, &createdGroup, input.OwnerUserId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create group: %w", err)
 	}
 
 	for _, id := range input.UsersIds {
@@ -46,7 +47,7 @@ func (uc *CreateGroupUseCase) Execute(ctx context.Context, input CreateGroupInpu
 
 		err = uc.deps.GroupRepository.AddMember(ctx, createdGroup.Id, id)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to add user to group: %w", err)
 		}
 	}
 
@@ -57,7 +58,7 @@ func (uc *CreateGroupUseCase) Execute(ctx context.Context, input CreateGroupInpu
 		UpdatedAt: createdGroup.UpdatedAt,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to add group to search group: %w", err)
 	}
 
 	for _, observer := range uc.deps.Observers {
