@@ -4,6 +4,7 @@ import (
 	"context"
 	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/group/repository"
+	"github.com/supchat-lmrt/back-go/internal/search/group"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	uberdig "go.uber.org/dig"
 	"time"
@@ -11,8 +12,9 @@ import (
 
 type CreateGroupUseCaseDeps struct {
 	uberdig.In
-	GroupRepository repository.GroupRepository
-	Observers       []GroupCreatedObserver `group:"group_created_observer"`
+	GroupRepository        repository.GroupRepository
+	SearchGroupSyncManager group.SearchGroupSyncManager
+	Observers              []GroupCreatedObserver `group:"group_created_observer"`
 }
 
 type CreateGroupUseCase struct {
@@ -25,13 +27,13 @@ func NewCreateGroupUseCase(deps CreateGroupUseCaseDeps) *CreateGroupUseCase {
 
 func (uc *CreateGroupUseCase) Execute(ctx context.Context, input CreateGroupInput) (*group_entity.Group, error) {
 	now := time.Now()
-	group := group_entity.Group{
+	createdGroup := group_entity.Group{
 		Name:      input.GroupName,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 
-	err := uc.deps.GroupRepository.Create(ctx, &group, input.OwnerUserId)
+	err := uc.deps.GroupRepository.Create(ctx, &createdGroup, input.OwnerUserId)
 	if err != nil {
 		return nil, err
 	}
@@ -42,18 +44,27 @@ func (uc *CreateGroupUseCase) Execute(ctx context.Context, input CreateGroupInpu
 			continue
 		}
 
-		err = uc.deps.GroupRepository.AddMember(ctx, group.Id, id)
+		err = uc.deps.GroupRepository.AddMember(ctx, createdGroup.Id, id)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	// TODO impl meilisearch
-	for _, observer := range uc.deps.Observers {
-		observer.NotifyGroupMemberAdded(&group)
+	err = uc.deps.SearchGroupSyncManager.AddGroup(ctx, &group.SearchGroup{
+		Id:        createdGroup.Id,
+		Name:      createdGroup.Name,
+		CreatedAt: createdGroup.CreatedAt,
+		UpdatedAt: createdGroup.UpdatedAt,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	return &group, nil
+	for _, observer := range uc.deps.Observers {
+		observer.NotifyGroupMemberAdded(&createdGroup)
+	}
+
+	return &createdGroup, nil
 }
 
 type CreateGroupInput struct {

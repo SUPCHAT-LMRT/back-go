@@ -3,6 +3,8 @@ package search
 import (
 	"context"
 	"fmt"
+	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
+	group_search "github.com/supchat-lmrt/back-go/internal/search/group"
 
 	meilisearch2 "github.com/meilisearch/meilisearch-go"
 	"github.com/supchat-lmrt/back-go/internal/meilisearch"
@@ -48,11 +50,14 @@ func (u SearchTermUseCase) Execute(
 		queries = []*meilisearch2.SearchRequest{u.channelQuery(term)}
 	case "user":
 		queries = []*meilisearch2.SearchRequest{u.userQuery(term)}
+	case "group":
+		queries = []*meilisearch2.SearchRequest{u.groupQuery(term)}
 	default:
 		queries = []*meilisearch2.SearchRequest{
 			u.messageQuery(term, userInitiator.Id),
 			u.channelQuery(term),
 			u.userQuery(term),
+			u.groupQuery(term),
 		}
 	}
 
@@ -158,6 +163,38 @@ func (u SearchTermUseCase) Execute(
 							),
 						},
 					})
+				case string(message.SearchMessageGroupMessage):
+					// The message was found in a channel (in a workspace)
+					result := message.SearchMessage{Data: message.SearchMessageGroupData{}}
+					err = utils.Decode(hitMap["_formatted"].(map[string]any), &result)
+					if err != nil {
+						return nil, err
+					}
+
+					data, ok := result.Data.(message.SearchMessageGroupData)
+					if !ok {
+						return nil, fmt.Errorf("unexpected data type: %T", result.Data)
+					}
+
+					user, err := u.deps.GetUserByIdUseCase.Execute(ctx, result.AuthorId)
+					if err != nil {
+						return nil, err
+					}
+
+					results = append(results, &SearchResult{
+						Kind: SearchResultKindMessage,
+						Data: &SearchResultMessage{
+							Id:         result.Id,
+							Content:    result.Content,
+							AuthorId:   result.AuthorId,
+							AuthorName: user.FullName(),
+							Href: fmt.Sprintf(
+								"/chat/group/%s?aroundMessageId=%s",
+								data.GroupId,
+								result.Id,
+							),
+						},
+					})
 				}
 			}
 
@@ -211,6 +248,32 @@ func (u SearchTermUseCase) Execute(
 				})
 			}
 
+			if response.IndexUID == "groups" {
+				result := group_search.SearchGroup{}
+				highlightedResult := group_search.SearchGroup{}
+				err = utils.Decode(hitMap, &result)
+				if err != nil {
+					return nil, err
+				}
+				err = utils.Decode(hitMap["_formatted"].(map[string]any), &highlightedResult)
+				if err != nil {
+					return nil, err
+				}
+
+				results = append(results, &SearchResult{
+					Kind: SearchResultKindGroup,
+					Data: &SearchResultGroup{
+						Id:              result.Id,
+						HighlightedName: highlightedResult.Name,
+						Name:            result.Name,
+						Href: fmt.Sprintf(
+							"/chat/group/%s",
+							result.Id,
+						),
+					},
+				})
+			}
+
 		}
 	}
 
@@ -252,6 +315,14 @@ func (u SearchTermUseCase) userQuery(term string) *meilisearch2.SearchRequest {
 	}
 }
 
+func (u SearchTermUseCase) groupQuery(term string) *meilisearch2.SearchRequest {
+	return &meilisearch2.SearchRequest{
+		IndexUID:              "groups",
+		AttributesToHighlight: []string{"Name"},
+		Query:                 term,
+	}
+}
+
 func (u SearchTermUseCase) mapSearchResultChannelKindToChannelKind(
 	kind channel.SearchChannelKind,
 ) channel_entity.ChannelKind {
@@ -276,6 +347,7 @@ const (
 	SearchResultKindChannel SearchResultKind = "channel"
 	SearchResultKindMessage SearchResultKind = "message"
 	SearchResultKindUser    SearchResultKind = "user"
+	SearchResultKindGroup   SearchResultKind = "group"
 )
 
 type SearchResultChannel struct {
@@ -303,4 +375,11 @@ type SearchResultUser struct {
 	LastName             string             `json:"lastName"`
 	Email                string             `json:"email"`
 	Href                 string             `json:"href"`
+}
+
+type SearchResultGroup struct {
+	Id              group_entity.GroupId `json:"id"`
+	HighlightedName string               `json:"highlightedName"`
+	Name            string               `json:"name"`
+	Href            string               `json:"href"`
 }

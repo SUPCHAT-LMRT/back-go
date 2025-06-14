@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	group_chat_entity "github.com/supchat-lmrt/back-go/internal/group/chat_message/entity"
+	"github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/toggle_reaction"
 	"log"
 	"reflect"
 	"strings"
@@ -98,6 +99,13 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 			return
 		}
 		c.handleJoinDirectRoomMessage(&joinDirectRoomMessage)
+	case messages.InboundJoinGroupRoomAction:
+		joinGroupRoomMessage := inbound.InboundJoinGroupRoom{DefaultMessage: message}
+		if err := json.Unmarshal(jsonMessage, &joinGroupRoomMessage); err != nil {
+			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
+			return
+		}
+		c.handleJoinGroupRoomMessage(&joinGroupRoomMessage)
 	case messages.InboundSendChannelMessageAction:
 		sendMessage := inbound.InboundSendMessageToChannel{DefaultMessage: message}
 		if err := json.Unmarshal(jsonMessage, &sendMessage); err != nil {
@@ -159,6 +167,27 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 			return
 		}
 		c.handleDirectMessageReactionToggleMessage(&reactionMessage)
+	case messages.InboundGroupMessageReactionToggle:
+		reactionMessage := inbound.InboundGroupMessageReactionToggle{DefaultMessage: message}
+		if err := json.Unmarshal(jsonMessage, &reactionMessage); err != nil {
+			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
+			return
+		}
+		c.handleGroupMessageReactionToggleMessage(&reactionMessage)
+	case messages.InboundGroupMessageContentEdit:
+		editMessage := inbound.InboundGroupMessageContentEdit{DefaultMessage: message}
+		if err := json.Unmarshal(jsonMessage, &editMessage); err != nil {
+			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
+			return
+		}
+		c.handleGroupMessageContentEdit(&editMessage)
+	case messages.InboundGroupMessageDelete:
+		deleteMessage := inbound.InboundGroupMessageDelete{DefaultMessage: message}
+		if err := json.Unmarshal(jsonMessage, &deleteMessage); err != nil {
+			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
+			return
+		}
+		c.handleGroupMessageDelete(&deleteMessage)
 	default:
 		log.Printf("Unknown action %s", message.Action)
 	}
@@ -287,21 +316,18 @@ func (c *Client) handleSendGroupMessage(message *inbound.InboundSendGroupMessage
 }
 
 func (c *Client) handleJoinChannelRoomMessage(message *inbound.InboundJoinChannel) {
-	// Todo: Check if the room exists
 	c.joinRoom(message.ChannelId.String(), &ChannelRoomData{})
 }
 
 func (c *Client) handleJoinDirectRoomMessage(message *inbound.InboundJoinDirectRoom) {
 	roomId := utils.BuildDirectMessageRoomId(c.UserId, message.OtherUserId)
-	// Todo: Check if the room exists
 	c.joinRoom(roomId, &DirectRoomData{UserId: c.UserId, OtherUserId: message.OtherUserId})
 }
 
-//	func (c *Client) handleJoinGroupRoomMessage(message Message) {
-//		roomId := message.Message
-//		// Todo: Check if the room exists
-//		c.joinRoom(roomId, GroupRoomKind, message.Sender)
-//	}
+func (c *Client) handleJoinGroupRoomMessage(message *inbound.InboundJoinGroupRoom) {
+	roomId := message.GroupId.String()
+	c.joinRoom(roomId, &GroupRoomData{})
+}
 
 func (c *Client) handleLeaveRoomMessage(message *inbound.InboundLeaveRoom) {
 	roomId := message.RoomId
@@ -455,10 +481,117 @@ func (c *Client) handleDirectMessageReactionToggleMessage(
 	}
 }
 
+func (c *Client) handleGroupMessageReactionToggleMessage(
+	message *inbound.InboundGroupMessageReactionToggle,
+) {
+	// The send-message action, this will send messages to a specific room now.
+	// Which room wil depend on the message Target
+	roomId := message.GroupId.String()
+	foundRoom := c.wsServer.findRoomById(roomId)
+	if foundRoom == nil {
+		return
+	}
+
+	// Use the ChatServer method to find the room, and if found, broadcast!
+	if foundRoom = c.wsServer.findRoomById(roomId); foundRoom != nil {
+		member, err := c.toOutboundGroupMessageReactionMember()
+		if err != nil {
+			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on creating sender")
+			return
+		}
+
+		added, err := c.wsServer.Deps.ToggleGroupChatReactionUseCase.Execute(
+			context.Background(),
+			toggle_reaction.ToggleReactionInput{
+				MessageId: group_chat_entity.GroupChatMessageId(message.MessageId),
+				UserId:    c.UserId,
+				Reaction:  message.Reaction,
+			},
+		)
+		if err != nil {
+			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on creating reaction")
+			return
+		}
+
+		if added {
+			err = foundRoom.SendMessage(&outbound.OutboundGroupMessageReactionAdded{
+				MessageId: message.MessageId,
+				Reaction:  message.Reaction,
+				GroupId:   message.GroupId,
+				Member:    *member,
+			})
+			if err != nil {
+				c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+				return
+			}
+		} else {
+			err = foundRoom.SendMessage(&outbound.OutboundGroupMessageReactionRemoved{
+				MessageId: message.MessageId,
+				Reaction:  message.Reaction,
+				GroupId:   message.GroupId,
+				Member:    *member,
+			})
+			if err != nil {
+				c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+				return
+			}
+		}
+	}
+}
+
+func (c *Client) handleGroupMessageContentEdit(
+	message *inbound.InboundGroupMessageContentEdit,
+) {
+	roomId := message.GroupId.String()
+	foundRoom := c.wsServer.findRoomById(roomId)
+	if foundRoom == nil {
+		return
+	}
+
+	// Use the ChatServer method to find the room, and if found, broadcast!
+	if foundRoom = c.wsServer.findRoomById(roomId); foundRoom != nil {
+		err := foundRoom.SendMessage(&outbound.OutboundGroupMessageContentEdited{
+			MessageId:  message.MessageId,
+			NewContent: message.NewContent,
+			GroupId:    message.GroupId,
+		})
+		if err != nil {
+			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+			return
+		}
+	}
+}
+
+func (c *Client) handleGroupMessageDelete(
+	message *inbound.InboundGroupMessageDelete,
+) {
+	roomId := message.GroupId.String()
+	foundRoom := c.wsServer.findRoomById(roomId)
+	if foundRoom == nil {
+		return
+	}
+
+	// Use the ChatServer method to find the room, and if found, broadcast!
+	if foundRoom = c.wsServer.findRoomById(roomId); foundRoom != nil {
+		err := foundRoom.SendMessage(&outbound.OutboundGroupMessageDeleted{
+			MessageId: message.MessageId,
+			GroupId:   message.GroupId,
+		})
+		if err != nil {
+			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+			return
+		}
+
+		// Notify observers
+		for _, observer := range c.wsServer.Deps.DeleteGroupMessageObservers {
+			observer.OnDeleteMessage(message)
+		}
+	}
+}
+
 func (c *Client) joinRoom(roomId string, roomData RoomData) {
 	foundRoom := c.wsServer.findRoomById(roomId)
 	if foundRoom == nil {
-		// Todo handle GroupRoomKind
 		foundRoom = c.wsServer.createRoom(roomId, roomData)
 	}
 
@@ -500,7 +633,10 @@ func (c *Client) notifyRoomJoined(r *Room) {
 			RoomId:      r.Id,
 			OtherUserId: roomData.OtherUserId,
 		}
-		// TODO handle groups
+	case *GroupRoomData:
+		message = &outbound.OutboundGroupRoomJoined{
+			RoomId: r.Id,
+		}
 	}
 
 	if message == nil {
@@ -682,6 +818,18 @@ func (c *Client) toOutboundDirectMessageReactionMember() (*outbound.OutboundDire
 	}
 
 	return &outbound.OutboundDirectMessageReactionMember{
+		UserId:   c.UserId.String(),
+		Username: user.FullName(),
+	}, nil
+}
+
+func (c *Client) toOutboundGroupMessageReactionMember() (*outbound.OutboundGroupMessageReactionMember, error) {
+	user, err := c.wsServer.Deps.GetUserByIdUseCase.Execute(context.Background(), c.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &outbound.OutboundGroupMessageReactionMember{
 		UserId:   c.UserId.String(),
 		Username: user.FullName(),
 	}, nil

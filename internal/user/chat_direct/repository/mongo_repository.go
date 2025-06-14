@@ -349,6 +349,7 @@ func (m MongoChatDirectRepository) ListByUser(
 	if err != nil {
 		return nil, err
 	}
+	defer cursor.Close(ctx)
 
 	var mongoChatDirects []*MongoChatDirect
 	if err = cursor.All(ctx, &mongoChatDirects); err != nil {

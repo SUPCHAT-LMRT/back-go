@@ -2,6 +2,8 @@ package save_message
 
 import (
 	"context"
+	"github.com/supchat-lmrt/back-go/internal/search/message"
+	uberdig "go.uber.org/dig"
 	"time"
 
 	"github.com/supchat-lmrt/back-go/internal/group/chat_message/entity"
@@ -19,25 +21,44 @@ type SaveMessageInput struct {
 	UpdatedAt time.Time
 }
 
+type SaveGroupChatMessageUseCaseDeps struct {
+	uberdig.In
+	ChatMessageRepository    repository.ChatMessageRepository
+	SearchMessageSyncManager message.SearchMessageSyncManager
+}
+
 type SaveGroupChatMessageUseCase struct {
-	repository repository.ChatMessageRepository
+	deps SaveGroupChatMessageUseCaseDeps
 }
 
 func NewSaveGroupChatMessageUseCase(
-	repository repository.ChatMessageRepository,
+	deps SaveGroupChatMessageUseCaseDeps,
 ) *SaveGroupChatMessageUseCase {
-	return &SaveGroupChatMessageUseCase{repository: repository}
+	return &SaveGroupChatMessageUseCase{deps: deps}
 }
 
 func (u *SaveGroupChatMessageUseCase) Execute(
 	ctx context.Context,
 	msg *entity.GroupChatMessage,
 ) error {
-	if err := u.repository.Create(ctx, msg); err != nil {
+	if err := u.deps.ChatMessageRepository.Create(ctx, msg); err != nil {
 		return err
 	}
 
-	// TODO impl meilisearch
+	err := u.deps.SearchMessageSyncManager.AddMessage(ctx, &message.SearchMessage{
+		Id:      msg.Id.String(),
+		Content: msg.Content,
+		Kind:    message.SearchMessageGroupMessage,
+		Data: message.SearchMessageGroupData{
+			GroupId: msg.GroupId,
+		},
+		AuthorId:  msg.AuthorId,
+		CreatedAt: msg.CreatedAt,
+		UpdatedAt: msg.UpdatedAt,
+	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -2,16 +2,13 @@ package inbound
 
 import (
 	"github.com/goccy/go-json"
-	"time"
-
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages"
 )
 
 type InboundSendGroupMessage struct {
 	messages.DefaultMessage
-	GroupId                   string    `json:"group_id"`
-	Content                   string    `json:"content"`
-	TransportMessageCreatedAt time.Time `json:"created_at"`
+	GroupId string `json:"groupId"`
+	Content string `json:"content"`
 }
 
 func (m *InboundSendGroupMessage) GetActionName() messages.Action {

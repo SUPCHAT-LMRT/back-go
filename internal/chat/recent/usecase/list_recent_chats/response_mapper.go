@@ -13,33 +13,45 @@ func NewResponseMapper() mapper.Mapper[*ListRecentChatsUseCaseOutput, *RecentCha
 func (r ResponseMapper) MapFromEntity(
 	response *RecentChatResponse,
 ) (*ListRecentChatsUseCaseOutput, error) {
-	return &ListRecentChatsUseCaseOutput{
-		Id:   response.Id,
-		Kind: response.Kind,
-		Name: response.Name,
-		LastMessage: &RecentChatLastMessage{
+	lastMessage := RecentChatLastMessage{}
+
+	if response.LastMessage != nil {
+		lastMessage = RecentChatLastMessage{
 			Id:         response.LastMessage.Id,
 			Content:    response.LastMessage.Content,
 			CreatedAt:  response.LastMessage.CreatedAt,
 			AuthorId:   response.LastMessage.AuthorId,
 			AuthorName: response.LastMessage.AuthorName,
-		},
+		}
+	}
+
+	return &ListRecentChatsUseCaseOutput{
+		Id:          response.Id,
+		Kind:        response.Kind,
+		Name:        response.Name,
+		LastMessage: &lastMessage,
 	}, nil
 }
 
 func (r ResponseMapper) MapToEntity(
 	entityRecentChat *ListRecentChatsUseCaseOutput,
 ) (*RecentChatResponse, error) {
-	return &RecentChatResponse{
-		Id:   entityRecentChat.Id,
-		Kind: entityRecentChat.Kind,
-		Name: entityRecentChat.Name,
-		LastMessage: RecentChatLastMessageResponse{
+	lastMessage := RecentChatLastMessageResponse{}
+
+	if entityRecentChat.LastMessage != nil {
+		lastMessage = RecentChatLastMessageResponse{
 			Id:         entityRecentChat.LastMessage.Id,
 			Content:    entityRecentChat.LastMessage.Content,
 			CreatedAt:  entityRecentChat.LastMessage.CreatedAt,
 			AuthorId:   entityRecentChat.LastMessage.AuthorId,
 			AuthorName: entityRecentChat.LastMessage.AuthorName,
-		},
+		}
+	}
+
+	return &RecentChatResponse{
+		Id:          entityRecentChat.Id,
+		Kind:        entityRecentChat.Kind,
+		Name:        entityRecentChat.Name,
+		LastMessage: &lastMessage,
 	}, nil
 }

@@ -31,3 +31,9 @@ type SendGroupMessageObserver interface {
 		userId user_entity.UserId,
 	)
 }
+
+type DeleteGroupMessageObserver interface {
+	OnDeleteMessage(
+		message *inbound.InboundGroupMessageDelete,
+	)
+}

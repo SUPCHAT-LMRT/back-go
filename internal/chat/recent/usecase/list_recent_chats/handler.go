@@ -53,10 +53,10 @@ func (h *ListRecentChatsHandler) Handle(c *gin.Context) {
 }
 
 type RecentChatResponse struct {
-	Id          entity.RecentChatId           `json:"id"`
-	Kind        entity.RecentChatKind         `json:"kind"`
-	Name        string                        `json:"name"`
-	LastMessage RecentChatLastMessageResponse `json:"lastMessage"`
+	Id          entity.RecentChatId            `json:"id"`
+	Kind        entity.RecentChatKind          `json:"kind"`
+	Name        string                         `json:"name"`
+	LastMessage *RecentChatLastMessageResponse `json:"lastMessage"`
 }
 
 type RecentChatLastMessageResponse struct {
