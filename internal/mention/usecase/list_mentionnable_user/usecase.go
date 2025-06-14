@@ -5,33 +5,40 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/repository"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_user_private_channel"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_user_by_workspace_member_id"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workspace_members"
 	repository2 "github.com/supchat-lmrt/back-go/internal/workspace/repository"
 )
 
 type (
-	Channel struct {
-		Id          string
-		IsPrivate   bool
-		WorkspaceId string
-	}
 	MentionnableUser struct {
 		Id       entity.UserId
 		Username string
 	}
 
 	ListMentionnableUserUseCase struct {
-		channelRepo   repository.ChannelRepository
-		workspaceRepo repository2.WorkspaceRepository
+		channelRepo                       repository.ChannelRepository
+		workspaceRepo                     repository2.WorkspaceRepository
+		listPrivateChannelMembersUsecase  *list_user_private_channel.ListPrivateChannelMembersUseCase
+		getUserByWorkspaceMemberIdUseCase *get_user_by_workspace_member_id.GetUserByWorkspaceMemberIdUseCase
+		listWorkspaceMembersUseCase       *list_workspace_members.ListWorkspaceMembersUseCase
 	}
 )
 
 func NewListMentionnableUserUseCase(
 	channelRepo repository.ChannelRepository,
 	workspaceRepo repository2.WorkspaceRepository,
+	listPrivateChannelMembersUsecase *list_user_private_channel.ListPrivateChannelMembersUseCase,
+	getUserByWorkspaceMemberIdUseCase *get_user_by_workspace_member_id.GetUserByWorkspaceMemberIdUseCase,
+	listWorkspaceMembersUseCase *list_workspace_members.ListWorkspaceMembersUseCase,
 ) *ListMentionnableUserUseCase {
 	return &ListMentionnableUserUseCase{
-		channelRepo:   channelRepo,
-		workspaceRepo: workspaceRepo,
+		channelRepo:                       channelRepo,
+		workspaceRepo:                     workspaceRepo,
+		listPrivateChannelMembersUsecase:  listPrivateChannelMembersUsecase,
+		getUserByWorkspaceMemberIdUseCase: getUserByWorkspaceMemberIdUseCase,
+		listWorkspaceMembersUseCase:       listWorkspaceMembersUseCase,
 	}
 }
 
@@ -42,8 +49,38 @@ func (u *ListMentionnableUserUseCase) Execute(ctx context.Context, channelId cha
 	}
 
 	if channel.IsPrivate {
-		return u.channelRepo.GetMembers(ctx, channelId)
+		memberIds, err := u.listPrivateChannelMembersUsecase.Execute(ctx, channelId)
+		if err != nil {
+			return nil, err
+		}
+		var users []MentionnableUser
+		for _, memberId := range memberIds {
+			user, err := u.getUserByWorkspaceMemberIdUseCase.Execute(ctx, memberId)
+			if err != nil {
+				return nil, err
+			}
+			users = append(users, MentionnableUser{
+				Id:       user.Id,
+				Username: user.FullName(),
+			})
+		}
+		return users, nil
 	}
 
-	return u.workspaceRepo.GetMembers(ctx, channel.WorkspaceId)
+	_, workspaceMembers, err := u.listWorkspaceMembersUseCase.Execute(ctx, channel.WorkspaceId, 1000, 1)
+	if err != nil {
+		return nil, err
+	}
+	var users []MentionnableUser
+	for _, member := range workspaceMembers {
+		user, err := u.getUserByWorkspaceMemberIdUseCase.Execute(ctx, member.Id)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, MentionnableUser{
+			Id:       user.Id,
+			Username: user.FullName(),
+		})
+	}
+	return users, nil
 }

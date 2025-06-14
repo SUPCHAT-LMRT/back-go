@@ -5,6 +5,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/create_group"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/group_info"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/leave_group"
+	"github.com/supchat-lmrt/back-go/internal/mention/usecase/list_mentionnable_user"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -140,6 +141,8 @@ type GinRouterDeps struct {
 	GetChannelHandler                *get_channel.GetChannelHandler
 	DeleteChannelHandler             *delete_channels.DeleteChannelHandler
 	ListPrivateChannelMembersHandler *list_user_private_channel.ListPrivateChannelMembersHandler
+	// Workspace channels mention
+	ListMentionnableUserHandler *list_mentionnable_user.ListMentionnableUserHandler
 	// Workspace roles
 	CreateRoleHandler        *create_role.CreateRoleHandler
 	GetRoleHandler           *get_role.GetRoleHandler
@@ -392,8 +395,8 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				channelGroup.DELETE("/:channel_id", d.deps.DeleteChannelHandler.Handle)
 				channelGroup.GET(
 					"/:channel_id/members",
-					d.deps.ListPrivateChannelMembersHandler.Handle,
-				)
+					d.deps.ListPrivateChannelMembersHandler.Handle)
+				channelGroup.GET("/:channel_id/mentionnable-users", d.deps.ListMentionnableUserHandler.Handle)
 			}
 
 			roleGroup := specificWorkspaceGroup.Group("/roles")

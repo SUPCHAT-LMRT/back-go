@@ -2,7 +2,6 @@ package di
 
 import (
 	"fmt"
-	send_notification2 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/send_notification"
 	get_last_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/get_last_message"
 	is_first_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/is_first_message"
 	toggle_reaction2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/toggle_reaction"
@@ -13,6 +12,9 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/leave_group"
 	list_members "github.com/supchat-lmrt/back-go/internal/group/usecase/list_members_users"
 	"github.com/supchat-lmrt/back-go/internal/logger"
+	"github.com/supchat-lmrt/back-go/internal/mention/usecase/extract_mentions"
+	"github.com/supchat-lmrt/back-go/internal/mention/usecase/list_mentionnable_user"
+	send_notification2 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/send_notification"
 	"log"
 	"os"
 	"reflect"
@@ -354,6 +356,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(send_notification2.NewEmailChannel, uberdig.Group("send_channelmessage_notification_channel")),
 		dig.NewProvider(send_notification2.NewPushChannel, uberdig.Group("send_channelmessage_notification_channel")),
 		dig.NewProvider(save_message.NewSendNotificationObserver, uberdig.Group("save_channel_message_observers")),
+		dig.NewProvider(save_message.NewGetMentionObserver, uberdig.Group("save_channel_message_observers")),
 		// User
 		dig.NewProvider(mongo2.NewMongoUserRepository),
 		dig.NewProvider(mongo2.NewMongoUserMapper),
@@ -598,6 +601,10 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(delete_poll.NewDeletePollHandler),
 		dig.NewProvider(vote_option_poll.NewVoteOptionPollHandler),
 		dig.NewProvider(unvote_option_poll.NewUnvoteOptionPollHandler),
+		// Mentions
+		dig.NewProvider(list_mentionnable_user.NewListMentionnableUserUseCase),
+		dig.NewProvider(list_mentionnable_user.NewListMentionnableUserHandler),
+		dig.NewProvider(extract_mentions.NewExtractMentionsUseCase),
 	}
 
 	for _, provider := range providers {
