@@ -296,3 +296,19 @@ func (m MongoWorkspaceRepository) GetMemberId(
 
 	return entity2.WorkspaceMemberId(member.Id.Hex()), nil
 }
+
+func (m MongoWorkspaceRepository) ListAllWorkspacesByUser(
+	ctx context.Context,
+	userId user_entity.UserId,
+) ([]*entity.Workspace, error) {
+	workspaces, err := m.ListByUserId(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(workspaces) == 0 {
+		return []*entity.Workspace{}, nil
+	}
+
+	return workspaces, nil
+}

@@ -24,6 +24,7 @@ type ChannelMessageRepository interface {
 		reaction string,
 	) (added bool, err error)
 	CountByWorkspace(ctx context.Context, id workspace_entity.WorkspaceId) (uint, error)
+	ListAllMessagesByUser(ctx context.Context, userId user_entity.UserId) ([]*entity.ChannelMessage, error)
 }
 
 type ListByChannelIdQueryParams struct {

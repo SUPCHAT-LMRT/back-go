@@ -3,13 +3,13 @@ package oauth
 import (
 	"context"
 	"fmt"
+	"github.com/markbates/goth/providers/github"
 	"os"
 	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
-	"github.com/markbates/goth/providers/facebook"
 	"github.com/markbates/goth/providers/google"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_email"
@@ -30,10 +30,10 @@ func init() {
 			os.Getenv("GOOGLE_CRED_SECRET"),
 			os.Getenv("GOOGLE_CRED_CALLBACK_URL"),
 		),
-		facebook.New(
-			os.Getenv("FACEBOOK_CRED_CRED_ID"),
-			os.Getenv("FACEBOOK_CRED_SECRET"),
-			os.Getenv("FACEBOOK_CRED_CALLBACK_URL"),
+		github.New(
+			os.Getenv("GITHUB_CRED_ID"),
+			os.Getenv("GITHUB_CRED_SECRET"),
+			os.Getenv("GITHUB_CRED_CALLBACK_URL"),
 		),
 	)
 }

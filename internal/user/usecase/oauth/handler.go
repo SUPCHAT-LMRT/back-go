@@ -28,7 +28,7 @@ func NewRegisterOAuthHandler(deps RegisterOAuthHandlerDeps) *RegisterOAuthHandle
 func (h *RegisterOAuthHandler) Provider(c *gin.Context) {
 	provider := c.Param("provider")
 	inviteToken := c.Query("token")
-	if provider != "google" && provider != "facebook" {
+	if provider != "google" && provider != "github" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid provider"})
 		return
 	}
@@ -44,7 +44,7 @@ func (h *RegisterOAuthHandler) Provider(c *gin.Context) {
 // Callback after OAuth authentication
 func (h *RegisterOAuthHandler) Callback(c *gin.Context) {
 	provider := c.Param("provider")
-	if provider != "google" && provider != "facebook" {
+	if provider != "google" && provider != "github" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid provider"})
 		return
 	}

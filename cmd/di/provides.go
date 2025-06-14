@@ -3,6 +3,7 @@ package di
 import (
 	"fmt"
 	save_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/delete_message"
+	"github.com/supchat-lmrt/back-go/internal/data/usecase/export_all_user_data"
 	get_last_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/get_last_message"
 	is_first_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/is_first_message"
 	toggle_reaction2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/toggle_reaction"
@@ -15,6 +16,10 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/transfer_ownership"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/search/group"
+	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/export_data_chat_direct"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/export_user_data"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/export_data_chat_message"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/export_data_user_workspace"
 	"log"
 	"os"
 	"reflect"
@@ -607,6 +612,15 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(delete_poll.NewDeletePollHandler),
 		dig.NewProvider(vote_option_poll.NewVoteOptionPollHandler),
 		dig.NewProvider(unvote_option_poll.NewUnvoteOptionPollHandler),
+		// export data
+		// export data usecases
+		dig.NewProvider(export_all_user_data.NewExportAllUserDataUseCase),
+		dig.NewProvider(export_user_data.NewExportUserDataUseCase),
+		dig.NewProvider(export_data_chat_direct.NewExportDataChatDirectUseCase),
+		dig.NewProvider(export_data_chat_message.NewExportDataChatMessageUseCase),
+		dig.NewProvider(export_data_user_workspace.NewExportDataUserWorkspaceUseCase),
+		// export data handlers
+		dig.NewProvider(export_all_user_data.NewExportAllUserDataHandler),
 	}
 
 	for _, provider := range providers {

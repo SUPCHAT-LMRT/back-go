@@ -349,3 +349,35 @@ func (m MongoChannelMessageRepository) CountByWorkspace(
 
 	return uint(elementsCount.TotalMessages), nil
 }
+
+func (m *MongoChannelMessageRepository) ListAllMessagesByUser(ctx context.Context, userId user_entity.UserId) ([]*entity.ChannelMessage, error) {
+	userIdHex, err := bson.ObjectIDFromHex(string(userId))
+	if err != nil {
+		return nil, err
+	}
+
+	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
+	filter := bson.M{
+		"user_id": userIdHex,
+	}
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var mongoMessages []*MongoChannelMessage
+	if err := cursor.All(ctx, &mongoMessages); err != nil {
+		return nil, err
+	}
+
+	messages := make([]*entity.ChannelMessage, len(mongoMessages))
+	for i, mongoMsg := range mongoMessages {
+		msg, err := m.deps.Mapper.MapToEntity(mongoMsg)
+		if err != nil {
+			return nil, err
+		}
+		messages[i] = msg
+	}
+	return messages, nil
+}
