@@ -14,6 +14,8 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/mention/usecase/extract_mentions"
 	"github.com/supchat-lmrt/back-go/internal/mention/usecase/list_mentionnable_user"
+	"github.com/supchat-lmrt/back-go/internal/notification/usecase/list_notifications"
+	"github.com/supchat-lmrt/back-go/internal/notification/usecase/mark_as_read"
 	send_notification2 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/send_notification"
 	"log"
 	"os"
@@ -583,6 +585,11 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(send_notification.NewPushChannel, uberdig.Group("send_directmessage_notification_channel")),
 		dig.NewProvider(send_notification.NewSendMessageNotificationUseCase),
 		dig.NewProvider(permissions2.NewCheckUserPermissionsHandler),
+		dig.NewProvider(list_notifications.NewListNotificationsHandler),
+		dig.NewProvider(list_notifications.NewListNotificationsUseCase),
+		dig.NewProvider(mark_as_read.NewMarkAsReadUseCase),
+		dig.NewProvider(mark_as_read.NewMarkAsReadHandler),
+
 		// bots
 		// bots repository
 		dig.NewProvider(poll.NewMongoPollMapper),

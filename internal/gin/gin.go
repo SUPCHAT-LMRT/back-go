@@ -6,6 +6,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/group_info"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/leave_group"
 	"github.com/supchat-lmrt/back-go/internal/mention/usecase/list_mentionnable_user"
+	"github.com/supchat-lmrt/back-go/internal/notification/usecase/mark_as_read"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -21,6 +22,7 @@ import (
 	validator2 "github.com/supchat-lmrt/back-go/internal/gin/validator"
 	list_group_chat_messages "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/add_member"
+	"github.com/supchat-lmrt/back-go/internal/notification/usecase/list_notifications"
 	"github.com/supchat-lmrt/back-go/internal/search/usecase/search"
 	entity2 "github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
 	has_job "github.com/supchat-lmrt/back-go/internal/user/app_jobs/gin/middlewares"
@@ -212,6 +214,9 @@ type GinRouterDeps struct {
 	DeletePollHandler       *delete_poll.DeletePollHandler
 	VoteOptionPollHandler   *vote_option_poll.VoteOptionPollHandler
 	UnvoteOptionPollHandler *unvote_option_poll.UnvoteOptionPollHandler
+	// Notifications
+	ListNotificationsHandler *list_notifications.ListNotificationsHandler
+	MarkAsReadHandler        *mark_as_read.MarkAsReadHandler
 }
 
 func NewGinRouter(deps GinRouterDeps) GinRouter {
@@ -442,6 +447,12 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	}
 
 	apiGroup.GET("/search", authMiddleware, d.deps.SearchTermHandler.Handle)
+
+	notificationGroup := apiGroup.Group("/notifications", authMiddleware)
+	{
+		notificationGroup.PATCH("/:id/read", d.deps.MarkAsReadHandler.Handle)
+		notificationGroup.GET("", d.deps.ListNotificationsHandler.Handle)
+	}
 }
 
 func (d *DefaultGinRouter) AddCorsHeaders() {

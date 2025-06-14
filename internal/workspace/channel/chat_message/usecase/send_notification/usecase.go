@@ -9,7 +9,6 @@ import (
 	channel_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	uberdig "go.uber.org/dig"
-	"log"
 )
 
 type SendMessageNotificationUseCaseDeps struct {
@@ -27,9 +26,7 @@ func NewSendMessageNotificationUseCase(deps SendMessageNotificationUseCaseDeps) 
 }
 
 func (uc *SendMessageNotificationUseCase) Execute(ctx context.Context, req SendMessageNotificationRequest) error {
-	log.Printf("fouf")
 	for _, channel := range uc.deps.Channels {
-		log.Printf("fouf2")
 		if err := channel.SendNotification(ctx, req); err != nil {
 			return err
 		}
