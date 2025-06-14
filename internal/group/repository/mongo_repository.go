@@ -63,30 +63,17 @@ func (r MongoGroupRepository) Create(
 		return err
 	}
 
-	session, err := r.deps.Client.Client.StartSession()
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		InsertOne(ctx, mongoGroup)
 	if err != nil {
 		return err
 	}
-	defer session.EndSession(ctx)
 
-	_, err = session.WithTransaction(ctx, func(sessionContext context.Context) (any, error) {
-		_, err = r.deps.Client.Client.Database(databaseName).
-			Collection(collectionName).
-			InsertOne(sessionContext, mongoGroup)
-		if err != nil {
-			return nil, err
-		}
-
-		// Add the owner as a member
-		err = r.unsafeAddMember(sessionContext, group.Id, &entity.GroupMember{
-			Id:     group.OwnerMemberId,
-			UserId: ownerUserId,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		return nil, nil
+	// Add the owner as a member
+	err = r.unsafeAddMember(ctx, group.Id, &entity.GroupMember{
+		Id:     group.OwnerMemberId,
+		UserId: ownerUserId,
 	})
 	if err != nil {
 		return err
