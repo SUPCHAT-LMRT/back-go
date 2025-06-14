@@ -43,6 +43,10 @@ func (d DirectRoomData) String() string {
 	return fmt.Sprintf("direct-%s_%s", d.OtherUserId.String(), d.UserId.String())
 }
 
+type GroupRoomData struct{}
+
+func (GroupRoomData) mustImplementRoomData() {}
+
 // NewRoom creates a new Room
 func NewRoom(deps WebSocketDeps, id string, data RoomData) *Room {
 	return &Room{

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/supchat-lmrt/back-go/internal/mapper"
@@ -79,6 +80,29 @@ func (m MongoChatDirectRepository) Create(
 	}
 
 	return nil
+}
+
+func (m MongoChatDirectRepository) GetById(
+	ctx context.Context,
+	chatDirectId entity.ChatDirectId,
+) (*entity.ChatDirect, error) {
+	objectId, err := bson.ObjectIDFromHex(string(chatDirectId))
+	if err != nil {
+		return nil, err
+	}
+
+	var mongoChatDirect MongoChatDirect
+	err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, bson.M{"_id": objectId}).Decode(&mongoChatDirect)
+	if err != nil {
+		if errors.Is(err, mongo2.ErrNoDocuments) {
+			return nil, nil // Pas de message trouvé
+		}
+		return nil, err
+	}
+
+	return m.deps.Mapper.MapToEntity(&mongoChatDirect)
 }
 
 func (m MongoChatDirectRepository) ListRecentChats(
@@ -175,6 +199,46 @@ func (m MongoChatDirectRepository) IsFirstMessage(
 	}
 
 	return count == 1, nil
+}
+
+func (m MongoChatDirectRepository) GetLastMessage(
+	ctx context.Context,
+	user1Id, user2Id user_entity.UserId,
+) (*entity.ChatDirect, error) {
+	user1IdHex, err := bson.ObjectIDFromHex(string(user1Id))
+	if err != nil {
+		return nil, err
+	}
+
+	user2IdHex, err := bson.ObjectIDFromHex(string(user2Id))
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.D{
+		{
+			Key: "$or", Value: bson.A{
+				bson.D{{Key: "user1Id", Value: user1IdHex}, {Key: "user2Id", Value: user2IdHex}},
+				bson.D{{Key: "user1Id", Value: user2IdHex}, {Key: "user2Id", Value: user1IdHex}},
+			},
+		},
+	}
+
+	opts := options.FindOne().
+		SetSort(bson.D{{Key: "created_at", Value: -1}}) // Dernier message
+
+	var mongoChatDirect MongoChatDirect
+	err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, filter, opts).Decode(&mongoChatDirect)
+	if err != nil {
+		if errors.Is(err, mongo2.ErrNoDocuments) {
+			return nil, nil // Pas de messages trouvés
+		}
+		return nil, err
+	}
+
+	return m.deps.Mapper.MapToEntity(&mongoChatDirect)
 }
 
 //nolint:revive
@@ -308,6 +372,7 @@ func (m MongoChatDirectRepository) ListByUser(
 	if err != nil {
 		return nil, err
 	}
+	defer cursor.Close(ctx)
 
 	var mongoChatDirects []*MongoChatDirect
 	if err = cursor.All(ctx, &mongoChatDirects); err != nil {
@@ -404,4 +469,84 @@ func (m MongoChatDirectRepository) ToggleReaction(
 	}
 
 	return !removed, nil
+}
+
+func (m *MongoChatDirectRepository) ListAllMessagesByUser(ctx context.Context, userId user_entity.UserId) ([]*entity.ChatDirect, error) {
+	userIdHex, err := bson.ObjectIDFromHex(string(userId))
+	if err != nil {
+		return nil, err
+	}
+
+	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
+	filter := bson.M{
+		"$or": []bson.M{
+			{"user1Id": userIdHex},
+			{"user2Id": userIdHex},
+		},
+	}
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var mongoChatDirects []*MongoChatDirect
+	if err := cursor.All(ctx, &mongoChatDirects); err != nil {
+		return nil, err
+	}
+
+	chatDirects := make([]*entity.ChatDirect, len(mongoChatDirects))
+	for i, mongoChatDirect := range mongoChatDirects {
+		chatDirect, err := m.deps.Mapper.MapToEntity(mongoChatDirect)
+		if err != nil {
+			return nil, err
+		}
+		chatDirects[i] = chatDirect
+	}
+	return chatDirects, nil
+}
+
+func (m *MongoChatDirectRepository) DeleteMessage(ctx context.Context, chatDirectId entity.ChatDirectId) error {
+	chatDirectObjectId, err := bson.ObjectIDFromHex(string(chatDirectId))
+	if err != nil {
+		return err
+	}
+
+	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
+	_, err = collection.DeleteOne(ctx, bson.M{"_id": chatDirectObjectId})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *MongoChatDirectRepository) UpdateMessage(ctx context.Context, msg *entity.ChatDirect) error {
+	if msg.User2Id.IsAfter(msg.User1Id) {
+		msg.User1Id, msg.User2Id = msg.User2Id, msg.User1Id
+	}
+
+	mongoChatDirect, err := m.deps.Mapper.MapFromEntity(msg)
+	if err != nil {
+		return err
+	}
+
+	mongoChatDirect.UpdatedAt = time.Now()
+
+	chatDirectObjectId, err := bson.ObjectIDFromHex(string(msg.Id))
+	if err != nil {
+		return err
+	}
+
+	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
+	_, err = collection.UpdateOne(
+		ctx,
+		bson.M{"_id": chatDirectObjectId},
+		bson.M{"$set": mongoChatDirect},
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

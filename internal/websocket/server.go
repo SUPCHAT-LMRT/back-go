@@ -2,10 +2,12 @@ package websocket
 
 import (
 	"context"
-
+	"errors"
 	"github.com/goccy/go-json"
 	"github.com/supchat-lmrt/back-go/internal/event"
+	"github.com/supchat-lmrt/back-go/internal/group/repository"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
+	"github.com/supchat-lmrt/back-go/internal/user/status/entity"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages/outbound"
 )
 
@@ -92,6 +94,246 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 			if err != nil {
 				logg.Error().Err(err).
 					Msg("failed to send message to user2")
+				return
+			}
+		}
+	})
+
+	server.Deps.EventBus.Subscribe(event.GroupCreatedEventType, func(evt event.Event) {
+		groupCreatedEvent, ok := evt.(*event.GroupCreatedEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to DirectChatMessageSavedEvent")
+			return
+		}
+
+		logg := deps.Logger.With().
+			Str("groupId", groupCreatedEvent.Message.Id.String()).
+			Str("groupName", groupCreatedEvent.Message.Name).Logger()
+
+		// Broadcast the created group to all the invited users
+		groupMembers, err := server.Deps.ListGroupMembersUseCase.Execute(context.Background(), groupCreatedEvent.Message.Id)
+		if err != nil {
+			logg.Error().Err(err).
+				Msg("failed to list group members")
+			return
+		}
+
+		for _, member := range groupMembers {
+			client := server.findClientByUserId(member.UserId)
+			if client == nil {
+				logg.Warn().Str("userId", member.UserId.String()).
+					Msg("client not found for group member, skipping")
+				continue
+			}
+
+			err = client.SendMessage(&outbound.OutboundAddRecentGroupChat{
+				GroupId:  groupCreatedEvent.Message.Id,
+				ChatName: groupCreatedEvent.Message.Name,
+			})
+			if err != nil {
+				logg.Error().Err(err).
+					Str("userId", member.UserId.String()).
+					Msg("failed to send message to group member")
+				return
+			}
+		}
+	})
+
+	server.Deps.EventBus.Subscribe(event.GroupMemberAddedEventType, func(evt event.Event) {
+		ctx := context.Background()
+		groupMemberAddedEvent, ok := evt.(*event.GroupMemberAddedEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to GroupMemberAddedEvent")
+			return
+		}
+
+		logg := deps.Logger.With().
+			Str("groupId", groupMemberAddedEvent.Message.Id.String()).
+			Str("userId", groupMemberAddedEvent.InvitedUserId.String()).Logger()
+
+		// Send to the invited user, the group chat
+		client := server.findClientByUserId(groupMemberAddedEvent.InvitedUserId)
+		if client == nil {
+			logg.Warn().Msg("client not found for invited user, skipping")
+			return
+		}
+
+		err = client.SendMessage(&outbound.OutboundAddRecentGroupChat{
+			GroupId:  groupMemberAddedEvent.Message.Id,
+			ChatName: groupMemberAddedEvent.Message.Name,
+		})
+		if err != nil {
+			logg.Error().Err(err).
+				Msg("failed to send message to invited user")
+			return
+		}
+
+		// Broadcast the created group to all the invited users that the group member was added
+		groupMembers, err := server.Deps.ListGroupMembersUseCase.Execute(ctx, groupMemberAddedEvent.Message.Id)
+		if err != nil {
+			logg.Error().Err(err).
+				Msg("failed to list group members")
+			return
+		}
+
+		invitedUserMember, err := server.Deps.GetMemberByUserUseCase.Execute(ctx, groupMemberAddedEvent.Message.Id, groupMemberAddedEvent.InvitedUserId)
+		if err != nil {
+			logg.Error().Err(err).
+				Msg("failed to get invited user member")
+			return
+		}
+
+		invitedUser, err := server.Deps.GetUserByIdUseCase.Execute(ctx, invitedUserMember.UserId)
+		if err != nil {
+			logg.Error().Err(err).
+				Msg("failed to get invited user")
+			return
+		}
+
+		invitedUserStatus, err := server.Deps.GetPublicStatusUseCase.Execute(ctx, invitedUserMember.UserId, entity.StatusOffline)
+		if err != nil {
+			logg.Error().Err(err).
+				Msg("failed to get invited user status")
+			return
+		}
+
+		for _, member := range groupMembers {
+			// Skip the invited user, as they already received the message and fetch the group chat
+			if member.UserId == groupMemberAddedEvent.InvitedUserId {
+				continue
+			}
+
+			memberClient := server.findClientByUserId(member.UserId)
+			if memberClient == nil {
+				logg.Warn().Str("userId", member.UserId.String()).
+					Msg("client not found for group member, skipping")
+				continue
+			}
+
+			err = memberClient.SendMessage(&outbound.OutboundAddGroupMemberChat{
+				GroupId: groupMemberAddedEvent.Message.Id,
+				Member: &outbound.OutboundAddGroupMemberChatMember{
+					Id:           invitedUserMember.Id,
+					UserId:       invitedUserMember.UserId,
+					UserName:     invitedUser.FullName(),
+					IsGroupOwner: false,
+					Status:       invitedUserStatus,
+				},
+			})
+		}
+	})
+
+	server.Deps.EventBus.Subscribe(event.GroupMemberRemovedEventType, func(evt event.Event) {
+		groupMemberRemovedEvent, ok := evt.(*event.GroupMemberRemovedEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to GroupMemberRemovedEvent")
+			return
+		}
+
+		logg := deps.Logger.With().
+			Str("groupId", groupMemberRemovedEvent.Group.Id.String()).
+			Str("userId", groupMemberRemovedEvent.RemovedMemberId.String()).Logger()
+
+		// Broadcast the removed group member to all the group members
+		groupMembers, err := server.Deps.ListGroupMembersUseCase.Execute(context.Background(), groupMemberRemovedEvent.Group.Id)
+		if err != nil {
+			if errors.Is(err, repository.ErrGroupNotFound) {
+				// Send message to the removed user to remove the recent chat
+				client := server.findClientByUserId(groupMemberRemovedEvent.RemovedUserId)
+				if client == nil {
+					logg.Warn().Str("userId", groupMemberRemovedEvent.RemovedUserId.String()).
+						Msg("client not found for group member, skipping")
+					return
+				}
+
+				err = client.SendMessage(&outbound.OutboundRemovedRecentGroupChat{
+					GroupId: groupMemberRemovedEvent.Group.Id,
+				})
+				if err != nil {
+					logg.Error().Err(err).
+						Msg("failed to send message to invited user")
+					return
+				}
+				return
+			}
+			logg.Error().Err(err).
+				Msg("failed to list group members")
+			return
+		}
+
+		// Send message to the removed user to remove the recent chat
+		client := server.findClientByUserId(groupMemberRemovedEvent.RemovedUserId)
+		if client == nil {
+			logg.Warn().Str("userId", groupMemberRemovedEvent.RemovedUserId.String()).
+				Msg("client not found for group member, skipping")
+			return
+		}
+
+		err = client.SendMessage(&outbound.OutboundRemovedRecentGroupChat{
+			GroupId: groupMemberRemovedEvent.Group.Id,
+		})
+		if err != nil {
+			logg.Error().Err(err).
+				Msg("failed to send message to invited user")
+			return
+		}
+
+		// Send message to all other group members about the removed member
+		for _, member := range groupMembers {
+			client := server.findClientByUserId(member.UserId)
+			if client == nil {
+				logg.Warn().Str("userId", member.UserId.String()).
+					Msg("client not found for group member, skipping")
+				continue
+			}
+
+			err = client.SendMessage(&outbound.OutboundRemoveGroupMemberChat{
+				GroupId:  groupMemberRemovedEvent.Group.Id,
+				MemberId: groupMemberRemovedEvent.RemovedMemberId,
+				UserId:   groupMemberRemovedEvent.RemovedUserId,
+			})
+			if err != nil {
+				logg.Error().Err(err).
+					Msg("failed to send message to group member")
+				return
+			}
+		}
+	})
+
+	server.Deps.EventBus.Subscribe(event.GroupTransferOwnershipEventType, func(evt event.Event) {
+		groupTransferOwnershipEvent, ok := evt.(*event.GroupTransferOwnershipEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to GroupTransferOwnershipEvent")
+			return
+		}
+
+		logg := deps.Logger.With().
+			Str("groupId", groupTransferOwnershipEvent.Group.Id.String()).
+			Str("newOwnerId", groupTransferOwnershipEvent.NewOwnerId.String()).Logger()
+
+		// Broadcast the ownership transfer to all group members
+		groupMembers, err := server.Deps.ListGroupMembersUseCase.Execute(context.Background(), groupTransferOwnershipEvent.Group.Id)
+		if err != nil {
+			logg.Error().Err(err).
+				Msg("failed to list group members")
+			return
+		}
+
+		for _, member := range groupMembers {
+			client := server.findClientByUserId(member.UserId)
+			if client == nil {
+				logg.Warn().Str("userId", member.UserId.String()).
+					Msg("client not found for group member, skipping")
+				continue
+			}
+
+			err = client.SendMessage(&outbound.OutboundGroupOwnershipTransferer{
+				GroupId:    groupTransferOwnershipEvent.Group.Id,
+				NewOwnerId: groupTransferOwnershipEvent.NewOwnerId,
+			})
+			if err != nil {
+				logg.Error().Err(err).
+					Msg("failed to send ownership transfer message to group member")
 				return
 			}
 		}

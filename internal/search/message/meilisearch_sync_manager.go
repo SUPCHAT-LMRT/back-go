@@ -131,6 +131,19 @@ func (m MeilisearchSearchMessageSyncManager) AddMessage(
 	return nil
 }
 
+func (m MeilisearchSearchMessageSyncManager) DeleteMessage(ctx context.Context, messageId string) error {
+	_, err := m.client.Client.Index("messages").DeleteDocument(messageId)
+	if err != nil {
+		m.logger.Error().
+			Err(err).
+			Str("message_id", messageId).
+			Msg("Failed to delete message from Meilisearch")
+		return err
+	}
+	m.cache.Remove(messageId)
+	return nil
+}
+
 func (m MeilisearchSearchMessageSyncManager) Sync(ctx context.Context) {
 	var docs []*SearchMessage
 	for _, key := range m.cache.Keys() {

@@ -9,10 +9,8 @@ const (
 	PermissionManageChannels          uint64 = 1 << iota // Gérer les canaux
 	PermissionManageRoles                                // Gérer les rôles
 	PermissionManageMessages                             // Gérer les messages
-	PermissionManageInvites                              // Gérer les invitations
 	PermissionSendMessages                               // Envoyer un message
 	PermissionAttachFiles                                // Joindre des fichiers
-	PermissionPinMessages                                // Épingler des messages
 	PermissionMentionEveryone                            // Mentionner @everyone
 	PermissionKickMembers                                // Kick des membres
 	PermissionInviteMembers                              // Inviter des membres

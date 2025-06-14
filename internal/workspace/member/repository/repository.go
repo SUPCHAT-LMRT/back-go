@@ -46,4 +46,8 @@ type WorkspaceMemberRepository interface {
 		workspaceId entity.WorkspaceId,
 		userId entity2.WorkspaceMemberId,
 	) error
+	GetMemberById(
+		ctx context.Context,
+		memberId entity2.WorkspaceMemberId,
+	) (*entity2.WorkspaceMember, error)
 }

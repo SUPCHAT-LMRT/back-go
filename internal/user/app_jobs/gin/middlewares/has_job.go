@@ -25,7 +25,7 @@ func (h *HasJobPermissionsMiddleware) Execute(requiredPermission uint64) gin.Han
 
 		hasPermission, err := h.CheckPermissionJobUseCase.Execute(
 			c.Request.Context(),
-			user.Id.String(),
+			user.Id,
 			requiredPermission,
 		)
 		if err != nil {

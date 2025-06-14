@@ -2,18 +2,16 @@ package entity
 
 import (
 	"time"
-
-	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 )
 
 type GroupId string
 
 type Group struct {
-	Id          GroupId
-	Name        string
-	OwnerUserId user_entity.UserId
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	Id            GroupId
+	Name          string
+	OwnerMemberId GroupMemberId
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 func (id GroupId) String() string {

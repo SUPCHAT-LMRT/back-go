@@ -83,6 +83,31 @@ func (m MongoChannelMessageRepository) Create(
 	return nil
 }
 
+func (m MongoChannelMessageRepository) Get(
+	ctx context.Context,
+	id entity.ChannelMessageId,
+) (*entity.ChannelMessage, error) {
+	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
+
+	messageObjectId, err := bson.ObjectIDFromHex(string(id))
+	if err != nil {
+		return nil, err
+	}
+
+	var mongoMessage MongoChannelMessage
+	err = collection.FindOne(ctx, bson.M{"_id": messageObjectId}).Decode(&mongoMessage)
+	if err != nil {
+		return nil, err
+	}
+
+	message, err := m.deps.Mapper.MapToEntity(&mongoMessage)
+	if err != nil {
+		return nil, err
+	}
+
+	return message, nil
+}
+
 //nolint:revive
 func (m MongoChannelMessageRepository) ListByChannelId(
 	ctx context.Context,
@@ -348,4 +373,83 @@ func (m MongoChannelMessageRepository) CountByWorkspace(
 	}
 
 	return uint(elementsCount.TotalMessages), nil
+}
+
+func (m *MongoChannelMessageRepository) ListAllMessagesByUser(ctx context.Context, userId user_entity.UserId) ([]*entity.ChannelMessage, error) {
+	userIdHex, err := bson.ObjectIDFromHex(string(userId))
+	if err != nil {
+		return nil, err
+	}
+
+	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
+	filter := bson.M{
+		"user_id": userIdHex,
+	}
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var mongoMessages []*MongoChannelMessage
+	if err := cursor.All(ctx, &mongoMessages); err != nil {
+		return nil, err
+	}
+
+	messages := make([]*entity.ChannelMessage, len(mongoMessages))
+	for i, mongoMsg := range mongoMessages {
+		msg, err := m.deps.Mapper.MapToEntity(mongoMsg)
+		if err != nil {
+			return nil, err
+		}
+		messages[i] = msg
+	}
+	return messages, nil
+}
+
+func (m MongoChannelMessageRepository) DeleteMessage(
+	ctx context.Context,
+	channelMessageId entity.ChannelMessageId,
+) error {
+	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
+
+	messageObjectId, err := bson.ObjectIDFromHex(string(channelMessageId))
+	if err != nil {
+		return err
+	}
+
+	_, err = collection.DeleteOne(ctx, bson.M{"_id": messageObjectId})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m MongoChannelMessageRepository) UpdateMessage(
+	ctx context.Context,
+	msg *entity.ChannelMessage,
+) error {
+	collection := m.deps.Client.Client.Database(databaseName).Collection(collectionName)
+
+	messageObjectId, err := bson.ObjectIDFromHex(string(msg.Id))
+	if err != nil {
+		return err
+	}
+
+	mongoMessage, err := m.deps.Mapper.MapFromEntity(msg)
+	if err != nil {
+		return err
+	}
+
+	_, err = collection.UpdateOne(
+		ctx,
+		bson.M{"_id": messageObjectId},
+		bson.M{"$set": mongoMessage},
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

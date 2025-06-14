@@ -2,6 +2,32 @@ package di
 
 import (
 	"fmt"
+	"github.com/supchat-lmrt/back-go/internal/data/usecase/export_all_user_data"
+	save_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/delete_message"
+	"github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/edit_message"
+	get_last_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/get_last_message"
+	"github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/get_message"
+	is_first_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/is_first_message"
+	toggle_reaction2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/toggle_reaction"
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/create_group"
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/get_member_by_user"
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/group_info"
+	kick_member2 "github.com/supchat-lmrt/back-go/internal/group/usecase/kick_member"
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/leave_group"
+	list_members "github.com/supchat-lmrt/back-go/internal/group/usecase/list_members_users"
+	"github.com/supchat-lmrt/back-go/internal/group/usecase/transfer_ownership"
+	"github.com/supchat-lmrt/back-go/internal/logger"
+	"github.com/supchat-lmrt/back-go/internal/search/group"
+	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/delete_message"
+	edit_message2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/edit_message"
+	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/export_data_chat_direct"
+	get_message2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/get_message"
+	"github.com/supchat-lmrt/back-go/internal/user/usecase/export_user_data"
+	delete_message2 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/delete_message"
+	edit_message3 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/edit_message"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/export_data_chat_message"
+	get_message3 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/get_message"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/export_data_user_workspace"
 	"log"
 	"os"
 	"reflect"
@@ -23,10 +49,9 @@ import (
 	list_group_chat_messages "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/list_messages"
 	save_group_chat_message "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/save_message"
 	group_repository "github.com/supchat-lmrt/back-go/internal/group/repository"
-	"github.com/supchat-lmrt/back-go/internal/group/strategies"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/add_member"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/list_recent_groups"
-	logger "github.com/supchat-lmrt/back-go/internal/logger/zerolog"
+	"github.com/supchat-lmrt/back-go/internal/logger/zerolog"
 	"github.com/supchat-lmrt/back-go/internal/mail"
 	"github.com/supchat-lmrt/back-go/internal/meilisearch"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
@@ -47,6 +72,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/unassign_job"
 	"github.com/supchat-lmrt/back-go/internal/user/app_jobs/usecase/update_job"
 	user_chat_direct_repository "github.com/supchat-lmrt/back-go/internal/user/chat_direct/repository"
+	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/get_last_message"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/is_first_message"
 	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
 	list_recent_chats_direct "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_recent_direct_chats"
@@ -107,10 +133,12 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_channels"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_private_channels"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/list_user_private_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/reoder_channels"
 	workspace_middlewares "github.com/supchat-lmrt/back-go/internal/workspace/gin/middlewares"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/repository"
 	add_member2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/add_member"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_user_by_workspace_member_id"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_workpace_member"
 	repository3 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/repository"
 	delete3 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/delete"
@@ -148,10 +176,14 @@ import (
 
 //nolint:revive
 func NewDi() *uberdig.Container {
+	isProd := os.Getenv("ENV") == "production"
+
 	di := uberdig.New()
 	providers := []dig.Provider{
 		// Logger
-		dig.NewProvider(logger.NewZerologLogger),
+		dig.NewProvider(zerolog.NewZerologLogger(
+			logger.WithMinLevel(utils.IfThenElse(isProd, logger.LogLevelInfo, logger.LogLevelTrace)),
+		)),
 		// Gin
 		dig.NewProvider(gin.NewGinRouter),
 		// Mongo
@@ -217,7 +249,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(get_data_token_invite3.NewGetInviteLinkWorkspaceDataHandler),
 		dig.NewProvider(update_info_workspaces.NewUpdateInfoWorkspacesHandler),
 		dig.NewProvider(update_type_workspace.NewUpdateTypeWorkspaceHandler),
-		dig.NewProvider(kick_member.NewKickMemberHandler),
+		dig.NewProvider(kick_member.NewKickGroupMemberHandler),
 		dig.NewProvider(get_member_id.NewGetMemberIdHandler),
 		// Workspace observers
 		dig.NewProvider(
@@ -261,6 +293,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(dessassign_role.NewDessassignRoleFromUserHandler),
 		dig.NewProvider(get_roles_for_member.NewGetRolesForMemberHandler),
 		dig.NewProvider(check_permissions.NewCheckPermissionsHandler),
+		dig.NewProvider(list_user_private_channel.NewListPrivateChannelMembersHandler),
 		// Workspace channels usecases
 		dig.NewProvider(list_channels.NewListChannelsUseCase),
 		dig.NewProvider(list_private_channels.NewGetPrivateChannelsUseCase),
@@ -273,6 +306,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(dessassign_role.NewDessassignRoleFromUserUsecase),
 		dig.NewProvider(get_roles_for_member.NewGetRolesForMemberUsecase),
 		dig.NewProvider(permissions.NewCheckPermissionUseCase),
+		dig.NewProvider(list_user_private_channel.NewListPrivateChannelMembersUseCase),
 		// Workspaces channels observers
 		dig.NewProvider(
 			create_channel.NewCreateChannelObserver,
@@ -305,6 +339,9 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(list_messages.NewListChannelMessagesHandler),
 		// Workspace channels chat messages usecases
 		dig.NewProvider(save_message.NewSaveChannelMessageUseCase),
+		dig.NewProvider(get_message3.NewGetMessageUseCase),
+		dig.NewProvider(edit_message3.NewEditChannelChatMessageUseCase),
+		dig.NewProvider(delete_message2.NewDeleteChannelChatMessageUseCase),
 		// Workspace time series
 		// Workspace time series message sent
 		// Workspace time series message sent repository
@@ -322,6 +359,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(add_member2.NewAddMemberUseCase),
 		dig.NewProvider(add_member2.NewAddMemberHandler),
 		dig.NewProvider(delete3.NewDeleteInviteLinkWorkspaceUseCase),
+		dig.NewProvider(get_user_by_workspace_member_id.NewGetUserByWorkspaceMemberIdUseCase),
 		// Workspace member handlers
 		dig.NewProvider(join_workspace_invite.NewJoinWorkspaceInviteUseCase),
 		dig.NewProvider(join_workspace_invite.NewJoinWorkspaceInviteHandler),
@@ -420,6 +458,10 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(user_chat_direct_repository.NewChatDirectMapper),
 		// User chat direct usecases
 		dig.NewProvider(list_recent_chats_direct.NewListRecentChatDirectUseCase),
+		dig.NewProvider(get_last_message.NewGetLastDirectChatMessageUseCase),
+		dig.NewProvider(delete_message.NewDeleteDirectChatMessageUseCase),
+		dig.NewProvider(edit_message2.NewEditDirectChatMessageUseCase),
+		dig.NewProvider(get_message2.NewGetDirectChatMessageUseCase),
 		dig.NewProvider(save_direct_message.NewSaveDirectMessageUseCase),
 		dig.NewProvider(is_first_message.NewIsFirstMessageUseCase),
 		dig.NewProvider(list_direct_messages.NewListDirectMessagesUseCase),
@@ -455,8 +497,36 @@ func NewDi() *uberdig.Container {
 			uberdig.Group("send_channel_message_observers"),
 		),
 		dig.NewProvider(
+			websocket.NewSaveDeleteGroupMessageObserver,
+			uberdig.Group("delete_group_message_observers"),
+		),
+		dig.NewProvider(
+			websocket.NewSaveDeleteDirectMessageObserver,
+			uberdig.Group("delete_direct_message_observers"),
+		),
+		dig.NewProvider(
+			websocket.NewSaveDeleteChannelMessageObserver,
+			uberdig.Group("delete_channel_message_observers"),
+		),
+		dig.NewProvider(
+			websocket.NewSaveEditChannelMessageObserver,
+			uberdig.Group("edit_channel_message_observers"),
+		),
+		dig.NewProvider(
+			websocket.NewSaveEditGroupMessageObserver,
+			uberdig.Group("edit_group_message_observers"),
+		),
+		dig.NewProvider(
+			websocket.NewSaveEditDirectMessageObserver,
+			uberdig.Group("edit_direct_message_observers"),
+		),
+		dig.NewProvider(
 			websocket.NewSaveDirectMessageObserver,
 			uberdig.Group("send_direct_message_observers"),
+		),
+		dig.NewProvider(
+			websocket.NewSaveGroupMessageObserver,
+			uberdig.Group("send_group_message_observers"),
 		),
 		dig.NewProvider(
 			save_direct_message.NewSyncRecentChatObserver,
@@ -483,19 +553,38 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(group_repository.NewMongoGroupMapper),
 		dig.NewProvider(group_repository.NewMongoGroupMemberMapper),
 		// Group strategies
-		dig.NewProvider(strategies.NewMembersNamesGroupNameStrategy),
 		// Group usecases
 		dig.NewProvider(add_member.NewAddMemberToGroupUseCase),
+		dig.NewProvider(create_group.NewCreateGroupUseCase),
+		dig.NewProvider(list_members.NewListGroupMembersUseCase),
+		dig.NewProvider(group_info.NewGetGroupInfoUseCase),
+		dig.NewProvider(kick_member2.NewKickMemberUseCase),
+		dig.NewProvider(create_group.NewSyncRecentChatObserver, uberdig.Group("group_created_observer")),
+		dig.NewProvider(add_member.NewSyncRecentChatObserver, uberdig.Group("add_group_member_observer")),
+		dig.NewProvider(kick_member2.NewSyncRecentChatObserver, uberdig.Group("kick_group_member_observer")),
+		dig.NewProvider(get_member_by_user.NewGetMemberByUserUseCase),
 		// Group handlers
 		dig.NewProvider(add_member.NewAddMemberToGroupHandler),
+		dig.NewProvider(create_group.NewCreateGroupHandler),
+		dig.NewProvider(group_info.NewGetGroupInfoHandler),
+		dig.NewProvider(leave_group.NewLeaveGroupHandler),
+		dig.NewProvider(kick_member2.NewKickMemberHandler),
 		// Group chats
 		// Group chats repository
-		dig.NewProvider(group_chat_message_repository.NewMongoGroupChatMessageRepository),
-		dig.NewProvider(group_chat_message_repository.NewGroupChatMessageMapper),
+		dig.NewProvider(group_chat_message_repository.NewMongoGroupChatRepository),
+		dig.NewProvider(group_chat_message_repository.NewMongoGroupChatMessageMapper),
 		// Group chats usecases
 		dig.NewProvider(list_recent_groups.NewListRecentGroupsUseCase),
 		dig.NewProvider(list_group_chat_messages.NewListGroupChatMessagesUseCase),
 		dig.NewProvider(save_group_chat_message.NewSaveGroupChatMessageUseCase),
+		dig.NewProvider(save_message2.NewDeleteGroupChatMessageUseCase),
+		dig.NewProvider(edit_message.NewEditGroupChatMessageUseCase),
+		dig.NewProvider(get_message.NewGetMessageUseCase),
+		dig.NewProvider(get_last_message2.NewGetLastGroupChatMessageUseCase),
+		dig.NewProvider(is_first_message2.NewIsFirstGroupChatMessageUseCase),
+		dig.NewProvider(toggle_reaction2.NewToggleGroupChatReactionUseCase),
+		dig.NewProvider(transfer_ownership.NewTransferGroupOwnershipUseCase),
+		dig.NewProvider(transfer_ownership.NewNotifyTransferGroupOwnershipObserver, uberdig.Group("transfer_group_ownership_observers")),
 		// Group chats handlers
 		dig.NewProvider(list_group_chat_messages.NewListGroupChatMessagesHandler),
 		// Search
@@ -506,6 +595,7 @@ func NewDi() *uberdig.Container {
 		// Search sync managers
 		dig.NewProvider(message.NewMeilisearchSearchMessageSyncManager),
 		dig.NewProvider(channel.NewMeilisearchSearchChannelSyncManager),
+		dig.NewProvider(group.NewMeilisearchSearchGroupSyncManager),
 		dig.NewProvider(user.NewMeilisearchSearchUserSyncManager),
 		// Jobs
 		// Jobs repository
@@ -558,6 +648,15 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(delete_poll.NewDeletePollHandler),
 		dig.NewProvider(vote_option_poll.NewVoteOptionPollHandler),
 		dig.NewProvider(unvote_option_poll.NewUnvoteOptionPollHandler),
+		// export data
+		// export data usecases
+		dig.NewProvider(export_all_user_data.NewExportAllUserDataUseCase),
+		dig.NewProvider(export_user_data.NewExportUserDataUseCase),
+		dig.NewProvider(export_data_chat_direct.NewExportDataChatDirectUseCase),
+		dig.NewProvider(export_data_chat_message.NewExportDataChatMessageUseCase),
+		dig.NewProvider(export_data_user_workspace.NewExportDataUserWorkspaceUseCase),
+		// export data handlers
+		dig.NewProvider(export_all_user_data.NewExportAllUserDataHandler),
 	}
 
 	for _, provider := range providers {

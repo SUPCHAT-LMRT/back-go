@@ -8,15 +8,15 @@ import (
 	entity3 "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 )
 
-type KickMemberHandler struct {
+type KickGroupMemberHandler struct {
 	UseCase *KickMemberUseCase
 }
 
-func NewKickMemberHandler(useCase *KickMemberUseCase) *KickMemberHandler {
-	return &KickMemberHandler{UseCase: useCase}
+func NewKickGroupMemberHandler(useCase *KickMemberUseCase) *KickGroupMemberHandler {
+	return &KickGroupMemberHandler{UseCase: useCase}
 }
 
-func (h *KickMemberHandler) Handle(c *gin.Context) {
+func (h *KickGroupMemberHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	memberId := c.Param("user_id") // Renommez en `member_id` si nécessaire dans la route.
 

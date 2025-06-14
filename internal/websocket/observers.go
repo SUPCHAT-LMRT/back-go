@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	group_chat_entity "github.com/supchat-lmrt/back-go/internal/group/chat_message/entity"
 	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"github.com/supchat-lmrt/back-go/internal/websocket/messages/inbound"
@@ -20,5 +21,49 @@ type SendDirectMessageObserver interface {
 		message *inbound.InboundSendDirectMessage,
 		messageId chat_direct_entity.ChatDirectId,
 		userId user_entity.UserId,
+	)
+}
+
+type SendGroupMessageObserver interface {
+	OnSendMessage(
+		message *inbound.InboundSendGroupMessage,
+		messageId group_chat_entity.GroupChatMessageId,
+		userId user_entity.UserId,
+	)
+}
+
+type DeleteGroupMessageObserver interface {
+	OnDeleteMessage(
+		message *inbound.InboundGroupMessageDelete,
+	)
+}
+
+type EditGroupMessageObserver interface {
+	OnEditMessage(
+		message *inbound.InboundGroupMessageContentEdit,
+	)
+}
+
+type DeleteDirectMessageObserver interface {
+	OnDeleteMessage(
+		message *inbound.InboundDirectMessageDelete,
+	)
+}
+
+type EditDirectMessageObserver interface {
+	OnEditMessage(
+		message *inbound.InboundDirectMessageContentEdit,
+	)
+}
+
+type DeleteChannelMessageObserver interface {
+	OnDeleteMessage(
+		message *inbound.InboundChannelMessageDelete,
+	)
+}
+
+type EditChannelMessageObserver interface {
+	OnEditMessage(
+		message *inbound.InboundChannelMessageContentEdit,
 	)
 }

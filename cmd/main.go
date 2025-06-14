@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/supchat-lmrt/back-go/internal/search/group"
 	"log"
 	"os"
 	"os/signal"
@@ -168,6 +169,7 @@ func main() {
 		searchChannelMessageSyncManager message.SearchMessageSyncManager,
 		searchChannelSyncManager channel.SearchChannelSyncManager,
 		searchUserSyncManager user.SearchUserSyncManager,
+		searchGroupSyncManager group.SearchGroupSyncManager,
 	) {
 		err := searchChannelMessageSyncManager.CreateIndexIfNotExists(appContext)
 		if err != nil {
@@ -183,16 +185,23 @@ func main() {
 		if err != nil {
 			logg.Fatal().Err(err).Msg("Unable to create index")
 		}
+
+		err = searchGroupSyncManager.CreateIndexIfNotExists(appContext)
+		if err != nil {
+			logg.Fatal().Err(err).Msg("Unable to create index")
+		}
 	})
 
 	invokeFatal(logg, diContainer, func(
 		searchChannelMessageSyncManager message.SearchMessageSyncManager,
 		searchChannelSyncManager channel.SearchChannelSyncManager,
 		searchUserSyncManager user.SearchUserSyncManager,
+		searchGroupSyncManager group.SearchGroupSyncManager,
 	) {
 		go searchChannelMessageSyncManager.SyncLoop(appContext)
 		go searchChannelSyncManager.SyncLoop(appContext)
 		go searchUserSyncManager.SyncLoop(appContext)
+		go searchGroupSyncManager.SyncLoop(appContext)
 	})
 
 	go invokeFatal(logg, diContainer, runGinServer(logg))

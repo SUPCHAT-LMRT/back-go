@@ -14,7 +14,9 @@ type GroupChatMessage struct {
 	GroupId   group_entity.GroupId
 	Content   string
 	AuthorId  entity.UserId
+	Reactions []*MessageReaction
 	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (id GroupChatMessageId) String() string {

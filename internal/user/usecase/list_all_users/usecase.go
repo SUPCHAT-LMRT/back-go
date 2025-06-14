@@ -7,18 +7,14 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/repository"
 )
 
-type ListUserUseCase interface {
-	Execute(ctx context.Context) ([]*entity.User, error)
-}
-
-type useCase struct {
+type ListUserUseCase struct {
 	repo repository.UserRepository
 }
 
-func NewListUserUseCase(repo repository.UserRepository) ListUserUseCase {
-	return &useCase{repo: repo}
+func NewListUserUseCase(repo repository.UserRepository) *ListUserUseCase {
+	return &ListUserUseCase{repo: repo}
 }
 
-func (u *useCase) Execute(ctx context.Context) ([]*entity.User, error) {
+func (u *ListUserUseCase) Execute(ctx context.Context) ([]*entity.User, error) {
 	return u.repo.List(ctx)
 }

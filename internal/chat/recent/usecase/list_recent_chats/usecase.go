@@ -2,10 +2,13 @@ package list_recent_chats
 
 import (
 	"context"
+	"fmt"
+	"github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/get_last_message"
+	get_last_message2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/get_last_message"
 	"sort"
+	"time"
 
 	"github.com/supchat-lmrt/back-go/internal/chat/recent/entity"
-	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/list_recent_groups"
 	"github.com/supchat-lmrt/back-go/internal/mapper"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_recent_direct_chats"
@@ -15,10 +18,12 @@ import (
 
 type ListRecentChatsUseCaseDeps struct {
 	uberdig.In
-	ListRecentGroupsUseCase     *list_recent_groups.ListRecentGroupsUseCase
-	ListRecentChatDirectUseCase *list_recent_direct_chats.ListRecentChatDirectUseCase
-	GroupMapper                 mapper.Mapper[*group_entity.Group, *entity.RecentChat]
-	DirectMapper                mapper.Mapper[*ChatDirectMapping, *entity.RecentChat]
+	ListRecentGroupsUseCase         *list_recent_groups.ListRecentGroupsUseCase
+	GetLastDirectChatMessageUseCase *get_last_message2.GetLastDirectChatMessageUseCase
+	ListRecentChatDirectUseCase     *list_recent_direct_chats.ListRecentChatDirectUseCase
+	GetLastGroupChatMessageUseCase  *get_last_message.GetLastGroupChatMessageUseCase
+	GroupMapper                     mapper.Mapper[*GroupMapping, *ListRecentChatsUseCaseOutput]
+	DirectMapper                    mapper.Mapper[*ChatDirectMapping, *ListRecentChatsUseCaseOutput]
 }
 
 type ListRecentChatsUseCase struct {
@@ -33,38 +38,69 @@ func NewListRecentChatsUseCase(deps ListRecentChatsUseCaseDeps) *ListRecentChats
 func (u *ListRecentChatsUseCase) Execute(
 	ctx context.Context,
 	currentUserId user_entity.UserId,
-) ([]*entity.RecentChat, error) {
-	// Call the ListRecentGroupsUseCase and ListRecentChatDirectUseCase and sort by updated_at
-
-	// TODO impl groups
-	groups, err := u.deps.ListRecentGroupsUseCase.Execute(ctx)
+) ([]*ListRecentChatsUseCaseOutput, error) {
+	groups, err := u.deps.ListRecentGroupsUseCase.Execute(ctx, currentUserId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list recent groups: %w", err)
 	}
 
 	directs, err := u.deps.ListRecentChatDirectUseCase.Execute(ctx, currentUserId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list recent chat directs: %w", err)
 	}
 
-	// Sort by updated_at
-	var recentChats []*entity.RecentChat
+	var recentChats []*ListRecentChatsUseCaseOutput
 
 	for _, group := range groups {
-		fromEntity, err := u.deps.GroupMapper.MapToEntity(group)
+		lastMessage, err := u.deps.GetLastGroupChatMessageUseCase.Execute(ctx, group.Id)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get last group chat message: %w", err)
+		}
+
+		mapping := GroupMapping{
+			Group: group,
+		}
+		if lastMessage != nil {
+			mapping.LastMessageId = lastMessage.Id
+			mapping.LastMessageContent = lastMessage.Content
+			mapping.LastMessageCreatedAt = lastMessage.CreatedAt
+			mapping.LastMessageSenderId = lastMessage.AuthorId
+		}
+
+		fromEntity, err := u.deps.GroupMapper.MapToEntity(&mapping)
+		if err != nil {
+			return nil, fmt.Errorf("failed to map group to entity: %w", err)
 		}
 
 		recentChats = append(recentChats, fromEntity)
 	}
 
 	for _, direct := range directs {
-		fromEntity, err := u.deps.DirectMapper.MapToEntity(
-			&ChatDirectMapping{ChatDirect: direct, CurrentUserId: currentUserId},
+		lastMessage, err := u.deps.GetLastDirectChatMessageUseCase.Execute(
+			ctx,
+			direct.User1Id,
+			direct.User2Id,
 		)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get last direct chat message: %w", err)
+		}
+
+		mapping := ChatDirectMapping{
+			ChatDirect:    direct,
+			CurrentUserId: currentUserId,
+		}
+		if lastMessage != nil {
+			mapping.LastMessageId = lastMessage.ChatId
+			mapping.LastMessageContent = lastMessage.Content
+			mapping.LastMessageCreatedAt = lastMessage.CreatedAt
+			mapping.LastMessageSenderId = lastMessage.AuthorId
+		}
+
+		fromEntity, err := u.deps.DirectMapper.MapToEntity(
+			&mapping,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to map direct to entity: %w", err)
 		}
 
 		recentChats = append(recentChats, fromEntity)
@@ -76,4 +112,20 @@ func (u *ListRecentChatsUseCase) Execute(
 	})
 
 	return recentChats, nil
+}
+
+type ListRecentChatsUseCaseOutput struct {
+	Id          entity.RecentChatId
+	Kind        entity.RecentChatKind
+	Name        string
+	UpdatedAt   time.Time
+	LastMessage *RecentChatLastMessage
+}
+
+type RecentChatLastMessage struct {
+	Id         entity.RecentChatId
+	Content    string
+	CreatedAt  time.Time
+	AuthorId   user_entity.UserId
+	AuthorName string
 }

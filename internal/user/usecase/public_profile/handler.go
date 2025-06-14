@@ -33,12 +33,23 @@ func (h *GetPublicProfileHandler) Handle(c *gin.Context) {
 		return
 	}
 
+	var jobsNames string
+	for _, job := range profile.Jobs {
+		if job.IsAssigned {
+			if jobsNames != "" {
+				jobsNames += ", "
+			}
+			jobsNames += job.Name
+		}
+	}
+
 	c.JSON(http.StatusOK, PublicProfileResponse{
 		Id:        profile.Id.String(),
 		Email:     profile.Email,
 		FirstName: profile.FirstName,
 		LastName:  profile.LastName,
 		Status:    profile.Status.String(),
+		JobsNames: jobsNames,
 	})
 }
 
@@ -48,4 +59,5 @@ type PublicProfileResponse struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Status    string `json:"status"`
+	JobsNames string `json:"jobsNames"`
 }
