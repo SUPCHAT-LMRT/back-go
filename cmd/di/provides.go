@@ -23,7 +23,10 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/export_data_chat_direct"
 	get_message2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/get_message"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/export_user_data"
+	delete_message2 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/delete_message"
+	edit_message3 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/edit_message"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/export_data_chat_message"
+	get_message3 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/get_message"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/export_data_user_workspace"
 	"log"
 	"os"
@@ -336,6 +339,9 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(list_messages.NewListChannelMessagesHandler),
 		// Workspace channels chat messages usecases
 		dig.NewProvider(save_message.NewSaveChannelMessageUseCase),
+		dig.NewProvider(get_message3.NewGetMessageUseCase),
+		dig.NewProvider(edit_message3.NewEditChannelChatMessageUseCase),
+		dig.NewProvider(delete_message2.NewDeleteChannelChatMessageUseCase),
 		// Workspace time series
 		// Workspace time series message sent
 		// Workspace time series message sent repository
@@ -497,6 +503,14 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(
 			websocket.NewSaveDeleteDirectMessageObserver,
 			uberdig.Group("delete_direct_message_observers"),
+		),
+		dig.NewProvider(
+			websocket.NewSaveDeleteChannelMessageObserver,
+			uberdig.Group("delete_channel_message_observers"),
+		),
+		dig.NewProvider(
+			websocket.NewSaveEditChannelMessageObserver,
+			uberdig.Group("edit_channel_message_observers"),
 		),
 		dig.NewProvider(
 			websocket.NewSaveEditGroupMessageObserver,

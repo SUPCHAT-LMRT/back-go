@@ -26,13 +26,15 @@ type WebSocketDeps struct {
 	GetWorkspaceMemberUseCase           *get_workpace_member.GetWorkspaceMemberUseCase
 	ListChannelMessagesUseCase          *list_messages.ListChannelMessagesUseCase
 	GetUserByIdUseCase                  *get_by_id.GetUserByIdUseCase
-	SendChannelMessageObservers         []SendChannelMessageObserver  `group:"send_channel_message_observers"`
-	SendDirectMessageObservers          []SendDirectMessageObserver   `group:"send_direct_message_observers"`
-	SendGroupMessageObservers           []SendGroupMessageObserver    `group:"send_group_message_observers"`
-	DeleteGroupMessageObservers         []DeleteGroupMessageObserver  `group:"delete_group_message_observers"`
-	EditGroupMessageObservers           []EditGroupMessageObserver    `group:"edit_group_message_observers"`
-	DeleteDirectMessageObservers        []DeleteDirectMessageObserver `group:"delete_direct_message_observers"`
-	EditDirectMessageObservers          []EditDirectMessageObserver   `group:"edit_direct_message_observers"`
+	SendChannelMessageObservers         []SendChannelMessageObserver   `group:"send_channel_message_observers"`
+	SendDirectMessageObservers          []SendDirectMessageObserver    `group:"send_direct_message_observers"`
+	SendGroupMessageObservers           []SendGroupMessageObserver     `group:"send_group_message_observers"`
+	DeleteGroupMessageObservers         []DeleteGroupMessageObserver   `group:"delete_group_message_observers"`
+	EditGroupMessageObservers           []EditGroupMessageObserver     `group:"edit_group_message_observers"`
+	DeleteDirectMessageObservers        []DeleteDirectMessageObserver  `group:"delete_direct_message_observers"`
+	EditDirectMessageObservers          []EditDirectMessageObserver    `group:"edit_direct_message_observers"`
+	DeleteChannelMessageObservers       []DeleteChannelMessageObserver `group:"delete_channel_message_observers"`
+	EditChannelMessageObservers         []EditChannelMessageObserver   `group:"edit_channel_message_observers"`
 	ToggleReactionChannelMessageUseCase *toggle_channel_message_reaction.ToggleReactionChannelMessageUseCase
 	ToggleReactionDirectMessageUseCase  *toggle_direct_message_reaction.ToggleReactionDirectMessageUseCase
 	ToggleGroupChatReactionUseCase      *toggle_reaction.ToggleGroupChatReactionUseCase

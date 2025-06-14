@@ -24,10 +24,12 @@ const (
 	OutboundGroupMessageReactionAddedAction     Action = "group-message-reaction-added"
 	OutboundGroupMessageReactionRemovedAction   Action = "group-message-reaction-removed"
 	OutboundGroupMessageContentEditedAction     Action = "group-message-content-edited"
+	OutboundChannelMessageContentEditedAction   Action = "channel-message-content-edited"
 	OutboundDirectMessageContentEditedAction    Action = "direct-message-content-edited"
 	OutboundGroupOwnershipTransferredAction     Action = "group-ownership-transferred"
 	OutboundGroupMessageDeletedAction           Action = "group-message-deleted"
 	OutboundDirectMessageDeletedAction          Action = "direct-message-deleted"
+	OutboundChannelMessageDeletedAction         Action = "channel-message-deleted"
 	OutboundRecentDirectChatAddedAction         Action = "recent-direct-chat-added"
 	OutboundRecentGroupChatAddedAction          Action = "recent-group-chat-added"
 	OutboundRecentGroupChatRemovedAction        Action = "recent-group-chat-removed"
@@ -56,8 +58,10 @@ const (
 	InboundGroupMessageReactionToggle   Action = "group-message-reaction-toggle"
 	InboundGroupMessageContentEdit      Action = "group-message-content-edit"
 	InboundDirectMessageContentEdit     Action = "direct-message-content-edit"
+	InboundChannelMessageContentEdit    Action = "channel-message-content-edit"
 	InboundGroupMessageDelete           Action = "group-message-delete"
 	InboundDirectMessageDelete          Action = "direct-message-delete"
+	InboundChannelMessageDelete         Action = "channel-message-delete"
 )
 
 type Message interface {

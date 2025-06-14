@@ -55,3 +55,15 @@ type EditDirectMessageObserver interface {
 		message *inbound.InboundDirectMessageContentEdit,
 	)
 }
+
+type DeleteChannelMessageObserver interface {
+	OnDeleteMessage(
+		message *inbound.InboundChannelMessageDelete,
+	)
+}
+
+type EditChannelMessageObserver interface {
+	OnEditMessage(
+		message *inbound.InboundChannelMessageContentEdit,
+	)
+}

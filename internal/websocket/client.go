@@ -202,6 +202,20 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 			return
 		}
 		c.handleDirectMessageDelete(&deleteMessage)
+	case messages.InboundChannelMessageContentEdit:
+		editMessage := inbound.InboundChannelMessageContentEdit{DefaultMessage: message}
+		if err := json.Unmarshal(jsonMessage, &editMessage); err != nil {
+			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
+			return
+		}
+		c.handleChannelMessageContentEdit(&editMessage)
+	case messages.InboundChannelMessageDelete:
+		deleteMessage := inbound.InboundChannelMessageDelete{DefaultMessage: message}
+		if err := json.Unmarshal(jsonMessage, &deleteMessage); err != nil {
+			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
+			return
+		}
+		c.handleChannelMessageDelete(&deleteMessage)
 	default:
 		log.Printf("Unknown action %s", message.Action)
 	}
@@ -658,6 +672,61 @@ func (c *Client) handleDirectMessageDelete(
 
 		// Notify observers
 		for _, observer := range c.wsServer.Deps.DeleteDirectMessageObservers {
+			observer.OnDeleteMessage(message)
+		}
+	}
+}
+
+func (c *Client) handleChannelMessageContentEdit(
+	message *inbound.InboundChannelMessageContentEdit,
+) {
+	roomId := message.ChannelId.String()
+	foundRoom := c.wsServer.findRoomById(roomId)
+	if foundRoom == nil {
+		return
+	}
+
+	// Use the ChatServer method to find the room, and if found, broadcast!
+	if foundRoom = c.wsServer.findRoomById(roomId); foundRoom != nil {
+		err := foundRoom.SendMessage(&outbound.OutboundChannelMessageContentEdited{
+			MessageId:  message.MessageId,
+			NewContent: message.NewContent,
+			ChannelId:  message.ChannelId,
+		})
+		if err != nil {
+			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+			return
+		}
+
+		// Notify observers
+		for _, observer := range c.wsServer.Deps.EditChannelMessageObservers {
+			observer.OnEditMessage(message)
+		}
+	}
+}
+
+func (c *Client) handleChannelMessageDelete(
+	message *inbound.InboundChannelMessageDelete,
+) {
+	roomId := message.ChannelId.String()
+	foundRoom := c.wsServer.findRoomById(roomId)
+	if foundRoom == nil {
+		return
+	}
+
+	// Use the ChatServer method to find the room, and if found, broadcast!
+	if foundRoom = c.wsServer.findRoomById(roomId); foundRoom != nil {
+		err := foundRoom.SendMessage(&outbound.OutboundChannelMessageDeleted{
+			MessageId: message.MessageId,
+			ChannelId: message.ChannelId,
+		})
+		if err != nil {
+			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
+			return
+		}
+
+		// Notify observers
+		for _, observer := range c.wsServer.Deps.DeleteChannelMessageObservers {
 			observer.OnDeleteMessage(message)
 		}
 	}
