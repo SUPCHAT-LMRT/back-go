@@ -43,3 +43,15 @@ type EditGroupMessageObserver interface {
 		message *inbound.InboundGroupMessageContentEdit,
 	)
 }
+
+type DeleteDirectMessageObserver interface {
+	OnDeleteMessage(
+		message *inbound.InboundDirectMessageDelete,
+	)
+}
+
+type EditDirectMessageObserver interface {
+	OnEditMessage(
+		message *inbound.InboundDirectMessageContentEdit,
+	)
+}

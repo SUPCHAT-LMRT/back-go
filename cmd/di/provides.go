@@ -18,7 +18,10 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/transfer_ownership"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/search/group"
+	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/delete_message"
+	edit_message2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/edit_message"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/export_data_chat_direct"
+	get_message2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/get_message"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/export_user_data"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/export_data_chat_message"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/export_data_user_workspace"
@@ -450,6 +453,9 @@ func NewDi() *uberdig.Container {
 		// User chat direct usecases
 		dig.NewProvider(list_recent_chats_direct.NewListRecentChatDirectUseCase),
 		dig.NewProvider(get_last_message.NewGetLastDirectChatMessageUseCase),
+		dig.NewProvider(delete_message.NewDeleteDirectChatMessageUseCase),
+		dig.NewProvider(edit_message2.NewEditDirectChatMessageUseCase),
+		dig.NewProvider(get_message2.NewGetDirectChatMessageUseCase),
 		dig.NewProvider(save_direct_message.NewSaveDirectMessageUseCase),
 		dig.NewProvider(is_first_message.NewIsFirstMessageUseCase),
 		dig.NewProvider(list_direct_messages.NewListDirectMessagesUseCase),
@@ -489,8 +495,16 @@ func NewDi() *uberdig.Container {
 			uberdig.Group("delete_group_message_observers"),
 		),
 		dig.NewProvider(
+			websocket.NewSaveDeleteDirectMessageObserver,
+			uberdig.Group("delete_direct_message_observers"),
+		),
+		dig.NewProvider(
 			websocket.NewSaveEditGroupMessageObserver,
 			uberdig.Group("edit_group_message_observers"),
+		),
+		dig.NewProvider(
+			websocket.NewSaveEditDirectMessageObserver,
+			uberdig.Group("edit_direct_message_observers"),
 		),
 		dig.NewProvider(
 			websocket.NewSaveDirectMessageObserver,
