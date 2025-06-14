@@ -2,6 +2,8 @@ package list_workpace_members
 
 import (
 	"context"
+	user_status_entity "github.com/supchat-lmrt/back-go/internal/user/status/entity"
+	"github.com/supchat-lmrt/back-go/internal/user/status/usecase/get_public_status"
 	"net/http"
 	"strconv"
 
@@ -14,8 +16,9 @@ import (
 
 type ListWorkspaceMembersHandlerDeps struct {
 	uberdig.In
-	UseCase            *ListWorkspaceMembersUseCase
-	GetUserByIdUseCase *get_by_id.GetUserByIdUseCase
+	UseCase                *ListWorkspaceMembersUseCase
+	GetUserByIdUseCase     *get_by_id.GetUserByIdUseCase
+	GetPublicStatusUseCase *get_public_status.GetPublicStatusUseCase
 }
 
 type ListWorkspaceMembersHandler struct {
@@ -78,10 +81,17 @@ func (h *ListWorkspaceMembersHandler) mapToMemberResponse(
 			continue
 		}
 
+		status, err := h.deps.GetPublicStatusUseCase.Execute(ctx, member.UserId, user_status_entity.StatusOffline)
+		if err != nil {
+			return nil
+		}
+
 		result[i] = MemberResponse{
 			Id:     string(member.Id),
 			UserId: string(member.UserId),
 			Pseudo: user.FullName(),
+			Email:  user.Email,
+			Status: status.String(),
 		}
 	}
 
@@ -92,5 +102,6 @@ type MemberResponse struct {
 	Id     string `json:"id"`
 	UserId string `json:"userId"`
 	Pseudo string `json:"pseudo"`
+	Email  string `json:"email"`
 	Status string `json:"status"`
 }
