@@ -79,6 +79,29 @@ func (m MongoGroupChatRepository) Create(
 	return err
 }
 
+func (m MongoGroupChatRepository) Get(
+	ctx context.Context,
+	chatMessageId entity.GroupChatMessageId,
+) (*entity.GroupChatMessage, error) {
+	messageObjId, err := bson.ObjectIDFromHex(chatMessageId.String())
+	if err != nil {
+		return nil, err
+	}
+
+	var mongoMessage MongoGroupChatMessage
+	err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(ctx, bson.D{{"_id", messageObjId}}).Decode(&mongoMessage)
+	if err != nil {
+		if errors.Is(err, mongo2.ErrNoDocuments) {
+			return nil, nil // No message found
+		}
+		return nil, err
+	}
+
+	return m.deps.Mapper.MapToEntity(&mongoMessage)
+}
+
 func (m MongoGroupChatRepository) GetLastMessage(
 	ctx context.Context,
 	groupId group_entity.GroupId,
@@ -385,6 +408,34 @@ func (m MongoGroupChatRepository) DeleteMessage(
 	_, err = m.deps.Client.Client.Database(databaseName).
 		Collection(collectionName).
 		DeleteOne(ctx, bson.D{{"_id", messageObjId}})
+
+	return err
+}
+
+func (m MongoGroupChatRepository) UpdateMessage(
+	ctx context.Context,
+	message *entity.GroupChatMessage,
+) error {
+	messageObjId, err := bson.ObjectIDFromHex(message.Id.String())
+	if err != nil {
+		return err
+	}
+
+	mongoMessage, err := m.deps.Mapper.MapFromEntity(message)
+	if err != nil {
+		return err
+	}
+
+	update := bson.D{
+		{"$set", bson.D{
+			{"content", mongoMessage.Content},
+			{"updated_at", time.Now()},
+		}},
+	}
+
+	_, err = m.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(ctx, bson.D{{"_id", messageObjId}}, update)
 
 	return err
 }

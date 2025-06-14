@@ -37,3 +37,9 @@ type DeleteGroupMessageObserver interface {
 		message *inbound.InboundGroupMessageDelete,
 	)
 }
+
+type EditGroupMessageObserver interface {
+	OnEditMessage(
+		message *inbound.InboundGroupMessageContentEdit,
+	)
+}

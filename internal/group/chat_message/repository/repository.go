@@ -11,6 +11,7 @@ import (
 
 type ChatMessageRepository interface {
 	Create(ctx context.Context, chatMessage *entity.GroupChatMessage) error
+	Get(ctx context.Context, chatMessageId entity.GroupChatMessageId) (*entity.GroupChatMessage, error)
 	GetLastMessage(ctx context.Context, groupId group_entity.GroupId) (*entity.GroupChatMessage, error)
 	IsFirstMessage(ctx context.Context, groupId group_entity.GroupId) (bool, error)
 	ListMessages(
@@ -25,6 +26,10 @@ type ChatMessageRepository interface {
 		reaction string,
 	) (added bool, err error)
 	DeleteMessage(ctx context.Context, messageId entity.GroupChatMessageId) error
+	UpdateMessage(
+		ctx context.Context,
+		message *entity.GroupChatMessage,
+	) error
 }
 
 type ListMessagesQueryParams struct {

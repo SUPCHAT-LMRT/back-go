@@ -30,6 +30,7 @@ type WebSocketDeps struct {
 	SendDirectMessageObservers          []SendDirectMessageObserver  `group:"send_direct_message_observers"`
 	SendGroupMessageObservers           []SendGroupMessageObserver   `group:"send_group_message_observers"`
 	DeleteGroupMessageObservers         []DeleteGroupMessageObserver `group:"delete_group_message_observers"`
+	EditGroupMessageObservers           []EditGroupMessageObserver   `group:"edit_group_message_observers"`
 	ToggleReactionChannelMessageUseCase *toggle_channel_message_reaction.ToggleReactionChannelMessageUseCase
 	ToggleReactionDirectMessageUseCase  *toggle_direct_message_reaction.ToggleReactionDirectMessageUseCase
 	ToggleGroupChatReactionUseCase      *toggle_reaction.ToggleGroupChatReactionUseCase

@@ -559,6 +559,11 @@ func (c *Client) handleGroupMessageContentEdit(
 			c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on sending message")
 			return
 		}
+
+		// Notify observers
+		for _, observer := range c.wsServer.Deps.EditGroupMessageObservers {
+			observer.OnEditMessage(message)
+		}
 	}
 }
 

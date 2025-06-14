@@ -2,9 +2,11 @@ package di
 
 import (
 	"fmt"
-	save_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/delete_message"
 	"github.com/supchat-lmrt/back-go/internal/data/usecase/export_all_user_data"
+	save_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/delete_message"
+	"github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/edit_message"
 	get_last_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/get_last_message"
+	"github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/get_message"
 	is_first_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/is_first_message"
 	toggle_reaction2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/toggle_reaction"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/create_group"
@@ -487,6 +489,10 @@ func NewDi() *uberdig.Container {
 			uberdig.Group("delete_group_message_observers"),
 		),
 		dig.NewProvider(
+			websocket.NewSaveEditGroupMessageObserver,
+			uberdig.Group("edit_group_message_observers"),
+		),
+		dig.NewProvider(
 			websocket.NewSaveDirectMessageObserver,
 			uberdig.Group("send_direct_message_observers"),
 		),
@@ -544,6 +550,8 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(list_group_chat_messages.NewListGroupChatMessagesUseCase),
 		dig.NewProvider(save_group_chat_message.NewSaveGroupChatMessageUseCase),
 		dig.NewProvider(save_message2.NewDeleteGroupChatMessageUseCase),
+		dig.NewProvider(edit_message.NewEditGroupChatMessageUseCase),
+		dig.NewProvider(get_message.NewGetMessageUseCase),
 		dig.NewProvider(get_last_message2.NewGetLastGroupChatMessageUseCase),
 		dig.NewProvider(is_first_message2.NewIsFirstGroupChatMessageUseCase),
 		dig.NewProvider(toggle_reaction2.NewToggleGroupChatReactionUseCase),
