@@ -24,6 +24,20 @@ func NewAddMemberToGroupHandler(deps AddMemberToGroupHandlerDeps) *AddMemberToGr
 	return &AddMemberToGroupHandler{deps: deps}
 }
 
+// Handle ajoute un membre à un groupe de discussion
+// @Summary Ajouter un membre au groupe
+// @Description Ajoute un utilisateur spécifique à un groupe de discussion
+// @Tags group
+// @Accept json
+// @Produce json
+// @Param group_id path string true "ID du groupe"
+// @Param request body AddMemberToGroupRequest true "Informations de l'utilisateur à ajouter"
+// @Success 202 "Membre ajouté avec succès"
+// @Failure 400 {object} map[string]string "Erreur de paramètre ou impossibilité de s'ajouter soi-même"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/groups/{group_id}/members [post]
+// @Security ApiKeyAuth
 func (h *AddMemberToGroupHandler) Handle(c *gin.Context) {
 	groupId := c.Param("group_id")
 	var req AddMemberToGroupRequest

@@ -15,6 +15,19 @@ func NewGetJobForUserHandler(useCase *GetJobForUserUseCase) *GetJobForUserHandle
 	return &GetJobForUserHandler{useCase: useCase}
 }
 
+// Handle récupère les rôles de travail attribués à un utilisateur
+// @Summary Obtenir les rôles de travail d'un utilisateur
+// @Description Récupère la liste des rôles de travail avec leurs permissions pour un utilisateur spécifique
+// @Tags job
+// @Accept json
+// @Produce json
+// @Param user_id path string true "ID de l'utilisateur"
+// @Success 200 {object} get_job_for_user.JobResponse "Liste des rôles de travail de l'utilisateur"
+// @Failure 400 {object} map[string]string "Erreur de paramètre"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/job/user/{user_id} [get]
+// @Security ApiKeyAuth
 func (h *GetJobForUserHandler) Handle(c *gin.Context) {
 	userId := c.Param("user_id")
 	if userId == "" {

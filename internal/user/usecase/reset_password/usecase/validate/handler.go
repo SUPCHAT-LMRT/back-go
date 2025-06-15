@@ -19,6 +19,17 @@ func NewValidateResetPasswordHandler(
 	return &ValidateResetPasswordHandler{validateResetPasswordUseCase: validateResetPasswordUseCase}
 }
 
+// Handle valide et applique une demande de réinitialisation de mot de passe
+// @Summary Validation de la réinitialisation de mot de passe
+// @Description Valide le token de réinitialisation et change le mot de passe de l'utilisateur
+// @Tags account
+// @Accept json
+// @Produce json
+// @Param request body validate.ValidateResetPasswordRequest true "Données de réinitialisation du mot de passe"
+// @Success 204 {string} string "Mot de passe réinitialisé avec succès"
+// @Failure 400 {object} map[string]string "Paramètres invalides ou mots de passe non concordants"
+// @Failure 500 {object} map[string]string "Erreur lors de la validation du token ou de la mise à jour du mot de passe"
+// @Router /api/account/reset-password/validate [post]
 func (h *ValidateResetPasswordHandler) Handle(c *gin.Context) {
 	var request ValidateResetPasswordRequest
 	if err := c.ShouldBindJSON(&request); err != nil {

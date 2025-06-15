@@ -8,6 +8,8 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/leave_group"
 	"github.com/supchat-lmrt/back-go/internal/mention/usecase/list_mentionnable_user"
 	"github.com/supchat-lmrt/back-go/internal/notification/usecase/mark_as_read"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -227,6 +229,7 @@ func NewGinRouter(deps GinRouterDeps) GinRouter {
 }
 
 func (d *DefaultGinRouter) RegisterRoutes() {
+	d.Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	authMiddleware := d.deps.AuthMiddleware.Execute
 	userInWorkspaceMiddleware := d.deps.UserInWorkspaceMiddleware.Execute
 	hasPermissionsMiddleware := d.deps.HasMembersPermissionsMiddleware.Execute

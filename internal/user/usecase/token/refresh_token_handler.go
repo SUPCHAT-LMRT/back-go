@@ -15,6 +15,16 @@ func NewRefreshTokenHandler(useCase *RefreshAccessTokenUseCase) *RefreshTokenHan
 	return &RefreshTokenHandler{useCase: useCase}
 }
 
+// Handle renouvelle le token d'accès à partir du token de rafraîchissement
+// @Summary Rafraîchissement du token d'accès
+// @Description Génère un nouveau token d'accès à partir du token de rafraîchissement présent dans les cookies
+// @Tags account
+// @Accept json
+// @Produce json
+// @Success 204 {string} string "Token d'accès renouvelé avec succès"
+// @Failure 401 {object} map[string]string "Token de rafraîchissement manquant ou invalide"
+// @Failure 500 {object} map[string]string "Erreur lors du rafraîchissement du token"
+// @Router /api/account/auth/token/access/renew [post]
 func (g *RefreshTokenHandler) Handle(c *gin.Context) {
 	refreshToken, err := c.Cookie("refreshToken")
 	if err != nil || refreshToken == "" {

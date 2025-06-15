@@ -20,6 +20,17 @@ func NewDiscoverListWorkspaceHandler(
 	return &DiscoverListWorkspaceHandler{useCase: useCase, getUserByIdUseCase: getUserByIdUseCase}
 }
 
+// Handle récupère la liste des espaces de travail publics découvrables
+// @Summary Liste des espaces de travail publics
+// @Description Récupère tous les espaces de travail publics disponibles pour rejoindre
+// @Tags workspace,discovery
+// @Accept json
+// @Produce json
+// @Success 200 {array} map[string]string "Liste des espaces de travail publics"
+// @Failure 401 {object} map[string]string "Utilisateur non authentifié"
+// @Failure 500 {object} map[string]string "Erreur lors de la récupération des espaces de travail"
+// @Router /api/workspaces/discover [get]
+// @Security ApiKeyAuth
 func (h DiscoverListWorkspaceHandler) Handle(c *gin.Context) {
 	workspaces, err := h.useCase.Execute(c)
 	if err != nil {

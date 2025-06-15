@@ -1,0 +1,4465 @@
+basePath: /api
+definitions:
+  add_member.AddMemberToGroupRequest:
+    properties:
+      inviteeUserId:
+        type: string
+    required:
+    - inviteeUserId
+    type: object
+  assign_role.AssignRoleToUserRequest:
+    properties:
+      role_id:
+        maxLength: 100
+        minLength: 1
+        type: string
+      user_id:
+        maxLength: 100
+        minLength: 1
+        type: string
+      workspace_id:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - role_id
+    - user_id
+    - workspace_id
+    type: object
+  create_channel.CreateChannelRequest:
+    properties:
+      isPrivate:
+        type: boolean
+      members:
+        items:
+          type: string
+        type: array
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      topic:
+        type: string
+    required:
+    - name
+    type: object
+  create_group.CreateGroupBody:
+    properties:
+      name:
+        type: string
+      usersIds:
+        items:
+          type: string
+        type: array
+    required:
+    - name
+    - usersIds
+    type: object
+  create_poll.CreatePollRequest:
+    properties:
+      expiresat:
+        type: string
+      options:
+        items:
+          type: string
+        minItems: 2
+        type: array
+      question:
+        type: string
+    required:
+    - expiresat
+    - options
+    - question
+    type: object
+  create_role.CreateRoleRequest:
+    properties:
+      color:
+        maxLength: 100
+        minLength: 1
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - color
+    - name
+    type: object
+  dessassign_role.DessassignRoleFromUserRequest:
+    properties:
+      role_id:
+        maxLength: 100
+        minLength: 1
+        type: string
+      user_id:
+        maxLength: 100
+        minLength: 1
+        type: string
+      workspace_id:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - role_id
+    - user_id
+    - workspace_id
+    type: object
+  entity.ChannelMessageNotificationData:
+    properties:
+      channelId:
+        description: SenderAvatarUrl string
+        type: string
+      messageId:
+        type: string
+      senderId:
+        type: string
+      workspaceId:
+        type: string
+    type: object
+  entity.DirectMessageNotificationData:
+    properties:
+      messageId:
+        type: string
+      senderId:
+        type: string
+    type: object
+  entity.GroupMessageNotificationData:
+    properties:
+      groupId:
+        type: string
+      messageId:
+        type: string
+      senderId:
+        type: string
+    type: object
+  entity.Notification:
+    properties:
+      channel_message_data:
+        $ref: '#/definitions/entity.ChannelMessageNotificationData'
+      created_at:
+        type: string
+      direct_message_data:
+        allOf:
+        - $ref: '#/definitions/entity.DirectMessageNotificationData'
+        description: Metadata spécifiques selon le type
+      group_message_data:
+        $ref: '#/definitions/entity.GroupMessageNotificationData'
+      id:
+        type: string
+      is_read:
+        type: boolean
+      type:
+        $ref: '#/definitions/entity.NotificationType'
+      user_id:
+        type: string
+      workspace_invite_data:
+        $ref: '#/definitions/entity.WorkspaceInviteNotificationData'
+    type: object
+  entity.NotificationType:
+    enum:
+    - direct_message
+    - channel_message
+    - workspace_invite
+    - group_message
+    type: string
+    x-enum-varnames:
+    - NotificationTypeDirectMessage
+    - NotificationTypeChannelMessage
+    - NotificationTypeWorkspaceInvite
+    - NotificationTypeGroupeMessage
+  entity.RecentChatKind:
+    enum:
+    - 0
+    - 1
+    type: integer
+    x-enum-varnames:
+    - RecentChatKindGroup
+    - RecentChatKindDirect
+  entity.Status:
+    enum:
+    - unknown
+    - online
+    - do-not-disturb
+    - invisible
+    - away
+    - offline
+    type: string
+    x-enum-varnames:
+    - StatusUnknown
+    - StatusOnline
+    - StatusDoNotDisturb
+    - StatusInvisible
+    - StatusAway
+    - StatusOffline
+  entity.WorkspaceInviteNotificationData:
+    properties:
+      inviterId:
+        type: string
+      workspaceId:
+        type: string
+    type: object
+  get_channel.ChannelResponse:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      topic:
+        type: string
+      updatedAt:
+        type: string
+      workspaceId:
+        type: string
+    type: object
+  get_job_for_user.JobResponse:
+    properties:
+      id:
+        type: string
+      is_assigned:
+        type: boolean
+      name:
+        type: string
+      permissions:
+        type: integer
+    type: object
+  get_list_invite_link.ResponseInviteLink:
+    properties:
+      email:
+        type: string
+      expiresAt:
+        type: string
+      token:
+        type: string
+    type: object
+  get_my_account.UserResponse:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      lastName:
+        type: string
+      status:
+        type: string
+    type: object
+  get_polls_list.OptionResponse:
+    properties:
+      id:
+        type: string
+      is_voted:
+        type: boolean
+      text:
+        type: string
+      voters:
+        items:
+          type: string
+        type: array
+      votes:
+        type: integer
+    type: object
+  get_polls_list.PollResponse:
+    properties:
+      createdat:
+        type: string
+      createdby:
+        type: string
+      expiresat:
+        type: string
+      id:
+        type: string
+      options:
+        items:
+          $ref: '#/definitions/get_polls_list.OptionResponse'
+        type: array
+      question:
+        type: string
+    type: object
+  get_workspace_details.WorkspaceDetailsResponse:
+    properties:
+      channelsCount:
+        type: integer
+      id:
+        type: string
+      membersCount:
+        type: integer
+      messagesCount:
+        type: integer
+      name:
+        type: string
+      topic:
+        type: string
+      type:
+        type: string
+    type: object
+  github_com_supchat-lmrt_back-go_internal_user_usecase_invite_link_usecase_generate.CreateInviteLinkRequest:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+    required:
+    - email
+    - firstName
+    - lastName
+    type: object
+  github_com_supchat-lmrt_back-go_internal_user_usecase_invite_link_usecase_get_data_token_invite.InviteLinkDataResponse:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+    type: object
+  github_com_supchat-lmrt_back-go_internal_workspace_member_usecase_invite_link_workspace_usecase_generate.CreateInviteLinkRequest:
+    properties:
+      workspaceId:
+        type: string
+    type: object
+  ? github_com_supchat-lmrt_back-go_internal_workspace_member_usecase_invite_link_workspace_usecase_get_data_token_invite.InviteLinkDataResponse
+  : properties:
+      workspaceId:
+        type: string
+      workspaceName:
+        type: string
+    type: object
+  group_info.GroupInfoResponse:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      members:
+        items:
+          $ref: '#/definitions/group_info.GroupMemberResponse'
+        type: array
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  group_info.GroupMemberResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      isGroupOwner:
+        type: boolean
+      status:
+        $ref: '#/definitions/entity.Status'
+      userId:
+        type: string
+      userName:
+        type: string
+    type: object
+  list_all_users.ResponseUser:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      lastName:
+        type: string
+      status:
+        $ref: '#/definitions/entity.Status'
+    type: object
+  list_channels.ListChannelResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      topic:
+        type: string
+    type: object
+  list_mentionnable_user.MentionnableUserResponse:
+    properties:
+      id:
+        type: string
+      username:
+        type: string
+    type: object
+  list_messages.ChannelMessageAuthorResponse:
+    properties:
+      userId:
+        type: string
+      workspaceMemberId:
+        type: string
+      workspacePseudo:
+        type: string
+    type: object
+  list_messages.ChannelMessageReactionResponse:
+    properties:
+      id:
+        type: string
+      reaction:
+        type: string
+      users:
+        items:
+          $ref: '#/definitions/list_messages.ChannelMessageReactionUserResponse'
+        type: array
+    type: object
+  list_messages.ChannelMessageReactionUserResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  list_messages.ChannelMessageResponse:
+    properties:
+      author:
+        $ref: '#/definitions/list_messages.ChannelMessageAuthorResponse'
+      channelId:
+        type: string
+      content:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      reactions:
+        items:
+          $ref: '#/definitions/list_messages.ChannelMessageReactionResponse'
+        type: array
+    type: object
+  list_messages.DirectMessageAuthorResponse:
+    properties:
+      firstName:
+        type: string
+      lastName:
+        type: string
+      userId:
+        type: string
+    type: object
+  list_messages.DirectMessageReactionResponse:
+    properties:
+      id:
+        type: string
+      reaction:
+        type: string
+      users:
+        items:
+          $ref: '#/definitions/list_messages.DirectMessageReactionUserResponse'
+        type: array
+    type: object
+  list_messages.DirectMessageReactionUserResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  list_messages.DirectMessageResponse:
+    properties:
+      author:
+        $ref: '#/definitions/list_messages.DirectMessageAuthorResponse'
+      content:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      reactions:
+        items:
+          $ref: '#/definitions/list_messages.DirectMessageReactionResponse'
+        type: array
+    type: object
+  list_messages.GroupChatMessageResponse:
+    properties:
+      author:
+        $ref: '#/definitions/list_messages.GroupMessageAuthorResponse'
+      content:
+        type: string
+      createdAt:
+        type: string
+      groupId:
+        type: string
+      id:
+        type: string
+      reactions:
+        items:
+          $ref: '#/definitions/list_messages.GroupMessageReactionResponse'
+        type: array
+    type: object
+  list_messages.GroupMessageAuthorResponse:
+    properties:
+      firstName:
+        type: string
+      lastName:
+        type: string
+      userId:
+        type: string
+    type: object
+  list_messages.GroupMessageReactionResponse:
+    properties:
+      id:
+        type: string
+      reaction:
+        type: string
+      users:
+        items:
+          $ref: '#/definitions/list_messages.GroupMessageReactionUserResponse'
+        type: array
+    type: object
+  list_messages.GroupMessageReactionUserResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  list_private_channels.GetPrivateChannelResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      topic:
+        type: string
+    type: object
+  list_recent_chats.RecentChatLastMessageResponse:
+    properties:
+      authorId:
+        type: string
+      authorName:
+        type: string
+      content:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+    type: object
+  list_recent_chats.RecentChatResponse:
+    properties:
+      id:
+        type: string
+      kind:
+        $ref: '#/definitions/entity.RecentChatKind'
+      lastMessage:
+        $ref: '#/definitions/list_recent_chats.RecentChatLastMessageResponse'
+      name:
+        type: string
+    type: object
+  list_user_private_channel.Member:
+    properties:
+      userId:
+        type: string
+      username:
+        type: string
+    type: object
+  login.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 3
+        type: string
+      rememberMe:
+        type: boolean
+    required:
+    - email
+    - password
+    type: object
+  login.LoginUserResponse:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      lastName:
+        type: string
+      status:
+        type: string
+    type: object
+  models.AssignJobRequest:
+    properties:
+      due_date:
+        example: "2025-07-15T14:00:00Z"
+        type: string
+      job_id:
+        example: job-123
+        type: string
+      priority:
+        example: 2
+        type: integer
+      user_id:
+        example: user-456
+        type: string
+    type: object
+  models.CheckPermissionsRequest:
+    properties:
+      permission:
+        example: create_poll
+        type: string
+      user_id:
+        example: user-123
+        type: string
+    type: object
+  models.CheckPermissionsResponse:
+    properties:
+      has_permission:
+        example: true
+        type: boolean
+      message:
+        example: L'utilisateur a la permission
+        type: string
+    type: object
+  models.CreateJobRequest:
+    properties:
+      name:
+        example: Développeur Backend
+        type: string
+    type: object
+  models.CreateJobResponse:
+    properties:
+      id:
+        example: job-123
+        type: string
+      name:
+        example: Développeur Backend
+        type: string
+    type: object
+  models.ErrorResponse:
+    properties:
+      error:
+        example: Message d'erreur
+        type: string
+    type: object
+  models.JobResponse:
+    properties:
+      id:
+        example: job-123
+        type: string
+      name:
+        example: Développeur Frontend
+        type: string
+    type: object
+  models.KickMemberRequest:
+    properties:
+      member_id:
+        example: user-123
+        type: string
+    type: object
+  models.ListJobsResponse:
+    properties:
+      jobs:
+        items:
+          $ref: '#/definitions/models.JobResponse'
+        type: array
+    type: object
+  models.ListWorkspaceMembersResponse:
+    properties:
+      members:
+        items:
+          $ref: '#/definitions/models.WorkspaceMemberResponse'
+        type: array
+      total:
+        example: 10
+        type: integer
+    type: object
+  models.Option:
+    properties:
+      id:
+        type: string
+      label:
+        type: string
+      votes:
+        type: integer
+    type: object
+  models.PollResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/models.UserDetail'
+      id:
+        type: string
+      options:
+        items:
+          $ref: '#/definitions/models.Option'
+        type: array
+      title:
+        type: string
+    type: object
+  models.RecentChatResponse:
+    properties:
+      id:
+        type: string
+      last_message:
+        type: string
+      members:
+        items:
+          $ref: '#/definitions/models.UserDetail'
+        type: array
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.RequestForgotPasswordRequest:
+    properties:
+      email:
+        example: utilisateur@exemple.com
+        type: string
+    required:
+    - email
+    type: object
+  models.RequestForgotPasswordResponse:
+    properties:
+      message:
+        example: Un email de réinitialisation a été envoyé
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  models.SaveStatusRequest:
+    properties:
+      status:
+        enum:
+        - available
+        - away
+        - busy
+        - offline
+        example: available
+        type: string
+      text:
+        example: En réunion jusqu'à 15h
+        type: string
+    required:
+    - status
+    type: object
+  models.SaveStatusResponse:
+    properties:
+      status:
+        example: available
+        type: string
+      success:
+        example: true
+        type: boolean
+      text:
+        example: En réunion jusqu'à 15h
+        type: string
+    type: object
+  models.UnassignJobRequest:
+    properties:
+      job_id:
+        example: job-456
+        type: string
+      user_id:
+        example: user-123
+        type: string
+    type: object
+  models.UnassignJobResponse:
+    properties:
+      message:
+        example: Rôle retiré avec succès
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  models.UpdateJobRequest:
+    properties:
+      id:
+        example: job-123
+        type: string
+      name:
+        example: Développeur Senior
+        type: string
+    required:
+    - id
+    - name
+    type: object
+  models.UpdateJobResponse:
+    properties:
+      id:
+        example: job-123
+        type: string
+      message:
+        example: Rôle mis à jour avec succès
+        type: string
+      name:
+        example: Développeur Senior
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  models.UserDetail:
+    properties:
+      avatar:
+        type: string
+      id:
+        type: string
+      username:
+        type: string
+    type: object
+  models.WorkspaceMemberResponse:
+    properties:
+      avatar_url:
+        example: https://exemple.com/avatar.jpg
+        type: string
+      email:
+        example: utilisateur@exemple.com
+        type: string
+      first_name:
+        example: Jean
+        type: string
+      id:
+        example: user-123
+        type: string
+      last_name:
+        example: Dupont
+        type: string
+      role:
+        example: admin
+        type: string
+      status:
+        example: active
+        type: string
+    type: object
+  public_profile.PublicProfileResponse:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      jobsNames:
+        type: string
+      lastName:
+        type: string
+      status:
+        type: string
+    type: object
+  register.RegisterRequest:
+    properties:
+      password:
+        minLength: 3
+        type: string
+      passwordConfirmation:
+        type: string
+      token:
+        type: string
+    required:
+    - password
+    - passwordConfirmation
+    - token
+    type: object
+  reoder_channels.ReorderChannelRequest:
+    properties:
+      id:
+        type: string
+      newIndex:
+        type: integer
+    type: object
+  search.SearchResult:
+    properties:
+      data: {}
+      kind:
+        $ref: '#/definitions/search.SearchResultKind'
+    type: object
+  search.SearchResultKind:
+    enum:
+    - channel
+    - message
+    - user
+    - group
+    type: string
+    x-enum-varnames:
+    - SearchResultKindChannel
+    - SearchResultKindMessage
+    - SearchResultKindUser
+    - SearchResultKindGroup
+  unvote_option_poll.ErrorResponse:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  update_role.UpdateRoleRequest:
+    properties:
+      color:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      permissions:
+        minimum: 0
+        type: integer
+    required:
+    - name
+    type: object
+  validate.ValidateForgotPasswordRequest:
+    properties:
+      newPassword:
+        type: string
+      newPasswordConfirmation:
+        type: string
+      token:
+        type: string
+    required:
+    - newPassword
+    - newPasswordConfirmation
+    - token
+    type: object
+  validate.ValidateResetPasswordRequest:
+    properties:
+      newPassword:
+        minLength: 8
+        type: string
+      newPasswordConfirmation:
+        type: string
+      token:
+        type: string
+    required:
+    - newPassword
+    - newPasswordConfirmation
+    - token
+    type: object
+  vote_option_poll.ErrorResponse:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@supchat.io
+    name: Support API SupChat
+  description: API pour le service de messagerie SupChat
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: SupChat API
+  version: "1.0"
+paths:
+  /api/account/{user_id}:
+    put:
+      consumes:
+      - application/json
+      description: Met à jour le prénom, le nom et l'email d'un utilisateur spécifique
+      parameters:
+      - description: ID de l'utilisateur
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Nouvelles informations personnelles
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Informations mises à jour avec succès
+          schema:
+            type: string
+        "400":
+          description: Paramètres invalides ou corps de requête incorrect
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Utilisateur non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la mise à jour des informations
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Mise à jour des informations personnelles
+      tags:
+      - account
+  /api/account/{user_id}/profile:
+    get:
+      consumes:
+      - application/json
+      description: Récupère les informations publiques d'un utilisateur spécifique
+      parameters:
+      - description: ID de l'utilisateur
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Informations du profil public
+          schema:
+            $ref: '#/definitions/public_profile.PublicProfileResponse'
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Profil public d'un utilisateur
+      tags:
+      - account
+  /api/account/auth/delete/{userId}:
+    delete:
+      consumes:
+      - application/json
+      description: Supprime définitivement un utilisateur du système
+      parameters:
+      - description: ID de l'utilisateur à supprimer
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Utilisateur supprimé avec succès
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: ID utilisateur manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Supprimer un utilisateur
+      tags:
+      - account
+  /api/account/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authentifie un utilisateur avec email et mot de passe
+      parameters:
+      - description: Informations de connexion
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/login.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Informations de l'utilisateur connecté
+          schema:
+            $ref: '#/definitions/login.LoginUserResponse'
+        "400":
+          description: Paramètres invalides ou identifiants incorrects
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Connexion utilisateur
+      tags:
+      - account
+  /api/account/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Supprime les cookies d'authentification pour déconnecter l'utilisateur
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Déconnexion réussie
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Déconnexion utilisateur
+      tags:
+      - account
+  /api/account/auth/oauth/{provider}:
+    get:
+      consumes:
+      - application/json
+      description: Initie le processus d'authentification OAuth avec un fournisseur
+        spécifié
+      parameters:
+      - description: Nom du fournisseur OAuth (google ou github)
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: Token d'invitation optionnel
+        in: query
+        name: token
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirection vers le fournisseur OAuth
+          schema:
+            type: string
+        "400":
+          description: Fournisseur OAuth invalide
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Authentification OAuth
+      tags:
+      - account
+  /api/account/auth/oauth/{provider}/callback:
+    get:
+      consumes:
+      - application/json
+      description: Traite la réponse du fournisseur OAuth après authentification
+      parameters:
+      - description: Nom du fournisseur OAuth (google ou github)
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: Token d'invitation utilisé lors de l'initialisation
+        in: query
+        name: state
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirection vers l'application ou la page de connexion
+          schema:
+            type: string
+        "400":
+          description: Fournisseur OAuth invalide
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de l'authentification
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Callback OAuth
+      tags:
+      - account
+  /api/account/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Enregistre un nouvel utilisateur avec un token d'invitation et
+        un mot de passe
+      parameters:
+      - description: Informations d'inscription
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/register.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Inscription réussie
+          schema:
+            type: string
+        "400":
+          description: Paramètres invalides ou utilisateur déjà existant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Inscription d'un utilisateur
+      tags:
+      - account
+  /api/account/auth/token/access/renew:
+    post:
+      consumes:
+      - application/json
+      description: Génère un nouveau token d'accès à partir du token de rafraîchissement
+        présent dans les cookies
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Token d'accès renouvelé avec succès
+          schema:
+            type: string
+        "401":
+          description: Token de rafraîchissement manquant ou invalide
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors du rafraîchissement du token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Rafraîchissement du token d'accès
+      tags:
+      - account
+  /api/account/avatar:
+    patch:
+      consumes:
+      - multipart/form-data
+      description: Télécharge et associe une nouvelle image d'avatar à l'utilisateur
+        connecté
+      parameters:
+      - description: Fichier image de l'avatar
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Avatar mis à jour avec succès
+          schema:
+            type: string
+        "400":
+          description: Paramètres invalides ou image manquante
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors du traitement de l'image ou de la mise à jour de
+            l'avatar
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Mise à jour de l'avatar utilisateur
+      tags:
+      - account
+  /api/account/forgot-password/request:
+    post:
+      consumes:
+      - application/json
+      description: Envoie un email avec un lien pour réinitialiser le mot de passe
+        d'un utilisateur
+      parameters:
+      - description: Email pour réinitialiser le mot de passe
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RequestForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email envoyé avec succès
+          schema:
+            $ref: '#/definitions/models.RequestForgotPasswordResponse'
+        "400":
+          description: Paramètres invalides
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Demander une récupération de mot de passe
+      tags:
+      - account
+  /api/account/forgot-password/validate:
+    post:
+      consumes:
+      - application/json
+      description: Vérifie un jeton de réinitialisation et définit un nouveau mot
+        de passe pour l'utilisateur
+      parameters:
+      - description: Token de réinitialisation et nouveau mot de passe
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/validate.ValidateForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Mot de passe modifié avec succès
+        "400":
+          description: Paramètres invalides ou mots de passe différents
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Valider la réinitialisation de mot de passe
+      tags:
+      - account
+  /api/account/invite-link:
+    get:
+      consumes:
+      - application/json
+      description: Récupère tous les liens d'invitation actifs avec leurs informations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des liens d'invitation
+          schema:
+            items:
+              $ref: '#/definitions/get_list_invite_link.ResponseInviteLink'
+            type: array
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Accès refusé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Lister les liens d'invitation
+      tags:
+      - account
+    post:
+      consumes:
+      - application/json
+      description: Crée un lien d'invitation pour permettre à un nouvel utilisateur
+        de s'inscrire
+      parameters:
+      - description: Informations de l'utilisateur invité
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_supchat-lmrt_back-go_internal_user_usecase_invite_link_usecase_generate.CreateInviteLinkRequest'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: URL du lien d'invitation
+          schema:
+            type: string
+        "400":
+          description: Paramètres de requête invalides
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Créer un lien d'invitation
+      tags:
+      - account
+  /api/account/invite-link/{token}:
+    delete:
+      consumes:
+      - application/json
+      description: Supprime définitivement un lien d'invitation du système
+      parameters:
+      - description: Token unique du lien d'invitation à supprimer
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Lien d'invitation supprimé avec succès
+        "400":
+          description: Token manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Supprimer un lien d'invitation
+      tags:
+      - account
+    get:
+      consumes:
+      - application/json
+      description: Récupère les informations associées à un lien d'invitation spécifique
+      parameters:
+      - description: Token unique du lien d'invitation
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Données de l'invitation
+          schema:
+            $ref: '#/definitions/github_com_supchat-lmrt_back-go_internal_user_usecase_invite_link_usecase_get_data_token_invite.InviteLinkDataResponse'
+        "400":
+          description: Token manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtenir les données d'un lien d'invitation
+      tags:
+      - account
+  /api/account/me:
+    get:
+      consumes:
+      - application/json
+      description: Récupère les informations du compte de l'utilisateur authentifié,
+        y compris son statut actuel
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Informations de l'utilisateur connecté
+          schema:
+            $ref: '#/definitions/get_my_account.UserResponse'
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Obtenir mon compte utilisateur
+      tags:
+      - account
+  /api/account/reset-password/request:
+    post:
+      consumes:
+      - application/json
+      description: Envoie un email avec un lien permettant à l'utilisateur de réinitialiser
+        son mot de passe
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email envoyé avec succès
+          schema:
+            type: string
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de l'envoi de l'email
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Demande de réinitialisation de mot de passe
+      tags:
+      - account
+  /api/account/reset-password/validate:
+    post:
+      consumes:
+      - application/json
+      description: Valide le token de réinitialisation et change le mot de passe de
+        l'utilisateur
+      parameters:
+      - description: Données de réinitialisation du mot de passe
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/validate.ValidateResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Mot de passe réinitialisé avec succès
+          schema:
+            type: string
+        "400":
+          description: Paramètres invalides ou mots de passe non concordants
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la validation du token ou de la mise à jour
+            du mot de passe
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Validation de la réinitialisation de mot de passe
+      tags:
+      - account
+  /api/account/status:
+    patch:
+      consumes:
+      - application/json
+      description: Met à jour le statut d'un utilisateur authentifié (en ligne, absent,
+        ne pas déranger, etc.)
+      parameters:
+      - description: Informations du statut à mettre à jour
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.SaveStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Statut mis à jour avec succès
+          schema:
+            $ref: '#/definitions/models.SaveStatusResponse'
+        "400":
+          description: Paramètres invalides
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Mettre à jour le statut d'un utilisateur
+      tags:
+      - account
+  /api/account/users:
+    get:
+      consumes:
+      - application/json
+      description: Récupère la liste complète des utilisateurs avec leurs informations
+        de base et statuts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des utilisateurs
+          schema:
+            items:
+              $ref: '#/definitions/list_all_users.ResponseUser'
+            type: array
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Lister tous les utilisateurs
+      tags:
+      - account
+  /api/chats/direct/{other_user_id}/messages:
+    get:
+      consumes:
+      - application/json
+      description: Récupère la liste des messages directs échangés entre l'utilisateur
+        authentifié et un autre utilisateur spécifié
+      parameters:
+      - description: ID de l'utilisateur avec qui la conversation est partagée
+        in: path
+        name: other_user_id
+        required: true
+        type: string
+      - default: 20
+        description: 'Nombre maximum de messages à récupérer (défaut: 20, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      - description: Récupérer les messages avant cette date (format ISO8601)
+        in: query
+        name: before
+        type: string
+      - description: Récupérer les messages après cette date (format ISO8601)
+        in: query
+        name: after
+        type: string
+      - description: Récupérer les messages autour de cet ID de message
+        in: query
+        name: aroundMessageId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des messages directs
+          schema:
+            items:
+              $ref: '#/definitions/list_messages.DirectMessageResponse'
+            type: array
+        "400":
+          description: Paramètres invalides
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Lister les messages directs
+      tags:
+      - chats
+  /api/chats/recents:
+    get:
+      consumes:
+      - application/json
+      description: Récupère toutes les conversations récentes de l'utilisateur authentifié
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des conversations récentes
+          schema:
+            items:
+              $ref: '#/definitions/list_recent_chats.RecentChatResponse'
+            type: array
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Lister les conversations récentes
+      tags:
+      - chat
+  /api/groups:
+    post:
+      consumes:
+      - application/json
+      description: Crée un nouveau groupe de discussion avec les utilisateurs spécifiés
+      parameters:
+      - description: Informations du groupe à créer
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/create_group.CreateGroupBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ID du groupe créé
+          schema:
+            type: string
+        "400":
+          description: Erreur de paramètre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Créer un groupe
+      tags:
+      - group
+  /api/groups/{group_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Permet à l'utilisateur actuel de quitter un groupe de discussion
+      parameters:
+      - description: ID du groupe
+        in: path
+        name: group_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Groupe quitté avec succès
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Groupe non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Quitter un groupe
+      tags:
+      - group
+    get:
+      consumes:
+      - application/json
+      description: Récupère les informations détaillées d'un groupe de discussion,
+        y compris la liste de ses membres
+      parameters:
+      - description: ID du groupe
+        in: path
+        name: group_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Informations du groupe
+          schema:
+            $ref: '#/definitions/group_info.GroupInfoResponse'
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Obtenir les informations du groupe
+      tags:
+      - group
+  /api/groups/{group_id}/members:
+    delete:
+      consumes:
+      - application/json
+      description: Expulse un utilisateur spécifique d'un groupe de discussion
+      parameters:
+      - description: ID du groupe
+        in: path
+        name: group_id
+        required: true
+        type: string
+      - description: ID du membre à expulser
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.KickMemberRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Membre expulsé avec succès
+        "400":
+          description: Erreur de paramètre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Expulser un membre du groupe
+      tags:
+      - group
+    post:
+      consumes:
+      - application/json
+      description: Ajoute un utilisateur spécifique à un groupe de discussion
+      parameters:
+      - description: ID du groupe
+        in: path
+        name: group_id
+        required: true
+        type: string
+      - description: Informations de l'utilisateur à ajouter
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/add_member.AddMemberToGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Membre ajouté avec succès
+        "400":
+          description: Erreur de paramètre ou impossibilité de s'ajouter soi-même
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Ajouter un membre au groupe
+      tags:
+      - group
+  /api/groups/{group_id}/messages:
+    get:
+      consumes:
+      - application/json
+      description: Récupère les messages d'un groupe spécifique
+      parameters:
+      - description: ID du groupe
+        in: path
+        name: group_id
+        required: true
+        type: string
+      - default: 20
+        description: Nombre maximum de messages à récupérer
+        in: query
+        maximum: 100
+        name: limit
+        type: integer
+      - description: Récupérer les messages avant cette date (format ISO)
+        in: query
+        name: before
+        type: string
+      - description: Récupérer les messages après cette date (format ISO)
+        in: query
+        name: after
+        type: string
+      - description: Récupérer les messages autour de ce message
+        in: query
+        name: aroundMessageId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des messages
+          schema:
+            items:
+              $ref: '#/definitions/list_messages.GroupChatMessageResponse'
+            type: array
+        "400":
+          description: Requête invalide
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Lister les messages d'un groupe
+      tags:
+      - group-chat
+  /api/job:
+    get:
+      consumes:
+      - application/json
+      description: Récupère la liste complète des rôles de travail avec leurs ID,
+        noms et permissions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des rôles de travail
+          schema:
+            $ref: '#/definitions/models.ListJobsResponse'
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Lister les rôles de travail
+      tags:
+      - job
+    post:
+      consumes:
+      - application/json
+      description: Crée un nouveau rôle de travail avec le nom fourni
+      parameters:
+      - description: Informations du rôle à créer
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateJobRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Rôle créé avec succès
+          schema:
+            $ref: '#/definitions/models.CreateJobResponse'
+        "400":
+          description: Erreur de paramètre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflit - Le rôle existe déjà
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Créer un rôle de travail
+      tags:
+      - job
+  /api/job/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Supprime un rôle de travail existant en fonction de son ID
+      parameters:
+      - description: ID du rôle à supprimer
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Rôle supprimé avec succès
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Erreur de paramètre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Supprimer un rôle de travail
+      tags:
+      - job
+    put:
+      consumes:
+      - application/json
+      description: Met à jour le nom d'un rôle de travail existant
+      parameters:
+      - description: ID du rôle à mettre à jour
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Informations pour mettre à jour un rôle
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateJobRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Rôle mis à jour avec succès
+          schema:
+            $ref: '#/definitions/models.UpdateJobResponse'
+        "400":
+          description: Erreur de paramètre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Mettre à jour un rôle de travail
+      tags:
+      - job
+  /api/job/assign:
+    post:
+      consumes:
+      - application/json
+      description: Attribue un rôle de travail spécifique à un utilisateur
+      parameters:
+      - description: Informations d'attribution de rôle
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.AssignJobRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Rôle attribué avec succès
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Erreur de paramètre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Assigner un rôle de travail
+      tags:
+      - job
+  /api/job/check-permissions/{user_id}:
+    post:
+      consumes:
+      - application/json
+      description: Vérifie si un utilisateur spécifié possède les permissions demandées
+      parameters:
+      - description: ID de l'utilisateur
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Paramètres de vérification des permissions
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CheckPermissionsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Résultat de la vérification
+          schema:
+            $ref: '#/definitions/models.CheckPermissionsResponse'
+        "400":
+          description: Erreur de paramètre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Vérifier les permissions d'un utilisateur
+      tags:
+      - job
+  /api/job/unassign:
+    post:
+      consumes:
+      - application/json
+      description: Retire un rôle de travail spécifié d'un utilisateur
+      parameters:
+      - description: Informations pour retirer un rôle
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UnassignJobRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Opération réussie
+          schema:
+            $ref: '#/definitions/models.UnassignJobResponse'
+        "400":
+          description: Erreur de paramètre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Désassigner un rôle de travail
+      tags:
+      - job
+  /api/job/user/{user_id}:
+    get:
+      consumes:
+      - application/json
+      description: Récupère la liste des rôles de travail avec leurs permissions pour
+        un utilisateur spécifique
+      parameters:
+      - description: ID de l'utilisateur
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des rôles de travail de l'utilisateur
+          schema:
+            $ref: '#/definitions/get_job_for_user.JobResponse'
+        "400":
+          description: Erreur de paramètre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Obtenir les rôles de travail d'un utilisateur
+      tags:
+      - job
+  /api/notifications:
+    get:
+      consumes:
+      - application/json
+      description: Récupère toutes les notifications de l'utilisateur connecté
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des notifications
+          schema:
+            items:
+              $ref: '#/definitions/entity.Notification'
+            type: array
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Lister les notifications
+      tags:
+      - notification
+  /api/notifications/{id}/read:
+    patch:
+      consumes:
+      - application/json
+      description: Change l'état d'une notification spécifique pour la marquer comme
+        lue
+      parameters:
+      - description: ID de la notification
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Notification marquée comme lue avec succès
+        "400":
+          description: Erreur de paramètre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Marquer une notification comme lue
+      tags:
+      - notification
+  /api/search:
+    get:
+      consumes:
+      - application/json
+      description: Effectue une recherche globale basée sur un terme et filtrée par
+        type de contenu
+      parameters:
+      - description: Terme de recherche
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: Type de contenu à rechercher (optionnel)
+        in: query
+        name: kind
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Résultats de la recherche
+          schema:
+            items:
+              $ref: '#/definitions/search.SearchResult'
+            type: array
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Rechercher du contenu
+      tags:
+      - search
+  /api/user/data/export:
+    get:
+      consumes:
+      - application/json
+      description: Récupère toutes les conversations récentes de l'utilisateur authentifié
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des conversations récentes
+          schema:
+            items:
+              $ref: '#/definitions/models.RecentChatResponse'
+            type: array
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Lister les conversations récentes
+      tags:
+      - chat
+  /api/workspace-invite-link/{token}:
+    get:
+      consumes:
+      - application/json
+      description: Récupère les informations associées à un lien d'invitation à un
+        espace de travail
+      parameters:
+      - description: Token d'invitation à vérifier
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Informations sur l'espace de travail lié à l'invitation
+          schema:
+            $ref: '#/definitions/github_com_supchat-lmrt_back-go_internal_workspace_member_usecase_invite_link_workspace_usecase_get_data_token_invite.InviteLinkDataResponse'
+        "400":
+          description: Token manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Token d'invitation invalide ou expiré
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération des informations
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Informations d'un lien d'invitation
+      tags:
+      - workspace
+      - invite
+  /api/workspace-invite-link/{token}/join:
+    post:
+      consumes:
+      - application/json
+      description: Permet à l'utilisateur authentifié de rejoindre un espace de travail
+        en utilisant un lien d'invitation
+      parameters:
+      - description: Token d'invitation
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Utilisateur ajouté à l'espace de travail
+          schema:
+            type: string
+        "400":
+          description: Token d'invitation manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Token d'invitation invalide ou expiré
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: L'utilisateur est déjà membre de cet espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de l'ajout de l'utilisateur à l'espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Rejoindre via lien d'invitation
+      tags:
+      - workspace
+      - invite
+  /api/workspace-invite-link/create/{workspace_id}:
+    post:
+      consumes:
+      - application/json
+      description: Génère un lien d'invitation pour permettre à d'autres utilisateurs
+        de rejoindre l'espace de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: Données de l'espace de travail
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_supchat-lmrt_back-go_internal_workspace_member_usecase_invite_link_workspace_usecase_generate.CreateInviteLinkRequest'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Lien d'invitation généré
+          schema:
+            type: string
+        "400":
+          description: Requête invalide ou ID d'espace de travail manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Permissions insuffisantes pour créer un lien d'invitation
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Espace de travail non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la génération du lien d'invitation
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Création d'un lien d'invitation
+      tags:
+      - workspace
+      - invite
+  /api/workspaces:
+    get:
+      consumes:
+      - application/json
+      description: Récupère tous les espaces de travail auxquels l'utilisateur appartient
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des espaces de travail de l'utilisateur
+          schema:
+            items:
+              additionalProperties:
+                type: string
+              type: object
+            type: array
+        "401":
+          description: Utilisateur non authentifié
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération des espaces de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Espaces de travail de l'utilisateur
+      tags:
+      - workspace
+    post:
+      consumes:
+      - application/json
+      description: Crée un nouvel espace de travail avec l'utilisateur connecté comme
+        propriétaire
+      parameters:
+      - description: Informations de l'espace de travail
+        in: body
+        name: body
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Espace de travail créé avec succès
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Requête invalide ou données incomplètes
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Utilisateur non authentifié
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la création de l'espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Création d'un espace de travail
+      tags:
+      - workspace
+  /api/workspaces/{workspace_id}:
+    get:
+      consumes:
+      - application/json
+      description: Récupère les informations de base d'un espace de travail spécifique
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Informations de l'espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: ID de l'espace de travail manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Utilisateur non autorisé dans cet espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération de l'espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Détails d'un espace de travail
+      tags:
+      - workspace
+    put:
+      consumes:
+      - application/json
+      description: Modifie le nom et le sujet d'un espace de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: Informations à mettre à jour
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Informations mises à jour avec succès
+        "400":
+          description: ID de l'espace de travail manquant ou requête invalide
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Utilisateur non autorisé dans cet espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la mise à jour des informations
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Mise à jour des informations de l'espace de travail
+      tags:
+      - workspace
+  /api/workspaces/{workspace_id}/banner:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Modifie l'image de bannière d'un espace de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: Fichier image pour la bannière
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bannière mise à jour avec succès
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Paramètres manquants ou invalides
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Utilisateur non autorisé à gérer les paramètres de l'espace
+            de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la mise à jour de la bannière
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Mise à jour de la bannière
+      tags:
+      - workspace
+  /api/workspaces/{workspace_id}/channels:
+    get:
+      consumes:
+      - application/json
+      description: Retourne tous les canaux publics d'un espace de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des canaux
+          schema:
+            items:
+              $ref: '#/definitions/list_channels.ListChannelResponse'
+            type: array
+        "400":
+          description: ID de workspace manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération des canaux
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Liste des canaux
+      tags:
+      - workspace
+      - channel
+    post:
+      consumes:
+      - application/json
+      description: Crée un nouveau canal textuel dans un espace de travail spécifique
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: Informations du canal à créer
+        in: body
+        name: channel
+        required: true
+        schema:
+          $ref: '#/definitions/create_channel.CreateChannelRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Canal créé avec succès
+          schema:
+            type: string
+        "400":
+          description: Paramètres manquants ou invalides
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Permissions insuffisantes pour créer un canal
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la création du canal
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Création d'un canal
+      tags:
+      - workspace
+      - channel
+  /api/workspaces/{workspace_id}/channels/{channel_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Supprime un canal existant dans l'espace de travail spécifié
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID du canal à supprimer
+        in: path
+        name: channel_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Canal supprimé avec succès
+          schema:
+            type: string
+        "400":
+          description: ID de canal manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Permissions insuffisantes pour supprimer le canal
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Canal non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la suppression du canal
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Suppression d'un canal
+      tags:
+      - workspace
+      - channel
+    get:
+      consumes:
+      - application/json
+      description: Récupère les informations détaillées d'un canal dans un espace
+        de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID du canal
+        in: path
+        name: channel_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Informations détaillées du canal
+          schema:
+            $ref: '#/definitions/get_channel.ChannelResponse'
+        "404":
+          description: Canal non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération des informations du canal
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Détails d'un canal
+      tags:
+      - workspace
+      - channel
+  /api/workspaces/{workspace_id}/channels/{channel_id}/members:
+    get:
+      consumes:
+      - application/json
+      description: Retourne tous les utilisateurs qui ont accès à un canal privé spécifique
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID du canal privé
+        in: path
+        name: channel_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des membres du canal privé
+          schema:
+            items:
+              $ref: '#/definitions/list_user_private_channel.Member'
+            type: array
+        "400":
+          description: ID de canal manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Permissions insuffisantes pour accéder à ce canal
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Canal non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération des membres du canal
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Liste des membres d'un canal privé
+      tags:
+      - workspace
+      - channel
+      - members
+  /api/workspaces/{workspace_id}/channels/{channel_id}/mentionnable-users:
+    get:
+      consumes:
+      - application/json
+      description: Récupère la liste des utilisateurs qui peuvent être mentionnés
+        dans un canal spécifique
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID du canal
+        in: path
+        name: channel_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des utilisateurs mentionnables
+          schema:
+            items:
+              $ref: '#/definitions/list_mentionnable_user.MentionnableUserResponse'
+            type: array
+        "400":
+          description: Erreur de paramètre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Obtenir les utilisateurs mentionnables
+      tags:
+      - mention
+  /api/workspaces/{workspace_id}/channels/{channel_id}/messages:
+    get:
+      consumes:
+      - application/json
+      description: Retourne les messages d'un canal spécifique avec pagination et
+        filtrage temporel
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID du canal
+        in: path
+        name: channel_id
+        required: true
+        type: string
+      - default: 20
+        description: Nombre maximum de messages à retourner (max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Récupérer les messages avant cette date (format ISO8601)
+        in: query
+        name: before
+        type: string
+      - description: Récupérer les messages après cette date (format ISO8601)
+        in: query
+        name: after
+        type: string
+      - description: Récupérer les messages autour de cet ID de message
+        in: query
+        name: aroundMessageId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des messages du canal
+          schema:
+            items:
+              $ref: '#/definitions/list_messages.ChannelMessageResponse'
+            type: array
+        "400":
+          description: ID de workspace ou canal manquant, ou paramètres de requête
+            invalides
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération des messages
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Liste des messages d'un canal
+      tags:
+      - workspace
+      - channel
+  /api/workspaces/{workspace_id}/channels/private:
+    get:
+      consumes:
+      - application/json
+      description: Retourne tous les canaux privés auxquels l'utilisateur a accès
+        dans un espace de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des canaux privés accessibles
+          schema:
+            items:
+              $ref: '#/definitions/list_private_channels.GetPrivateChannelResponse'
+            type: array
+        "400":
+          description: ID de workspace manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Utilisateur non authentifié ou non membre du workspace
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération des canaux
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Liste des canaux privés
+      tags:
+      - workspace
+      - channel
+  /api/workspaces/{workspace_id}/channels/reorder:
+    post:
+      consumes:
+      - application/json
+      description: Modifie l'ordre d'affichage des canaux dans un espace de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: Liste des canaux à réordonner avec leur nouvel index
+        in: body
+        name: channels
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/reoder_channels.ReorderChannelRequest'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Canaux réorganisés avec succès
+          schema:
+            type: string
+        "400":
+          description: Requête invalide ou mal formée
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Permissions insuffisantes pour réorganiser les canaux
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Canal non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la réorganisation des canaux
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Réorganisation des canaux
+      tags:
+      - workspace
+      - channel
+  /api/workspaces/{workspace_id}/details:
+    get:
+      consumes:
+      - application/json
+      description: Récupère les informations détaillées d'un espace de travail spécifique
+        avec statistiques
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Détails complets de l'espace de travail
+          schema:
+            $ref: '#/definitions/get_workspace_details.WorkspaceDetailsResponse'
+        "400":
+          description: ID de l'espace de travail manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Utilisateur non autorisé dans cet espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération des détails
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Détails complets d'un espace de travail
+      tags:
+      - workspace
+  /api/workspaces/{workspace_id}/icon:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Modifie l'image d'icône d'un espace de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: Fichier image pour l'icône
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Icône mise à jour avec succès
+        "400":
+          description: Paramètres manquants ou invalides
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Utilisateur non autorisé dans cet espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la mise à jour de l'icône
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Mise à jour de l'icône
+      tags:
+      - workspace
+  /api/workspaces/{workspace_id}/join:
+    get:
+      consumes:
+      - application/json
+      description: Permet à l'utilisateur authentifié de rejoindre un espace de travail
+        public
+      parameters:
+      - description: ID de l'espace de travail à rejoindre
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Utilisateur ajouté à l'espace de travail
+          schema:
+            type: string
+        "400":
+          description: ID de workspace manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: L'espace de travail est privé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Espace de travail non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: L'utilisateur est déjà membre de cet espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de l'ajout de l'utilisateur à l'espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Rejoindre un espace de travail
+      tags:
+      - workspace
+      - member
+  /api/workspaces/{workspace_id}/members:
+    get:
+      consumes:
+      - application/json
+      description: Récupère la liste paginée des membres d'un espace de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - default: 10
+        description: Nombre maximum de membres à retourner
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Numéro de la page à retourner
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des membres de l'espace de travail
+          schema:
+            $ref: '#/definitions/models.ListWorkspaceMembersResponse'
+        "400":
+          description: ID de workspace manquant ou paramètres de pagination invalides
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Utilisateur non membre de l'espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération des membres
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Liste des membres
+      tags:
+      - workspace
+      - member
+  /api/workspaces/{workspace_id}/members/{user_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Retire un utilisateur de l'espace de travail (requiert des permissions
+        administratives)
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID de l'utilisateur à expulser
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Membre expulsé avec succès
+          schema:
+            type: string
+        "400":
+          description: Erreur lors de l'expulsion du membre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Permissions insuffisantes pour expulser un membre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Membre ou espace de travail non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Expulsion d'un membre
+      tags:
+      - workspace
+      - member
+    get:
+      consumes:
+      - application/json
+      description: Obtient l'ID membre associé à un utilisateur dans un espace de
+        travail spécifique
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID de l'utilisateur
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ID du membre trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Paramètres manquants ou invalides
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Utilisateur non autorisé dans cet espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Membre non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération de l'ID du membre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: ID d'un membre
+      tags:
+      - workspace
+      - member
+  /api/workspaces/{workspace_id}/permissions/check:
+    post:
+      consumes:
+      - application/json
+      description: Vérifie si l'utilisateur courant possède un ensemble de permissions
+        dans l'espace de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: Permissions à vérifier
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CheckPermissionsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Résultat de la vérification des permissions
+          schema:
+            $ref: '#/definitions/models.CheckPermissionsResponse'
+        "400":
+          description: ID de l'espace de travail manquant ou requête invalide
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Utilisateur non membre de l'espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la vérification des permissions
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Vérification de permissions
+      tags:
+      - workspace
+      - permissions
+  /api/workspaces/{workspace_id}/poll:
+    get:
+      consumes:
+      - application/json
+      description: Récupère tous les sondages disponibles dans un espace de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des sondages
+          schema:
+            items:
+              $ref: '#/definitions/get_polls_list.PollResponse'
+            type: array
+        "400":
+          description: ID de l'espace de travail manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Lister les sondages
+      tags:
+      - poll
+    post:
+      consumes:
+      - application/json
+      description: Crée un nouveau sondage dans l'espace de travail spécifié
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: Informations du sondage
+        in: body
+        name: poll
+        required: true
+        schema:
+          $ref: '#/definitions/create_poll.CreatePollRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sondage créé avec succès
+          schema:
+            $ref: '#/definitions/models.PollResponse'
+        "400":
+          description: Erreur dans les données d'entrée
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Non autorisé
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Créer un nouveau sondage
+      tags:
+      - poll
+  /api/workspaces/{workspace_id}/poll/{poll_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Supprime un sondage existant dans l'espace de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID du sondage à supprimer
+        in: path
+        name: poll_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sondage supprimé avec succès
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: ID du sondage manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Supprimer un sondage
+      tags:
+      - poll
+    get:
+      consumes:
+      - application/json
+      description: Récupère les détails d'un sondage existant dans l'espace de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID du sondage à récupérer
+        in: path
+        name: poll_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Détails du sondage
+          schema: {}
+        "400":
+          description: ID du sondage manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Sondage non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Récupérer un sondage
+      tags:
+      - poll
+  /api/workspaces/{workspace_id}/poll/{poll_id}/unvote/{option_id}:
+    post:
+      consumes:
+      - application/json
+      description: Supprime le vote d'un utilisateur pour une option spécifique d'un
+        sondage
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID du sondage
+        in: path
+        name: poll_id
+        required: true
+        type: string
+      - description: ID de l'option
+        in: path
+        name: option_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Vote supprimé avec succès
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Erreur de paramètre ou vote non trouvé
+          schema:
+            $ref: '#/definitions/unvote_option_poll.ErrorResponse'
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            $ref: '#/definitions/unvote_option_poll.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Supprimer un vote d'une option
+      tags:
+      - poll
+  /api/workspaces/{workspace_id}/poll/{poll_id}/vote/{option_id}:
+    post:
+      consumes:
+      - application/json
+      description: Enregistre le vote d'un utilisateur pour une option spécifique
+        d'un sondage
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID du sondage
+        in: path
+        name: poll_id
+        required: true
+        type: string
+      - description: ID de l'option
+        in: path
+        name: option_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Vote enregistré avec succès
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Erreur de paramètre
+          schema:
+            $ref: '#/definitions/vote_option_poll.ErrorResponse'
+        "401":
+          description: Non autorisé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            $ref: '#/definitions/vote_option_poll.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Voter pour une option
+      tags:
+      - poll
+  /api/workspaces/{workspace_id}/roles:
+    get:
+      consumes:
+      - application/json
+      description: Récupère la liste de tous les rôles disponibles dans un espace
+        de travail spécifié
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des rôles
+          schema:
+            items:
+              additionalProperties:
+                type: string
+              type: object
+            type: array
+        "400":
+          description: ID de l'espace de travail manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Permissions insuffisantes ou utilisateur non membre de l'espace
+            de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération des rôles
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Liste des rôles
+      tags:
+      - workspace
+      - role
+    post:
+      consumes:
+      - application/json
+      description: Crée un nouveau rôle avec un nom et une couleur dans l'espace de
+        travail spécifié
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: Données du rôle à créer
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/create_role.CreateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Rôle créé avec succès
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Requête invalide ou données manquantes
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Permissions insuffisantes pour créer un rôle
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la création du rôle
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Création d'un rôle
+      tags:
+      - workspace
+      - role
+  /api/workspaces/{workspace_id}/roles/{role_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Supprime un rôle existant dans l'espace de travail spécifié
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID du rôle à supprimer
+        in: path
+        name: role_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Rôle supprimé avec succès
+          schema:
+            type: string
+        "400":
+          description: ID de rôle manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Permissions insuffisantes pour supprimer un rôle
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Rôle non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la suppression du rôle
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Suppression d'un rôle
+      tags:
+      - workspace
+      - role
+    get:
+      consumes:
+      - application/json
+      description: Récupère les informations détaillées d'un rôle spécifique dans
+        un espace de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID du rôle à récupérer
+        in: path
+        name: role_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Détails du rôle
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: ID du rôle manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Permissions insuffisantes pour voir les rôles
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Rôle non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération du rôle
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Détails d'un rôle
+      tags:
+      - workspace
+      - role
+    put:
+      consumes:
+      - application/json
+      description: Met à jour les informations d'un rôle existant (nom, couleur, permissions)
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID du rôle à mettre à jour
+        in: path
+        name: role_id
+        required: true
+        type: string
+      - description: Nouvelles informations du rôle
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/update_role.UpdateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Rôle mis à jour avec succès
+          schema:
+            type: string
+        "400":
+          description: Requête invalide ou données incomplètes
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Permissions insuffisantes pour gérer les rôles
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Rôle non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la mise à jour du rôle
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Mise à jour d'un rôle
+      tags:
+      - workspace
+      - role
+  /api/workspaces/{workspace_id}/roles/assign:
+    post:
+      consumes:
+      - application/json
+      description: Attribue un rôle à un membre spécifique de l'espace de travail
+      parameters:
+      - description: Données d'attribution du rôle
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/assign_role.AssignRoleToUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Rôle attribué avec succès
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Requête invalide ou données incomplètes
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Permissions insuffisantes pour attribuer des rôles
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Utilisateur ou rôle non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de l'attribution du rôle
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Attribution d'un rôle
+      tags:
+      - workspace
+      - role
+  /api/workspaces/{workspace_id}/roles/dessassign:
+    post:
+      consumes:
+      - application/json
+      description: Retire un rôle spécifique à un membre de l'espace de travail
+      parameters:
+      - description: Données de retrait du rôle
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dessassign_role.DessassignRoleFromUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Rôle retiré avec succès
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Requête invalide ou données incomplètes
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Permissions insuffisantes pour gérer les rôles
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Utilisateur ou rôle non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors du retrait du rôle
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Retrait d'un rôle
+      tags:
+      - workspace
+      - role
+  /api/workspaces/{workspace_id}/roles/members/{user_id}:
+    get:
+      consumes:
+      - application/json
+      description: Récupère tous les rôles attribués à un membre spécifique dans l'espace
+        de travail
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: ID de l'utilisateur
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des rôles du membre
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: ID de l'espace de travail ou de l'utilisateur manquant
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Permissions insuffisantes pour gérer les rôles
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Membre non trouvé dans l'espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération des rôles
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Rôles d'un membre
+      tags:
+      - workspace
+      - role
+      - member
+  /api/workspaces/{workspace_id}/type:
+    put:
+      consumes:
+      - application/json
+      description: Modifie le type d'un espace de travail (public/privé)
+      parameters:
+      - description: ID de l'espace de travail
+        in: path
+        name: workspace_id
+        required: true
+        type: string
+      - description: Nouveau type d'espace de travail
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Type mis à jour avec succès
+        "400":
+          description: ID de l'espace de travail manquant ou requête invalide
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Utilisateur non autorisé dans cet espace de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la mise à jour du type
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Mise à jour du type d'espace de travail
+      tags:
+      - workspace
+  /api/workspaces/discover:
+    get:
+      consumes:
+      - application/json
+      description: Récupère tous les espaces de travail publics disponibles pour rejoindre
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liste des espaces de travail publics
+          schema:
+            items:
+              additionalProperties:
+                type: string
+              type: object
+            type: array
+        "401":
+          description: Utilisateur non authentifié
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la récupération des espaces de travail
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Liste des espaces de travail publics
+      tags:
+      - workspace
+      - discovery
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

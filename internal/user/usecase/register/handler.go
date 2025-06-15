@@ -23,6 +23,16 @@ type RegisterRequest struct {
 	PasswordConfirmation string `json:"passwordConfirmation" binding:"required,eqfield=Password"`
 }
 
+// Handle traite les demandes d'inscription utilisateur
+// @Summary Inscription d'un utilisateur
+// @Description Enregistre un nouvel utilisateur avec un token d'invitation et un mot de passe
+// @Tags account
+// @Accept json
+// @Produce json
+// @Param request body register.RegisterRequest true "Informations d'inscription"
+// @Success 204 {string} string "Inscription réussie"
+// @Failure 400 {object} map[string]string "Paramètres invalides ou utilisateur déjà existant"
+// @Router /api/account/auth/register [post]
 func (l RegisterHandler) Handle(c *gin.Context) {
 	var request RegisterRequest
 	if err := c.ShouldBindJSON(&request); err != nil {

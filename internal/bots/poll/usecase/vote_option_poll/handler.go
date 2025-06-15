@@ -20,6 +20,21 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
+// Handle enregistre le vote d'un utilisateur pour une option d'un sondage
+// @Summary Voter pour une option
+// @Description Enregistre le vote d'un utilisateur pour une option spécifique d'un sondage
+// @Tags poll
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Param poll_id path string true "ID du sondage"
+// @Param option_id path string true "ID de l'option"
+// @Success 200 {object} map[string]string "Vote enregistré avec succès"
+// @Failure 400 {object} ErrorResponse "Erreur de paramètre"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} ErrorResponse "Erreur interne du serveur"
+// @Router /api/workspaces/{workspace_id}/poll/{poll_id}/vote/{option_id} [post]
+// @Security ApiKeyAuth
 func (h *VoteOptionPollHandler) Handle(c *gin.Context) {
 	pollId := c.Param("poll_id")
 	optionId := c.Param("option_id")

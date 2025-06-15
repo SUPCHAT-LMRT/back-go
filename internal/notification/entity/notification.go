@@ -1,6 +1,8 @@
 package entity
 
 import (
+	group_message_entity "github.com/supchat-lmrt/back-go/internal/group/chat_message/entity"
+	group_entity "github.com/supchat-lmrt/back-go/internal/group/entity"
 	chat_direct_entity "github.com/supchat-lmrt/back-go/internal/user/chat_direct/entity"
 	"github.com/supchat-lmrt/back-go/internal/user/entity"
 	channel_message_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/entity"
@@ -16,6 +18,7 @@ const (
 	NotificationTypeDirectMessage   NotificationType = "direct_message"
 	NotificationTypeChannelMessage  NotificationType = "channel_message"
 	NotificationTypeWorkspaceInvite NotificationType = "workspace_invite"
+	NotificationTypeGroupeMessage   NotificationType = "group_message"
 )
 
 type Notification struct {
@@ -28,6 +31,7 @@ type Notification struct {
 	DirectMessageData   *DirectMessageNotificationData   `json:"direct_message_data,omitempty"`
 	ChannelMessageData  *ChannelMessageNotificationData  `json:"channel_message_data,omitempty"`
 	WorkspaceInviteData *WorkspaceInviteNotificationData `json:"workspace_invite_data,omitempty"`
+	GroupMessageData    *GroupMessageNotificationData    `json:"group_message_data,omitempty"`
 }
 
 type DirectMessageNotificationData struct {
@@ -48,6 +52,12 @@ type ChannelMessageNotificationData struct {
 type WorkspaceInviteNotificationData struct {
 	InviterId   entity.UserId
 	WorkspaceId workspace_entity.WorkspaceId
+}
+
+type GroupMessageNotificationData struct {
+	SenderId  entity.UserId
+	GroupId   group_entity.GroupId
+	MessageId group_message_entity.GroupChatMessageId
 }
 
 func (t NotificationType) String() string {

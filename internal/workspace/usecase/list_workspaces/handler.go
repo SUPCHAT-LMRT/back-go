@@ -15,6 +15,17 @@ func NewListWorkspaceHandler(useCase *ListWorkspacesUseCase) *ListWorkspaceHandl
 	return &ListWorkspaceHandler{useCase: useCase}
 }
 
+// Handle récupère la liste des espaces de travail de l'utilisateur connecté
+// @Summary Espaces de travail de l'utilisateur
+// @Description Récupère tous les espaces de travail auxquels l'utilisateur appartient
+// @Tags workspace
+// @Accept json
+// @Produce json
+// @Success 200 {array} map[string]string "Liste des espaces de travail de l'utilisateur"
+// @Failure 401 {object} map[string]string "Utilisateur non authentifié"
+// @Failure 500 {object} map[string]string "Erreur lors de la récupération des espaces de travail"
+// @Router /api/workspaces [get]
+// @Security ApiKeyAuth
 func (l ListWorkspaceHandler) Handle(c *gin.Context) {
 	userVal, exists := c.Get("user")
 	if !exists {
