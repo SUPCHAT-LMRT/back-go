@@ -251,6 +251,8 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			authGroup.POST("/register", d.deps.RegisterHandler.Handle)
 			authGroup.GET("/oauth/:provider", d.deps.RegisterOAuthHandler.Provider)
 			authGroup.GET("/oauth/:provider/callback", d.deps.RegisterOAuthHandler.Callback)
+			authGroup.GET("/oauth/link/:provider", authMiddleware, d.deps.RegisterOAuthHandler.LinkProvider)
+			authGroup.GET("/oauth/link/:provider/callback", authMiddleware, d.deps.RegisterOAuthHandler.LinkCallback)
 			authGroup.DELETE("/delete/:userId", authMiddleware, d.deps.DeleteUserHandler.Handle)
 
 			authGroup.POST("/token/access/renew", d.deps.RefreshTokenHandler.Handle)

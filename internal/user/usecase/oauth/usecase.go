@@ -2,8 +2,10 @@ package oauth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/markbates/goth/providers/github"
+	entity2 "github.com/supchat-lmrt/back-go/internal/user/usecase/oauth/entity"
 	"os"
 	"time"
 
@@ -139,4 +141,41 @@ type OAuthResult struct {
 	AccessTokenLifespan  time.Duration
 	RefreshTokenLifespan time.Duration
 	User                 *entity.User
+}
+
+var ErrAlreadyLinked = errors.New("ce compte est déjà lié à ce fournisseur OAuth")
+
+type LinkOAuthUseCaseDeps struct {
+	uberdig.In
+	OauthConnectionRepository repository.OauthConnectionRepository
+}
+
+type LinkOAuthUseCase struct {
+	deps LinkOAuthUseCaseDeps
+}
+
+func NewLinkOAuthUseCase(deps LinkOAuthUseCaseDeps) *LinkOAuthUseCase {
+	return &LinkOAuthUseCase{deps: deps}
+}
+
+func (u *LinkOAuthUseCase) Execute(
+	ctx context.Context,
+	userId string,
+	provider string,
+	oauthUserId string,
+	oauthEmail string,
+) error {
+	// Vérifier si déjà lié
+	existing, _ := u.deps.OauthConnectionRepository.GetOauthConnectionByUserId(ctx, oauthUserId)
+	if existing != nil {
+		return ErrAlreadyLinked
+	}
+
+	// Créer la connexion OAuth
+	return u.deps.OauthConnectionRepository.CreateOauthConnection(ctx, &entity2.OauthConnection{
+		UserId:      entity.UserId(userId),
+		Provider:    provider,
+		OauthUserId: oauthUserId,
+		OauthEmail:  oauthEmail,
+	})
 }

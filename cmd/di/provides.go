@@ -472,6 +472,7 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(oauth.NewRegisterOAuthHandler),
 		dig.NewProvider(oauth.NewLoginOAuthUseCase),
 		dig.NewProvider(oauth.NewRegisterOAuthUseCase),
+		dig.NewProvider(oauth.NewLinkOAuthUseCase),
 		// User status
 		// User status repositories
 		dig.NewProvider(user_status_repository.NewMongoUserStatusRepository),
