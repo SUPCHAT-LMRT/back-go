@@ -38,6 +38,24 @@ type MessageQuery struct {
 }
 
 //nolint:revive
+
+// Handle récupère les messages d'un canal dans un workspace
+// @Summary Liste des messages d'un canal
+// @Description Retourne les messages d'un canal spécifique avec pagination et filtrage temporel
+// @Tags workspace,channel
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Param channel_id path string true "ID du canal"
+// @Param limit query int false "Nombre maximum de messages à retourner (max 100)" default(20)
+// @Param before query string false "Récupérer les messages avant cette date (format ISO8601)"
+// @Param after query string false "Récupérer les messages après cette date (format ISO8601)"
+// @Param aroundMessageId query string false "Récupérer les messages autour de cet ID de message"
+// @Success 200 {array} ChannelMessageResponse "Liste des messages du canal"
+// @Failure 400 {object} map[string]string "ID de workspace ou canal manquant, ou paramètres de requête invalides"
+// @Failure 500 {object} map[string]string "Erreur lors de la récupération des messages"
+// @Router /api/workspaces/{workspace_id}/channels/{channel_id}/messages [get]
+// @Security ApiKeyAuth
 func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {

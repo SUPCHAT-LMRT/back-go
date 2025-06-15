@@ -16,6 +16,20 @@ func NewAssignRoleToUserHandler(useCase *AssignRoleToUserUsecase) *AssignRoleToU
 	return &AssignRoleToUserHandler{useCase: useCase}
 }
 
+// Handle attribue un rôle à un membre de l'espace de travail
+// @Summary Attribution d'un rôle
+// @Description Attribue un rôle à un membre spécifique de l'espace de travail
+// @Tags workspace,role
+// @Accept json
+// @Produce json
+// @Param body body AssignRoleToUserRequest true "Données d'attribution du rôle"
+// @Success 200 {object} map[string]string "Rôle attribué avec succès"
+// @Failure 400 {object} map[string]string "Requête invalide ou données incomplètes"
+// @Failure 403 {object} map[string]string "Permissions insuffisantes pour attribuer des rôles"
+// @Failure 404 {object} map[string]string "Utilisateur ou rôle non trouvé"
+// @Failure 500 {object} map[string]string "Erreur lors de l'attribution du rôle"
+// @Router /api/workspaces/{workspace_id}/roles/assign [post]
+// @Security ApiKeyAuth
 func (h AssignRoleToUserHandler) Handle(c *gin.Context) {
 	var req AssignRoleToUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

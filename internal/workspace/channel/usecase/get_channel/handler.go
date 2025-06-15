@@ -15,6 +15,19 @@ func NewGetChannelHandler(useCase *GetChannelUseCase) *GetChannelHandler {
 	return &GetChannelHandler{useCase: useCase}
 }
 
+// Handle récupère les informations d'un canal spécifique
+// @Summary Détails d'un canal
+// @Description Récupère les informations détaillées d'un canal dans un espace de travail
+// @Tags workspace,channel
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Param channel_id path string true "ID du canal"
+// @Success 200 {object} ChannelResponse "Informations détaillées du canal"
+// @Failure 404 {object} map[string]string "Canal non trouvé"
+// @Failure 500 {object} map[string]string "Erreur lors de la récupération des informations du canal"
+// @Router /api/workspaces/{workspace_id}/channels/{channel_id} [get]
+// @Security ApiKeyAuth
 func (h *GetChannelHandler) Handle(c *gin.Context) {
 	channelId := c.Param("channel_id")
 	channel, err := h.useCase.Execute(c.Request.Context(), entity.ChannelId(channelId))

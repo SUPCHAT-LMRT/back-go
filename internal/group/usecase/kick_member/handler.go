@@ -22,6 +22,20 @@ func NewKickMemberHandler(deps KickMemberHandlerDeps) *KickMemberHandler {
 	}
 }
 
+// Handle expulse un membre d'un groupe de discussion
+// @Summary Expulser un membre du groupe
+// @Description Expulse un utilisateur spécifique d'un groupe de discussion
+// @Tags group
+// @Accept json
+// @Produce json
+// @Param group_id path string true "ID du groupe"
+// @Param request body models.KickMemberRequest true "ID du membre à expulser"
+// @Success 200 "Membre expulsé avec succès"
+// @Failure 400 {object} map[string]string "Erreur de paramètre"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/groups/{group_id}/members [delete]
+// @Security ApiKeyAuth
 func (h *KickMemberHandler) Handle(c *gin.Context) {
 	groupId := group_entity.GroupId(c.Param("group_id"))
 	var body struct {

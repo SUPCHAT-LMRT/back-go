@@ -31,6 +31,17 @@ type UserResponse struct {
 	Status    string `json:"status"`
 }
 
+// Handle récupère les informations du compte de l'utilisateur authentifié
+// @Summary Obtenir mon compte utilisateur
+// @Description Récupère les informations du compte de l'utilisateur authentifié, y compris son statut actuel
+// @Tags account
+// @Accept json
+// @Produce json
+// @Success 200 {object} get_my_account.UserResponse "Informations de l'utilisateur connecté"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/account/me [get]
+// @Security ApiKeyAuth
 func (g *GetMyUserAccountHandler) Handle(c *gin.Context) {
 	user := c.MustGet("user").(*entity.User) //nolint:revive
 

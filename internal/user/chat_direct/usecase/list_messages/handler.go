@@ -35,6 +35,24 @@ func NewListDirectMessagesHandler(deps ListDirectMessagesHandlerDeps) *ListDirec
 }
 
 //nolint:revive
+
+// Handle récupère les messages directs entre l'utilisateur authentifié et un autre utilisateur
+// @Summary Lister les messages directs
+// @Description Récupère la liste des messages directs échangés entre l'utilisateur authentifié et un autre utilisateur spécifié
+// @Tags chats
+// @Accept json
+// @Produce json
+// @Param other_user_id path string true "ID de l'utilisateur avec qui la conversation est partagée"
+// @Param limit query int false "Nombre maximum de messages à récupérer (défaut: 20, max: 100)" default(20)
+// @Param before query string false "Récupérer les messages avant cette date (format ISO8601)"
+// @Param after query string false "Récupérer les messages après cette date (format ISO8601)"
+// @Param aroundMessageId query string false "Récupérer les messages autour de cet ID de message"
+// @Success 200 {array} list_messages.DirectMessageResponse "Liste des messages directs"
+// @Failure 400 {object} map[string]string "Paramètres invalides"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/chats/direct/{other_user_id}/messages [get]
+// @Security ApiKeyAuth
 func (h *ListDirectMessagesHandler) Handle(c *gin.Context) {
 	authenticatedUser := c.MustGet("user").(*user_entity.User)
 

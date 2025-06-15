@@ -14,6 +14,22 @@ func NewUpdateRoleHandler(useCase *UpdateRoleUseCase) *UpdateRoleHandler {
 	return &UpdateRoleHandler{useCase: useCase}
 }
 
+// Handle met à jour un rôle existant dans l'espace de travail
+// @Summary Mise à jour d'un rôle
+// @Description Met à jour les informations d'un rôle existant (nom, couleur, permissions)
+// @Tags workspace,role
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Param role_id path string true "ID du rôle à mettre à jour"
+// @Param body body UpdateRoleRequest true "Nouvelles informations du rôle"
+// @Success 200 {string} string "Rôle mis à jour avec succès"
+// @Failure 400 {object} map[string]string "Requête invalide ou données incomplètes"
+// @Failure 403 {object} map[string]string "Permissions insuffisantes pour gérer les rôles"
+// @Failure 404 {object} map[string]string "Rôle non trouvé"
+// @Failure 500 {object} map[string]string "Erreur lors de la mise à jour du rôle"
+// @Router /api/workspaces/{workspace_id}/roles/{role_id} [put]
+// @Security ApiKeyAuth
 func (h UpdateRoleHandler) Handle(c *gin.Context) {
 	var req UpdateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

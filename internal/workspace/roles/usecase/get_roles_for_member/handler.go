@@ -14,6 +14,21 @@ func NewGetRolesForMemberHandler(useCase *GetRolesForMemberUsecase) *GetRolesFor
 	return &GetRolesForMemberHandler{useCase: useCase}
 }
 
+// Handle récupère les rôles attribués à un membre spécifique
+// @Summary Rôles d'un membre
+// @Description Récupère tous les rôles attribués à un membre spécifique dans l'espace de travail
+// @Tags workspace,role,member
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Param user_id path string true "ID de l'utilisateur"
+// @Success 200 {object} map[string]string "Liste des rôles du membre"
+// @Failure 400 {object} map[string]string "ID de l'espace de travail ou de l'utilisateur manquant"
+// @Failure 403 {object} map[string]string "Permissions insuffisantes pour gérer les rôles"
+// @Failure 404 {object} map[string]string "Membre non trouvé dans l'espace de travail"
+// @Failure 500 {object} map[string]string "Erreur lors de la récupération des rôles"
+// @Router /api/workspaces/{workspace_id}/roles/members/{user_id} [get]
+// @Security ApiKeyAuth
 func (h GetRolesForMemberHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	userId := c.Param("user_id")

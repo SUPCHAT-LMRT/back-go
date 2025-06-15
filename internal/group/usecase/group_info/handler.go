@@ -19,6 +19,18 @@ func NewGetGroupInfoHandler(useCase *GetGroupInfoUseCase) *GetGroupInfoHandler {
 	}
 }
 
+// Handle récupère les informations d'un groupe de discussion
+// @Summary Obtenir les informations du groupe
+// @Description Récupère les informations détaillées d'un groupe de discussion, y compris la liste de ses membres
+// @Tags group
+// @Accept json
+// @Produce json
+// @Param group_id path string true "ID du groupe"
+// @Success 200 {object} GroupInfoResponse "Informations du groupe"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/groups/{group_id} [get]
+// @Security ApiKeyAuth
 func (h *GetGroupInfoHandler) Handle(c *gin.Context) {
 	groupId := c.Param("group_id")
 

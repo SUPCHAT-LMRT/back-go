@@ -20,6 +20,21 @@ func NewReorderChannelHandler(reorderUseCase *ReorderChannelsUseCase) *ReorderCh
 	return &ReorderChannelHandler{reorderUseCase: reorderUseCase}
 }
 
+// Handle réorganise l'ordre des canaux dans un espace de travail
+// @Summary Réorganisation des canaux
+// @Description Modifie l'ordre d'affichage des canaux dans un espace de travail
+// @Tags workspace,channel
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Param channels body []ReorderChannelRequest true "Liste des canaux à réordonner avec leur nouvel index"
+// @Success 200 {string} string "Canaux réorganisés avec succès"
+// @Failure 400 {object} map[string]string "Requête invalide ou mal formée"
+// @Failure 403 {object} map[string]string "Permissions insuffisantes pour réorganiser les canaux"
+// @Failure 404 {object} map[string]string "Canal non trouvé"
+// @Failure 500 {object} map[string]string "Erreur lors de la réorganisation des canaux"
+// @Router /api/workspaces/{workspace_id}/channels/reorder [post]
+// @Security ApiKeyAuth
 func (h *ReorderChannelHandler) Handle(c *gin.Context) {
 	var requests []ReorderChannelRequest
 	if err := c.ShouldBindJSON(&requests); err != nil {

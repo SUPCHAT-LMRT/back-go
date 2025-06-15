@@ -23,6 +23,17 @@ func NewRequestResetPasswordHandler(
 	}
 }
 
+// Handle envoie un email avec un lien de réinitialisation de mot de passe
+// @Summary Demande de réinitialisation de mot de passe
+// @Description Envoie un email avec un lien permettant à l'utilisateur de réinitialiser son mot de passe
+// @Tags account
+// @Accept json
+// @Produce json
+// @Success 200 {string} string "Email envoyé avec succès"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur lors de l'envoi de l'email"
+// @Router /api/account/reset-password/request [post]
+// @Security ApiKeyAuth
 func (h *RequestResetPasswordHandler) Handle(c *gin.Context) {
 	loggedInUser, ok := c.Get("user")
 	if !ok {

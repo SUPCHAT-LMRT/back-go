@@ -17,6 +17,20 @@ func NewUpdateInfoWorkspacesHandler(
 	return &UpdateInfoWorkspacesHandler{useCase: useCase}
 }
 
+// Handle met à jour les informations d'un espace de travail
+// @Summary Mise à jour des informations de l'espace de travail
+// @Description Modifie le nom et le sujet d'un espace de travail
+// @Tags workspace
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Param request body object true "Informations à mettre à jour"
+// @Success 200 {object} nil "Informations mises à jour avec succès"
+// @Failure 400 {object} map[string]string "ID de l'espace de travail manquant ou requête invalide"
+// @Failure 403 {object} map[string]string "Utilisateur non autorisé dans cet espace de travail"
+// @Failure 500 {object} map[string]string "Erreur lors de la mise à jour des informations"
+// @Router /api/workspaces/{workspace_id} [put]
+// @Security ApiKeyAuth
 func (h *UpdateInfoWorkspacesHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {

@@ -17,6 +17,20 @@ func NewUpdateAccountPersonalInformationsHandler(
 	return &UpdateAccountPersonalInformationsHandler{useCase: useCase}
 }
 
+// Handle met à jour les informations personnelles d'un utilisateur
+// @Summary Mise à jour des informations personnelles
+// @Description Met à jour le prénom, le nom et l'email d'un utilisateur spécifique
+// @Tags account
+// @Accept json
+// @Produce json
+// @Param user_id path string true "ID de l'utilisateur"
+// @Param request body object true "Nouvelles informations personnelles"
+// @Success 204 {string} string "Informations mises à jour avec succès"
+// @Failure 400 {object} map[string]string "Paramètres invalides ou corps de requête incorrect"
+// @Failure 404 {object} map[string]string "Utilisateur non trouvé"
+// @Failure 500 {object} map[string]string "Erreur lors de la mise à jour des informations"
+// @Router /api/account/{user_id} [put]
+// @Security ApiKeyAuth
 func (h *UpdateAccountPersonalInformationsHandler) Handle(c *gin.Context) {
 	var body struct {
 		FirstName string `json:"firstName" binding:"required"`

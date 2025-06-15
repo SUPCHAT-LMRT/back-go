@@ -25,6 +25,17 @@ func NewListRecentChatsHandler(deps ListRecentChatsHandlerDeps) *ListRecentChats
 	return &ListRecentChatsHandler{deps: deps}
 }
 
+// Handle récupère la liste des conversations récentes d'un utilisateur
+// @Summary Lister les conversations récentes
+// @Description Récupère toutes les conversations récentes de l'utilisateur authentifié
+// @Tags chat
+// @Accept json
+// @Produce json
+// @Success 200 {array} RecentChatResponse "Liste des conversations récentes"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/chats/recents [get]
+// @Security ApiKeyAuth
 func (h *ListRecentChatsHandler) Handle(c *gin.Context) {
 	authenticatedUser := c.MustGet("user").(*user_entity.User) //nolint:revive
 

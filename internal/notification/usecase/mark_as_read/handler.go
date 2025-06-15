@@ -16,6 +16,19 @@ func NewMarkAsReadHandler(useCase *MarkAsReadUseCase) *MarkAsReadHandler {
 	}
 }
 
+// Handle marque une notification comme lue
+// @Summary Marquer une notification comme lue
+// @Description Change l'état d'une notification spécifique pour la marquer comme lue
+// @Tags notification
+// @Accept json
+// @Produce json
+// @Param id path string true "ID de la notification"
+// @Success 204 "Notification marquée comme lue avec succès"
+// @Failure 400 {object} map[string]string "Erreur de paramètre"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/notifications/{id}/read [patch]
+// @Security ApiKeyAuth
 func (h *MarkAsReadHandler) Handle(c *gin.Context) {
 	notificationId := c.Param("id")
 	if notificationId == "" {
