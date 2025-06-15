@@ -2,7 +2,6 @@ package save_message
 
 import (
 	"context"
-
 	"github.com/supchat-lmrt/back-go/internal/search/message"
 	chat_message_entity "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/entity"
 	chat_message_repository "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/repository"
@@ -20,6 +19,7 @@ type SaveChannelMessageUseCaseDeps struct {
 	GetChannelUseCase         *get_channel.GetChannelUseCase
 	GetWorkspaceMemberUseCase *get_workpace_member.GetWorkspaceMemberUseCase
 	SearchMessageSyncManager  message.SearchMessageSyncManager
+	Observers                 []MessageSavedObserver `group:"save_channel_message_observers"`
 }
 
 type SaveChannelMessageUseCase struct {
@@ -77,6 +77,10 @@ func (u SaveChannelMessageUseCase) Execute(
 	if err != nil {
 		return err
 	}
+	// Notifier les observateurs
+	for _, observer := range u.deps.Observers {
+		observer.NotifyMessageSaved(msg)
+	}
 
-	return err
+	return nil
 }

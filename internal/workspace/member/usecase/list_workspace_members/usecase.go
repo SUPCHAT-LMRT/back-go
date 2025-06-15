@@ -1,4 +1,4 @@
-package list_workpace_members
+package list_workspace_members
 
 import (
 	"context"

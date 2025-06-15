@@ -22,5 +22,5 @@ func (u *ListNotificationsUseCase) Execute(
 	ctx context.Context,
 	userId user_entity.UserId,
 ) ([]*entity.Notification, error) {
-	return u.notificationRepository.List(ctx, userId)
+	return u.notificationRepository.ListUnread(ctx, userId)
 }
