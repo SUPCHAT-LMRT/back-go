@@ -30,13 +30,14 @@ type MongoUserRepository struct {
 }
 
 type MongoUser struct {
-	Id        bson.ObjectID `bson:"_id"`
-	FirstName string        `bson:"first_name"`
-	LastName  string        `bson:"last_name"`
-	Email     string        `bson:"email"`
-	Password  string        `bson:"password"`
-	CreatedAt time.Time     `bson:"created_at"`
-	UpdatedAt time.Time     `bson:"updated_at"`
+	Id                  bson.ObjectID `bson:"_id"`
+	FirstName           string        `bson:"first_name"`
+	LastName            string        `bson:"last_name"`
+	Email               string        `bson:"email"`
+	Password            string        `bson:"password"`
+	NotificationEnabled bool          `bson:"notification_enabled"`
+	CreatedAt           time.Time     `bson:"created_at"`
+	UpdatedAt           time.Time     `bson:"updated_at"`
 }
 
 func NewMongoUserRepository(deps MongoUserRepositoryDeps) repository.UserRepository {
@@ -194,6 +195,37 @@ func (r MongoUserRepository) Delete(ctx context.Context, userId entity.UserId) e
 	_, err = r.deps.Client.Client.Database(databaseName).
 		Collection(collectionName).
 		DeleteOne(ctx, bson.M{"_id": objectId})
+	if err != nil {
+		if errors.Is(err, mongo2.ErrNoDocuments) {
+			return repository.ErrUserNotFound
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (r MongoUserRepository) UpdateNotificationSettings(
+	ctx context.Context,
+	userId entity.UserId,
+	enabled bool,
+) error {
+	userObjectId, err := bson.ObjectIDFromHex(userId.String())
+	if err != nil {
+		return err
+	}
+
+	_, err = r.deps.Client.Client.Database(databaseName).
+		Collection(collectionName).
+		UpdateOne(
+			ctx,
+			bson.M{"_id": userObjectId},
+			bson.M{"$set": bson.M{
+				"notifications_enabled": enabled,
+				"updated_at":            time.Now(),
+			}},
+		)
+
 	if err != nil {
 		if errors.Is(err, mongo2.ErrNoDocuments) {
 			return repository.ErrUserNotFound
