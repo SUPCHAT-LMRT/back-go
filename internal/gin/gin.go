@@ -235,7 +235,7 @@ func NewGinRouter(deps GinRouterDeps) GinRouter {
 }
 
 func (d *DefaultGinRouter) RegisterRoutes() {
-	d.Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	d.Router.GET("/api/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	authMiddleware := d.deps.AuthMiddleware.Execute
 	userInWorkspaceMiddleware := d.deps.UserInWorkspaceMiddleware.Execute
 	hasPermissionsMiddleware := d.deps.HasMembersPermissionsMiddleware.Execute

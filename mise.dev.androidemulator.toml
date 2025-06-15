@@ -14,9 +14,3 @@ DOMAIN = "10.0.2.2"
 
 [tasks.build-push]
 run = "docker compose -f ../docker-compose.yaml build back && docker compose -f ../docker-compose.yaml push back"
-
-[tasks.start-db]
-run = "docker compose -f ../docker-compose.yaml up -d mongo redis minio meilisearch"
-
-[tasks.stop]
-run = "docker compose -f ../docker-compose.yaml down"
