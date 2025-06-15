@@ -13,10 +13,4 @@ CORS_ORIGIN = "http://localhost:5173"
 DOMAIN = "localhost"
 
 [tasks.build-push]
-run = "docker compose -f ../docker-compose.yaml build back && docker compose -f ../docker-compose.yaml push back"
-
-[tasks.start-db]
-run = "docker compose -f ../docker-compose.yaml up -d mongo redis minio meilisearch"
-
-[tasks.stop]
-run = "docker compose -f ../docker-compose.yaml down"
+run = "docker buildx build --platform=linux/amd64,linux/arm64 -t ghcr.io/supchat-lmrt/back-go:dev --push ."
