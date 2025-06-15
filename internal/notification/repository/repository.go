@@ -14,6 +14,7 @@ type NotificationRepository interface {
 	Create(ctx context.Context, notification *entity.Notification) error
 	GetById(ctx context.Context, notificationId entity.NotificationId) (*entity.Notification, error)
 	List(ctx context.Context, userId user_entity.UserId) ([]*entity.Notification, error)
+	ListUnread(ctx context.Context, userId user_entity.UserId) ([]*entity.Notification, error)
 	Update(ctx context.Context, notification *entity.Notification) error
 	Delete(ctx context.Context, notificationId entity.NotificationId) error
 }

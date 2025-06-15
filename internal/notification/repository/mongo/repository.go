@@ -3,6 +3,7 @@ package mongo
 import (
 	"context"
 	"errors"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"time"
 
 	"github.com/supchat-lmrt/back-go/internal/mapper"
@@ -115,6 +116,36 @@ func (r MongoNotificationRepository) List(ctx context.Context, userId user_entit
 		return nil, err
 	}
 
+	for cursor.Next(ctx) {
+		var mongoNotification *MongoNotification
+		err = cursor.Decode(&mongoNotification)
+		if err != nil {
+			return nil, err
+		}
+
+		notification, err := r.deps.NotificationMapper.MapToEntity(mongoNotification)
+		if err != nil {
+			return nil, err
+		}
+
+		notifications = append(notifications, notification)
+	}
+
+	return notifications, nil
+}
+
+func (r MongoNotificationRepository) ListUnread(ctx context.Context, userId user_entity.UserId) ([]*entity.Notification, error) {
+	notificationUserObjectId, err := bson.ObjectIDFromHex(string(userId))
+	if err != nil {
+		return nil, err
+	}
+	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
+	cursor, err := r.deps.Client.Client.Database(databaseName).Collection(collectionName).Find(ctx, bson.M{"user_id": notificationUserObjectId, "is_read": false}, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	var notifications []*entity.Notification
 	for cursor.Next(ctx) {
 		var mongoNotification *MongoNotification
 		err = cursor.Decode(&mongoNotification)

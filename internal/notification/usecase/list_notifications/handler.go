@@ -2,6 +2,7 @@ package list_notifications
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/supchat-lmrt/back-go/internal/notification/entity"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"net/http"
 )
@@ -17,16 +18,15 @@ func NewListNotificationsHandler(useCase *ListNotificationsUseCase) *ListNotific
 }
 
 func (h *ListNotificationsHandler) Handle(c *gin.Context) {
-	userId := c.Query("user_id")
-	if userId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user_id is required"})
-		return
-	}
+	user := c.MustGet("user").(*user_entity.User) //nolint:revive
 
-	notifications, err := h.ListNotificationsUseCase.Execute(c.Request.Context(), user_entity.UserId(userId))
+	notifications, err := h.ListNotificationsUseCase.Execute(c.Request.Context(), user.Id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+	if len(notifications) == 0 {
+		notifications = []*entity.Notification{}
 	}
 	c.JSON(http.StatusOK, notifications)
 }
