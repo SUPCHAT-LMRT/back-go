@@ -20,6 +20,7 @@ type UserRepository interface {
 	List(ctx context.Context) (users []*entity.User, err error)
 	Update(ctx context.Context, user *entity.User) error
 	Delete(ctx context.Context, userId entity.UserId) error
+	UpdateNotificationSettings(ctx context.Context, userId entity.UserId, enabled bool) error
 }
 
 type getUserOptions struct {
