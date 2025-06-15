@@ -12,6 +12,7 @@ type User struct {
 	LastName  string
 	Email     string
 	Password  string
+	//pushId DevideId
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

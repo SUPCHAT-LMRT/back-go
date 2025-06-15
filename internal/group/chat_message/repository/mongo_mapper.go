@@ -35,14 +35,23 @@ func (m *MongoGroupChatMessageMapper) MapToEntity(
 		})
 	}
 
+	attachments := make([]*entity.GroupChatMessageAttachment, len(model.Attachments))
+	for i, attachment := range model.Attachments {
+		attachments[i] = &entity.GroupChatMessageAttachment{
+			Id:       entity.GroupChatAttachmentId(attachment.Id.Hex()),
+			FileName: attachment.FileName,
+		}
+	}
+
 	return &entity.GroupChatMessage{
-		Id:        entity.GroupChatMessageId(model.Id.Hex()),
-		GroupId:   group_entity.GroupId(model.GroupId.Hex()),
-		AuthorId:  user_entity.UserId(model.SenderId.Hex()),
-		Content:   model.Content,
-		Reactions: messageReactions,
-		CreatedAt: model.CreatedAt,
-		UpdatedAt: model.UpdatedAt,
+		Id:          entity.GroupChatMessageId(model.Id.Hex()),
+		GroupId:     group_entity.GroupId(model.GroupId.Hex()),
+		AuthorId:    user_entity.UserId(model.SenderId.Hex()),
+		Content:     model.Content,
+		Reactions:   messageReactions,
+		Attachments: attachments,
+		CreatedAt:   model.CreatedAt,
+		UpdatedAt:   model.UpdatedAt,
 	}, nil
 }
 
@@ -91,13 +100,27 @@ func (m *MongoGroupChatMessageMapper) MapFromEntity(
 		})
 	}
 
+	attachments := make([]*MongoMessageAttachment, len(entity.Attachments))
+	for i, attachment := range entity.Attachments {
+		attachmentId, err := bson.ObjectIDFromHex(string(attachment.Id))
+		if err != nil {
+			attachmentId = bson.NewObjectID()
+		}
+
+		attachments[i] = &MongoMessageAttachment{
+			Id:       attachmentId,
+			FileName: attachment.FileName,
+		}
+	}
+
 	return &MongoGroupChatMessage{
-		Id:        msgId,
-		GroupId:   groupId,
-		SenderId:  senderId,
-		Content:   entity.Content,
-		Reactions: reactions,
-		CreatedAt: entity.CreatedAt,
-		UpdatedAt: entity.UpdatedAt,
+		Id:          msgId,
+		GroupId:     groupId,
+		SenderId:    senderId,
+		Content:     entity.Content,
+		Reactions:   reactions,
+		Attachments: attachments,
+		CreatedAt:   entity.CreatedAt,
+		UpdatedAt:   entity.UpdatedAt,
 	}, nil
 }

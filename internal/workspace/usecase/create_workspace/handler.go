@@ -17,6 +17,19 @@ func NewCreateWorkspaceHandler(useCase *CreateWorkspaceUseCase) *CreateWorkspace
 	return &CreateWorkspaceHandler{useCase: useCase}
 }
 
+// Handle crée un nouvel espace de travail et y ajoute l'utilisateur comme propriétaire
+// @Summary Création d'un espace de travail
+// @Description Crée un nouvel espace de travail avec l'utilisateur connecté comme propriétaire
+// @Tags workspace
+// @Accept json
+// @Produce json
+// @Param body body object true "Informations de l'espace de travail"
+// @Success 201 {object} map[string]string "Espace de travail créé avec succès"
+// @Failure 400 {object} map[string]string "Requête invalide ou données incomplètes"
+// @Failure 401 {object} map[string]string "Utilisateur non authentifié"
+// @Failure 500 {object} map[string]string "Erreur lors de la création de l'espace de travail"
+// @Router /api/workspaces [post]
+// @Security ApiKeyAuth
 func (l CreateWorkspaceHandler) Handle(c *gin.Context) {
 	var body struct {
 		Name  string `json:"name" binding:"required"`

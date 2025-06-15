@@ -35,6 +35,24 @@ func NewListDirectMessagesHandler(deps ListDirectMessagesHandlerDeps) *ListDirec
 }
 
 //nolint:revive
+
+// Handle récupère les messages directs entre l'utilisateur authentifié et un autre utilisateur
+// @Summary Lister les messages directs
+// @Description Récupère la liste des messages directs échangés entre l'utilisateur authentifié et un autre utilisateur spécifié
+// @Tags chats
+// @Accept json
+// @Produce json
+// @Param other_user_id path string true "ID de l'utilisateur avec qui la conversation est partagée"
+// @Param limit query int false "Nombre maximum de messages à récupérer (défaut: 20, max: 100)" default(20)
+// @Param before query string false "Récupérer les messages avant cette date (format ISO8601)"
+// @Param after query string false "Récupérer les messages après cette date (format ISO8601)"
+// @Param aroundMessageId query string false "Récupérer les messages autour de cet ID de message"
+// @Success 200 {array} list_messages.DirectMessageResponse "Liste des messages directs"
+// @Failure 400 {object} map[string]string "Paramètres invalides"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/chats/direct/{other_user_id}/messages [get]
+// @Security ApiKeyAuth
 func (h *ListDirectMessagesHandler) Handle(c *gin.Context) {
 	authenticatedUser := c.MustGet("user").(*user_entity.User)
 
@@ -90,11 +108,20 @@ func (h *ListDirectMessagesHandler) Handle(c *gin.Context) {
 			}
 		}
 
+		attachments := make([]DirectMessageAttachmentResponse, len(message.Attachments))
+		for k, attachment := range message.Attachments {
+			attachments[k] = DirectMessageAttachmentResponse{
+				Id:   attachment.Id.String(),
+				Name: attachment.FileName,
+			}
+		}
+
 		response[i] = DirectMessageResponse{
-			Id:        message.Id.String(),
-			Content:   message.Content,
-			CreatedAt: message.CreatedAt,
-			Reactions: reactions,
+			Id:          message.Id.String(),
+			Content:     message.Content,
+			CreatedAt:   message.CreatedAt,
+			Reactions:   reactions,
+			Attachments: attachments,
 		}
 
 		user, err := h.deps.GetUserByIdUseCase.Execute(c, message.SenderId)
@@ -117,11 +144,12 @@ func (h *ListDirectMessagesHandler) Handle(c *gin.Context) {
 }
 
 type DirectMessageResponse struct {
-	Id        string                          `json:"id"`
-	Content   string                          `json:"content"`
-	Author    DirectMessageAuthorResponse     `json:"author"`
-	CreatedAt time.Time                       `json:"createdAt"`
-	Reactions []DirectMessageReactionResponse `json:"reactions"`
+	Id          string                            `json:"id"`
+	Content     string                            `json:"content"`
+	Author      DirectMessageAuthorResponse       `json:"author"`
+	CreatedAt   time.Time                         `json:"createdAt"`
+	Reactions   []DirectMessageReactionResponse   `json:"reactions"`
+	Attachments []DirectMessageAttachmentResponse `json:"attachments"`
 }
 
 type DirectMessageAuthorResponse struct {
@@ -137,6 +165,11 @@ type DirectMessageReactionResponse struct {
 }
 
 type DirectMessageReactionUserResponse struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type DirectMessageAttachmentResponse struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }

@@ -22,19 +22,25 @@ var (
 )
 
 type MongoGroupChatMessage struct {
-	Id        bson.ObjectID           `bson:"_id"`
-	GroupId   bson.ObjectID           `bson:"group_id"`
-	SenderId  bson.ObjectID           `bson:"sender_id"`
-	Content   string                  `bson:"content"`
-	Reactions []*MongoMessageReaction `bson:"reactions"`
-	CreatedAt time.Time               `bson:"created_at"`
-	UpdatedAt time.Time               `bson:"updated_at"`
+	Id          bson.ObjectID             `bson:"_id"`
+	GroupId     bson.ObjectID             `bson:"group_id"`
+	SenderId    bson.ObjectID             `bson:"sender_id"`
+	Content     string                    `bson:"content"`
+	Reactions   []*MongoMessageReaction   `bson:"reactions"`
+	Attachments []*MongoMessageAttachment `bson:"attachments"`
+	CreatedAt   time.Time                 `bson:"created_at"`
+	UpdatedAt   time.Time                 `bson:"updated_at"`
 }
 
 type MongoMessageReaction struct {
 	Id       bson.ObjectID   `bson:"_id"`
 	Users    []bson.ObjectID `bson:"users"`
 	Reaction string          `bson:"reaction"`
+}
+
+type MongoMessageAttachment struct {
+	Id       bson.ObjectID `bson:"_id"`
+	FileName string        `bson:"file_name"`
 }
 
 type MongoGroupChatRepositoryDeps struct {

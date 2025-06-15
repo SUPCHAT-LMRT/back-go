@@ -32,19 +32,25 @@ type MongoChannelMessageRepository struct {
 }
 
 type MongoChannelMessage struct {
-	Id        bson.ObjectID                  `bson:"_id"`
-	ChannelId bson.ObjectID                  `bson:"channel_id"`
-	AuthorId  bson.ObjectID                  `bson:"user_id"`
-	Content   string                         `bson:"content"`
-	CreatedAt time.Time                      `bson:"created_at"`
-	UpdatedAt time.Time                      `bson:"updated_at"`
-	Reactions []*MongoChannelMessageReaction `bson:"reactions"`
+	Id          bson.ObjectID                    `bson:"_id"`
+	ChannelId   bson.ObjectID                    `bson:"channel_id"`
+	AuthorId    bson.ObjectID                    `bson:"user_id"`
+	Content     string                           `bson:"content"`
+	CreatedAt   time.Time                        `bson:"created_at"`
+	UpdatedAt   time.Time                        `bson:"updated_at"`
+	Reactions   []*MongoChannelMessageReaction   `bson:"reactions"`
+	Attachments []*MongoChannelMessageAttachment `bson:"attachments"`
 }
 
 type MongoChannelMessageReaction struct {
 	Id       bson.ObjectID   `bson:"_id"`
 	Users    []bson.ObjectID `bson:"user_ids"`
 	Reaction string          `bson:"reaction"`
+}
+
+type MongoChannelMessageAttachment struct {
+	Id       bson.ObjectID `bson:"_id"`
+	FileName string        `bson:"file_name"`
 }
 
 func NewMongoChannelMessageRepository(

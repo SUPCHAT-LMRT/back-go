@@ -15,6 +15,19 @@ func NewUpdateUserAvatarHandler(useCase *UpdateUserAvatarUseCase) *UpdateUserAva
 	return &UpdateUserAvatarHandler{useCase: useCase}
 }
 
+// Handle met à jour l'avatar d'un utilisateur
+// @Summary Mise à jour de l'avatar utilisateur
+// @Description Télécharge et associe une nouvelle image d'avatar à l'utilisateur connecté
+// @Tags account
+// @Accept multipart/form-data
+// @Produce json
+// @Param image formData file true "Fichier image de l'avatar"
+// @Success 200 {string} string "Avatar mis à jour avec succès"
+// @Failure 400 {object} map[string]string "Paramètres invalides ou image manquante"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur lors du traitement de l'image ou de la mise à jour de l'avatar"
+// @Router /api/account/avatar [patch]
+// @Security ApiKeyAuth
 func (l UpdateUserAvatarHandler) Handle(c *gin.Context) {
 	userInter, exists := c.Get("user")
 	if !exists {

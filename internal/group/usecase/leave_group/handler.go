@@ -22,6 +22,19 @@ func NewLeaveGroupHandler(useCase *kick_member.KickMemberUseCase, repository rep
 	}
 }
 
+// Handle permet à un utilisateur de quitter un groupe de discussion
+// @Summary Quitter un groupe
+// @Description Permet à l'utilisateur actuel de quitter un groupe de discussion
+// @Tags group
+// @Accept json
+// @Produce json
+// @Param group_id path string true "ID du groupe"
+// @Success 204 "Groupe quitté avec succès"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 404 {object} map[string]string "Groupe non trouvé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/groups/{group_id} [delete]
+// @Security ApiKeyAuth
 func (h *LeaveGroupHandler) Handle(c *gin.Context) {
 	groupId := group_entity.GroupId(c.Param("group_id"))
 

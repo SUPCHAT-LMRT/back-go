@@ -30,15 +30,24 @@ func (m ChatDirectMapper) MapToEntity(
 		}
 	}
 
+	attachments := make([]*chat_direct_entity.ChatDirectAttachment, len(mongo.Attachments))
+	for i, attachment := range mongo.Attachments {
+		attachments[i] = &chat_direct_entity.ChatDirectAttachment{
+			Id:       chat_direct_entity.ChatDirectAttachmentId(attachment.Id.Hex()),
+			FileName: attachment.FileName,
+		}
+	}
+
 	return &chat_direct_entity.ChatDirect{
-		Id:        chat_direct_entity.ChatDirectId(mongo.Id.Hex()),
-		SenderId:  entity.UserId(mongo.SenderId.Hex()),
-		User1Id:   entity.UserId(mongo.User1Id.Hex()),
-		User2Id:   entity.UserId(mongo.User2Id.Hex()),
-		Content:   mongo.Content,
-		Reactions: reactions,
-		CreatedAt: mongo.CreatedAt,
-		UpdatedAt: mongo.UpdatedAt,
+		Id:          chat_direct_entity.ChatDirectId(mongo.Id.Hex()),
+		SenderId:    entity.UserId(mongo.SenderId.Hex()),
+		User1Id:     entity.UserId(mongo.User1Id.Hex()),
+		User2Id:     entity.UserId(mongo.User2Id.Hex()),
+		Content:     mongo.Content,
+		Reactions:   reactions,
+		Attachments: attachments,
+		CreatedAt:   mongo.CreatedAt,
+		UpdatedAt:   mongo.UpdatedAt,
 	}, nil
 }
 
@@ -90,14 +99,28 @@ func (m ChatDirectMapper) MapFromEntity(
 		}
 	}
 
+	attachments := make([]*MongoChatDirectAttachment, len(entity.Attachments))
+	for i, attachment := range entity.Attachments {
+		attachmentObjectId, err := bson.ObjectIDFromHex(string(attachment.Id))
+		if err != nil {
+			return nil, err
+		}
+
+		attachments[i] = &MongoChatDirectAttachment{
+			Id:       attachmentObjectId,
+			FileName: attachment.FileName,
+		}
+	}
+
 	return &MongoChatDirect{
-		Id:        chatObjectId,
-		SenderId:  senderId,
-		User1Id:   user1Id,
-		User2Id:   user2Id,
-		Content:   entity.Content,
-		Reactions: reactions,
-		UpdatedAt: entity.UpdatedAt,
-		CreatedAt: entity.CreatedAt,
+		Id:          chatObjectId,
+		SenderId:    senderId,
+		User1Id:     user1Id,
+		User2Id:     user2Id,
+		Content:     entity.Content,
+		Reactions:   reactions,
+		Attachments: attachments,
+		UpdatedAt:   entity.UpdatedAt,
+		CreatedAt:   entity.CreatedAt,
 	}, nil
 }

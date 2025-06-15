@@ -3,6 +3,7 @@ package di
 import (
 	"fmt"
 	"github.com/supchat-lmrt/back-go/internal/data/usecase/export_all_user_data"
+	create_attachment3 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/create_attachment"
 	save_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/delete_message"
 	"github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/edit_message"
 	get_last_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/get_last_message"
@@ -18,16 +19,23 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/transfer_ownership"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/search/group"
+	create_attachment2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/create_attachment"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/delete_message"
 	edit_message2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/edit_message"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/export_data_chat_direct"
 	get_message2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/get_message"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/export_user_data"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/create_attachment"
 	delete_message2 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/delete_message"
 	edit_message3 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/edit_message"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/export_data_chat_message"
 	get_message3 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/get_message"
 	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/export_data_user_workspace"
+	"github.com/supchat-lmrt/back-go/internal/mention/usecase/extract_mentions"
+	"github.com/supchat-lmrt/back-go/internal/mention/usecase/list_mentionnable_user"
+	"github.com/supchat-lmrt/back-go/internal/notification/usecase/list_notifications"
+	"github.com/supchat-lmrt/back-go/internal/notification/usecase/mark_as_read"
+	send_notification2 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/send_notification"
 	"log"
 	"os"
 	"reflect"
@@ -55,6 +63,8 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/mail"
 	"github.com/supchat-lmrt/back-go/internal/meilisearch"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
+	mongo3 "github.com/supchat-lmrt/back-go/internal/notification/repository/mongo"
+	"github.com/supchat-lmrt/back-go/internal/notification/usecase/create_notification"
 	"github.com/supchat-lmrt/back-go/internal/redis"
 	"github.com/supchat-lmrt/back-go/internal/s3"
 	"github.com/supchat-lmrt/back-go/internal/search/channel"
@@ -77,7 +87,7 @@ import (
 	list_direct_messages "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_messages"
 	list_recent_chats_direct "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/list_recent_direct_chats"
 	save_direct_message "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/save_message"
-	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/send_message_notification"
+	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/send_notification"
 	toggle_chat_direct_reaction "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/toggle_reaction"
 	"github.com/supchat-lmrt/back-go/internal/user/gin/middlewares"
 	mongo2 "github.com/supchat-lmrt/back-go/internal/user/repository/mongo"
@@ -147,7 +157,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/join_workspace_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/is_user_in_workspace"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/kick_member"
-	list_workpace_members2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workpace_members"
+	list_workpace_members2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workspace_members"
 	workspace_repository "github.com/supchat-lmrt/back-go/internal/workspace/repository"
 	has_permissions "github.com/supchat-lmrt/back-go/internal/workspace/roles/gin/middlewares"
 	roles_repository "github.com/supchat-lmrt/back-go/internal/workspace/roles/repository"
@@ -337,11 +347,15 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(count_messages_by_workspace.NewCountMessagesUseCase),
 		// Workspace channels chat handlers
 		dig.NewProvider(list_messages.NewListChannelMessagesHandler),
+		dig.NewProvider(create_attachment.NewCreateChannelMessageAttachmentHandler),
 		// Workspace channels chat messages usecases
 		dig.NewProvider(save_message.NewSaveChannelMessageUseCase),
 		dig.NewProvider(get_message3.NewGetMessageUseCase),
 		dig.NewProvider(edit_message3.NewEditChannelChatMessageUseCase),
 		dig.NewProvider(delete_message2.NewDeleteChannelChatMessageUseCase),
+		dig.NewProvider(create_attachment.NewCreateChatDirectAttachmentUseCase),
+		dig.NewProvider(create_attachment.NewS3FileUploadStrategy),
+		dig.NewProvider(create_attachment.NewNotifyWebsocketObserver, uberdig.Group("create_channel_messages_attachment_observer")),
 		// Workspace time series
 		// Workspace time series message sent
 		// Workspace time series message sent repository
@@ -365,6 +379,12 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(join_workspace_invite.NewJoinWorkspaceInviteHandler),
 		// Workspace member repository
 		dig.NewProvider(repository.NewMongoWorkspaceMemberRepository),
+		// Workspace notification
+		dig.NewProvider(send_notification2.NewSendMessageNotificationUseCase),
+		dig.NewProvider(send_notification2.NewEmailChannel, uberdig.Group("send_channelmessage_notification_channel")),
+		dig.NewProvider(send_notification2.NewPushChannel, uberdig.Group("send_channelmessage_notification_channel")),
+		dig.NewProvider(save_message.NewSendNotificationObserver, uberdig.Group("save_channel_message_observers")),
+		dig.NewProvider(save_message.NewGetMentionObserver, uberdig.Group("save_channel_message_observers")),
 		// User
 		dig.NewProvider(mongo2.NewMongoUserRepository),
 		dig.NewProvider(mongo2.NewMongoUserMapper),
@@ -466,8 +486,12 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(is_first_message.NewIsFirstMessageUseCase),
 		dig.NewProvider(list_direct_messages.NewListDirectMessagesUseCase),
 		dig.NewProvider(toggle_chat_direct_reaction.NewToggleReactionDirectMessageUseCase),
+		dig.NewProvider(create_attachment2.NewCreateChatDirectAttachmentUseCase),
+		dig.NewProvider(create_attachment2.NewS3FileUploadStrategy),
+		dig.NewProvider(create_attachment2.NewNotifyWebsocketObserver, uberdig.Group("create_chat_direct_attachment_observer")),
 		// USer chat direct handlers
 		dig.NewProvider(list_direct_messages.NewListDirectMessagesHandler),
+		dig.NewProvider(create_attachment2.NewCreateChatDirectAttachmentHandler),
 		// User Oauth handler & usecase
 		dig.NewProvider(oauth.NewRegisterOAuthHandler),
 		dig.NewProvider(oauth.NewLoginOAuthUseCase),
@@ -585,8 +609,12 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(toggle_reaction2.NewToggleGroupChatReactionUseCase),
 		dig.NewProvider(transfer_ownership.NewTransferGroupOwnershipUseCase),
 		dig.NewProvider(transfer_ownership.NewNotifyTransferGroupOwnershipObserver, uberdig.Group("transfer_group_ownership_observers")),
+		dig.NewProvider(create_attachment3.NewCreateGroupAttachmentUseCase),
+		dig.NewProvider(create_attachment3.NewS3FileUploadStrategy),
+		dig.NewProvider(create_attachment3.NewNotifyWebsocketObserver, uberdig.Group("create_group_attachment_observer")),
 		// Group chats handlers
 		dig.NewProvider(list_group_chat_messages.NewListGroupChatMessagesHandler),
+		dig.NewProvider(create_attachment3.NewCreateGroupAttachmentHandler),
 		// Search
 		// Search usecases
 		dig.NewProvider(search.NewSearchTermUseCase),
@@ -620,16 +648,19 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(assign_job.NewAssignJobHandler),
 		dig.NewProvider(unassign_job.NewUnassignJobHandler),
 		dig.NewProvider(get_job_for_user.NewGetJobForUserHandler),
-		dig.NewProvider(
-			send_message_notification.NewEmailChannel,
-			uberdig.Group("send_message_notification_channel"),
-		),
-		dig.NewProvider(
-			send_message_notification.NewPushChannel,
-			uberdig.Group("send_message_notification_channel"),
-		),
-		dig.NewProvider(send_message_notification.NewSendMessageNotificationUseCase),
+		// Notifications
+		dig.NewProvider(create_notification.NewCreateNotificationUseCase),
+		dig.NewProvider(mongo3.NewMongoNotificationRepository),
+		dig.NewProvider(mongo3.NewMongoNotificationMapper),
+		dig.NewProvider(send_notification.NewEmailChannel, uberdig.Group("send_directmessage_notification_channel")),
+		dig.NewProvider(send_notification.NewPushChannel, uberdig.Group("send_directmessage_notification_channel")),
+		dig.NewProvider(send_notification.NewSendMessageNotificationUseCase),
 		dig.NewProvider(permissions2.NewCheckUserPermissionsHandler),
+		dig.NewProvider(list_notifications.NewListNotificationsHandler),
+		dig.NewProvider(list_notifications.NewListNotificationsUseCase),
+		dig.NewProvider(mark_as_read.NewMarkAsReadUseCase),
+		dig.NewProvider(mark_as_read.NewMarkAsReadHandler),
+
 		// bots
 		// bots repository
 		dig.NewProvider(poll.NewMongoPollMapper),
@@ -648,6 +679,10 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(delete_poll.NewDeletePollHandler),
 		dig.NewProvider(vote_option_poll.NewVoteOptionPollHandler),
 		dig.NewProvider(unvote_option_poll.NewUnvoteOptionPollHandler),
+		// Mentions
+		dig.NewProvider(list_mentionnable_user.NewListMentionnableUserUseCase),
+		dig.NewProvider(list_mentionnable_user.NewListMentionnableUserHandler),
+		dig.NewProvider(extract_mentions.NewExtractMentionsUseCase),
 		// export data
 		// export data usecases
 		dig.NewProvider(export_all_user_data.NewExportAllUserDataUseCase),

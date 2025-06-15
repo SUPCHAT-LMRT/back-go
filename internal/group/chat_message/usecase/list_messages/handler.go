@@ -36,6 +36,23 @@ type MessageQuery struct {
 	AroundMessageId string    `form:"aroundMessageId"`
 }
 
+// Handle récupère la liste des messages d'un groupe
+// @Summary Lister les messages d'un groupe
+// @Description Récupère les messages d'un groupe spécifique
+// @Tags group-chat
+// @Accept json
+// @Produce json
+// @Param group_id path string true "ID du groupe"
+// @Param limit query int false "Nombre maximum de messages à récupérer" default(20) maximum(100)
+// @Param before query string false "Récupérer les messages avant cette date (format ISO)"
+// @Param after query string false "Récupérer les messages après cette date (format ISO)"
+// @Param aroundMessageId query string false "Récupérer les messages autour de ce message"
+// @Success 200 {array} list_messages.GroupChatMessageResponse "Liste des messages"
+// @Failure 400 {object} map[string]string "Requête invalide"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/groups/{group_id}/messages [get]
+// @Security ApiKeyAuth
 func (h *ListGroupChatMessagesHandler) Handle(c *gin.Context) {
 	groupId := c.Param("group_id")
 	if groupId == "" {
@@ -84,12 +101,21 @@ func (h *ListGroupChatMessagesHandler) Handle(c *gin.Context) {
 			}
 		}
 
+		attachments := make([]GroupMessageAttachmentResponse, len(message.Attachments))
+		for k, attachment := range message.Attachments {
+			attachments[k] = GroupMessageAttachmentResponse{
+				Id:   attachment.Id.String(),
+				Name: attachment.FileName,
+			}
+		}
+
 		response[i] = GroupChatMessageResponse{
-			Id:        message.Id.String(),
-			GroupId:   message.GroupId.String(),
-			Content:   message.Content,
-			Reactions: reactions,
-			CreatedAt: message.CreatedAt,
+			Id:          message.Id.String(),
+			GroupId:     message.GroupId.String(),
+			Content:     message.Content,
+			Reactions:   reactions,
+			Attachments: attachments,
+			CreatedAt:   message.CreatedAt,
 		}
 
 		user, err := h.deps.GetUserByIdUseCase.Execute(c, message.AuthorId)
@@ -112,12 +138,13 @@ func (h *ListGroupChatMessagesHandler) Handle(c *gin.Context) {
 }
 
 type GroupChatMessageResponse struct {
-	Id        string                         `json:"id"`
-	GroupId   string                         `json:"groupId"`
-	Content   string                         `json:"content"`
-	Author    GroupMessageAuthorResponse     `json:"author"`
-	Reactions []GroupMessageReactionResponse `json:"reactions"`
-	CreatedAt time.Time                      `json:"createdAt"`
+	Id          string                           `json:"id"`
+	GroupId     string                           `json:"groupId"`
+	Content     string                           `json:"content"`
+	Author      GroupMessageAuthorResponse       `json:"author"`
+	Reactions   []GroupMessageReactionResponse   `json:"reactions"`
+	Attachments []GroupMessageAttachmentResponse `json:"attachments"`
+	CreatedAt   time.Time                        `json:"createdAt"`
 }
 
 type GroupMessageAuthorResponse struct {
@@ -133,6 +160,11 @@ type GroupMessageReactionResponse struct {
 }
 
 type GroupMessageReactionUserResponse struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type GroupMessageAttachmentResponse struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }

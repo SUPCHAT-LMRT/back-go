@@ -23,7 +23,6 @@ type OutboundSendMessageToChannelSender struct {
 	UserId            user_entity.UserId                 `json:"userId"`
 	Pseudo            string                             `json:"pseudo"`
 	WorkspaceMemberId workspace_entity.WorkspaceMemberId `json:"workspaceMemberId"`
-	WorkspacePseudo   string                             `json:"workspacePseudo"`
 }
 
 func (m *OutboundSendMessageToChannel) GetActionName() messages.Action {

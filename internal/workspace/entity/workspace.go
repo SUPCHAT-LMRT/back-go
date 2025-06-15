@@ -8,8 +8,8 @@ type (
 )
 
 const (
-	WorkspaceTypePrivate WorkspaceType = "private"
-	WorkspaceTypePublic  WorkspaceType = "public"
+	WorkspaceTypePrivate WorkspaceType = "PRIVATE"
+	WorkspaceTypePublic  WorkspaceType = "PUBLIC"
 )
 
 type Workspace struct {

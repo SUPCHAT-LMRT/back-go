@@ -34,7 +34,7 @@ func (h *HasPermissionsMiddleware) Execute(permissionsBit uint64) gin.HandlerFun
 			permissionsBit,
 		)
 		if err != nil {
-			c.JSON(500, gin.H{"error": "Internal server error"})
+			c.JSON(500, gin.H{"error": err.Error(), "message": "Internal server error"})
 			c.Abort()
 			return
 		}

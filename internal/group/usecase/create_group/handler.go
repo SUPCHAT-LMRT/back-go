@@ -16,6 +16,19 @@ func NewCreateGroupHandler(useCase *CreateGroupUseCase) *CreateGroupHandler {
 	}
 }
 
+// Handle crée un nouveau groupe de discussion
+// @Summary Créer un groupe
+// @Description Crée un nouveau groupe de discussion avec les utilisateurs spécifiés
+// @Tags group
+// @Accept json
+// @Produce json
+// @Param request body CreateGroupBody true "Informations du groupe à créer"
+// @Success 200 {string} string "ID du groupe créé"
+// @Failure 400 {object} map[string]string "Erreur de paramètre"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/groups [post]
+// @Security ApiKeyAuth
 func (h *CreateGroupHandler) Handle(c *gin.Context) {
 	var input CreateGroupBody
 	if err := c.ShouldBindJSON(&input); err != nil {

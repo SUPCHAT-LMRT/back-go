@@ -20,6 +20,19 @@ func NewCreateInviteLinkHandler(usecase *InviteLinkUseCase) *CreateInviteLinkHan
 	return &CreateInviteLinkHandler{usecase: usecase}
 }
 
+// Handle génère un lien d'invitation pour un nouvel utilisateur
+// @Summary Créer un lien d'invitation
+// @Description Crée un lien d'invitation pour permettre à un nouvel utilisateur de s'inscrire
+// @Tags account
+// @Accept json
+// @Produce plain
+// @Param request body generate.CreateInviteLinkRequest true "Informations de l'utilisateur invité"
+// @Success 200 {string} string "URL du lien d'invitation"
+// @Failure 400 {object} map[string]string "Paramètres de requête invalides"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/account/invite-link [post]
+// @Security ApiKeyAuth
 func (h *CreateInviteLinkHandler) Handle(c *gin.Context) {
 	var req CreateInviteLinkRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

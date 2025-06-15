@@ -21,8 +21,7 @@ import (
 )
 
 func init() {
-	// TOOD Implement a shared store maybe ? What is exactly the store ?
-	store := sessions.NewCookieStore([]byte("secret"))
+	store := sessions.NewCookieStore([]byte("cookie-key"))
 	gothic.Store = store
 	goth.UseProviders(
 		google.New(

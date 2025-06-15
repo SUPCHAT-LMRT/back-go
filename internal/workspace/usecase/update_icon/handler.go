@@ -17,6 +17,20 @@ func NewUpdateWorkspaceIconHandler(
 	return &UpdateWorkspaceIconHandler{useCase: useCase}
 }
 
+// Handle met à jour l'icône d'un espace de travail
+// @Summary Mise à jour de l'icône
+// @Description Modifie l'image d'icône d'un espace de travail
+// @Tags workspace
+// @Accept multipart/form-data
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Param image formData file true "Fichier image pour l'icône"
+// @Success 200 {object} nil "Icône mise à jour avec succès"
+// @Failure 400 {object} map[string]string "Paramètres manquants ou invalides"
+// @Failure 403 {object} map[string]string "Utilisateur non autorisé dans cet espace de travail"
+// @Failure 500 {object} map[string]string "Erreur lors de la mise à jour de l'icône"
+// @Router /api/workspaces/{workspace_id}/icon [put]
+// @Security ApiKeyAuth
 func (l UpdateWorkspaceIconHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {

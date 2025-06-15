@@ -38,6 +38,24 @@ type MessageQuery struct {
 }
 
 //nolint:revive
+
+// Handle récupère les messages d'un canal dans un workspace
+// @Summary Liste des messages d'un canal
+// @Description Retourne les messages d'un canal spécifique avec pagination et filtrage temporel
+// @Tags workspace,channel
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Param channel_id path string true "ID du canal"
+// @Param limit query int false "Nombre maximum de messages à retourner (max 100)" default(20)
+// @Param before query string false "Récupérer les messages avant cette date (format ISO8601)"
+// @Param after query string false "Récupérer les messages après cette date (format ISO8601)"
+// @Param aroundMessageId query string false "Récupérer les messages autour de cet ID de message"
+// @Success 200 {array} ChannelMessageResponse "Liste des messages du canal"
+// @Failure 400 {object} map[string]string "ID de workspace ou canal manquant, ou paramètres de requête invalides"
+// @Failure 500 {object} map[string]string "Erreur lors de la récupération des messages"
+// @Router /api/workspaces/{workspace_id}/channels/{channel_id}/messages [get]
+// @Security ApiKeyAuth
 func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {
@@ -99,12 +117,21 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 			}
 		}
 
+		attachments := make([]ChannelMessageAttachmentResponse, len(message.Attachments))
+		for k, attachment := range message.Attachments {
+			attachments[k] = ChannelMessageAttachmentResponse{
+				Id:   attachment.Id.String(),
+				Name: attachment.FileName,
+			}
+		}
+
 		response[i] = ChannelMessageResponse{
-			Id:        message.Id.String(),
-			ChannelId: message.ChannelId.String(),
-			Content:   message.Content,
-			CreatedAt: message.CreatedAt,
-			Reactions: reactions,
+			Id:          message.Id.String(),
+			ChannelId:   message.ChannelId.String(),
+			Content:     message.Content,
+			CreatedAt:   message.CreatedAt,
+			Reactions:   reactions,
+			Attachments: attachments,
 		}
 
 		member, err := h.deps.GetWorkspaceMemberUseCase.Execute(
@@ -123,8 +150,8 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 
 		response[i].Author = ChannelMessageAuthorResponse{
 			UserId:            message.AuthorId.String(),
+			Pseudo:            user.FullName(),
 			WorkspaceMemberId: member.Id.String(),
-			WorkspacePseudo:   user.FullName(),
 		}
 	}
 
@@ -132,18 +159,19 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 }
 
 type ChannelMessageResponse struct {
-	Id        string                           `json:"id"`
-	ChannelId string                           `json:"channelId"`
-	Content   string                           `json:"content"`
-	Author    ChannelMessageAuthorResponse     `json:"author"`
-	CreatedAt time.Time                        `json:"createdAt"`
-	Reactions []ChannelMessageReactionResponse `json:"reactions"`
+	Id          string                             `json:"id"`
+	ChannelId   string                             `json:"channelId"`
+	Content     string                             `json:"content"`
+	Author      ChannelMessageAuthorResponse       `json:"author"`
+	CreatedAt   time.Time                          `json:"createdAt"`
+	Reactions   []ChannelMessageReactionResponse   `json:"reactions"`
+	Attachments []ChannelMessageAttachmentResponse `json:"attachments"`
 }
 
 type ChannelMessageAuthorResponse struct {
 	UserId            string `json:"userId"`
+	Pseudo            string `json:"pseudo"`
 	WorkspaceMemberId string `json:"workspaceMemberId"`
-	WorkspacePseudo   string `json:"workspacePseudo"`
 }
 
 type ChannelMessageReactionResponse struct {
@@ -153,6 +181,11 @@ type ChannelMessageReactionResponse struct {
 }
 
 type ChannelMessageReactionUserResponse struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type ChannelMessageAttachmentResponse struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }

@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/supchat-lmrt/back-go/cmd/di"
+	_ "github.com/supchat-lmrt/back-go/docs"
 	"github.com/supchat-lmrt/back-go/internal/gin"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/mongo"
@@ -53,6 +54,9 @@ func main() {
 			"workspaces-banners",
 			"users-avatars",
 			"messages-files",
+			"channels-attachments",
+			"chat-direct-attachments",
+			"groups-attachments",
 		}
 
 		bucketsCreated := make([]string, 0, len(bucketsToCreate))
