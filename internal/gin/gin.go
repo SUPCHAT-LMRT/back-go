@@ -7,10 +7,10 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/create_group"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/group_info"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/leave_group"
-	create_attachment2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/create_attachment"
-	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/create_attachment"
 	"github.com/supchat-lmrt/back-go/internal/mention/usecase/list_mentionnable_user"
 	"github.com/supchat-lmrt/back-go/internal/notification/usecase/mark_as_read"
+	create_attachment2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/create_attachment"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/create_attachment"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"os"
@@ -150,16 +150,8 @@ type GinRouterDeps struct {
 	DeleteChannelHandler             *delete_channels.DeleteChannelHandler
 	ListPrivateChannelMembersHandler *list_user_private_channel.ListPrivateChannelMembersHandler
 	// Workspace channels mention
-	ListMentionnableUserHandler *list_mentionnable_user.ListMentionnableUserHandler
-	ListChannelsHandler                   *list_channels.ListChannelsHandler
-	ListPrivateChannelsHandler            *list_private_channels.GetPrivateChannelsHandler
-	CreateChannelHandler                  *create_channel.CreateChannelHandler
-	ReorderChannelHandler                 *reoder_channels.ReorderChannelHandler
-	ListChannelMessagesHandler            *list_messages.ListChannelMessagesHandler
+	ListMentionnableUserHandler           *list_mentionnable_user.ListMentionnableUserHandler
 	CreateChannelMessageAttachmentHandler *create_attachment.CreateChannelMessageAttachmentHandler
-	GetChannelHandler                     *get_channel.GetChannelHandler
-	DeleteChannelHandler                  *delete_channels.DeleteChannelHandler
-	ListPrivateChannelMembersHandler      *list_user_private_channel.ListPrivateChannelMembersHandler
 	// Workspace roles
 	CreateRoleHandler        *create_role.CreateRoleHandler
 	GetRoleHandler           *get_role.GetRoleHandler
