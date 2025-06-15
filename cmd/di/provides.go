@@ -8,6 +8,7 @@ import (
 	get_last_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/get_last_message"
 	"github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/get_message"
 	is_first_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/is_first_message"
+	send_notification3 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/send_notification"
 	toggle_reaction2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/toggle_reaction"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/create_group"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/get_member_by_user"
@@ -17,6 +18,10 @@ import (
 	list_members "github.com/supchat-lmrt/back-go/internal/group/usecase/list_members_users"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/transfer_ownership"
 	"github.com/supchat-lmrt/back-go/internal/logger"
+	"github.com/supchat-lmrt/back-go/internal/mention/usecase/extract_mentions"
+	"github.com/supchat-lmrt/back-go/internal/mention/usecase/list_mentionnable_user"
+	"github.com/supchat-lmrt/back-go/internal/notification/usecase/list_notifications"
+	"github.com/supchat-lmrt/back-go/internal/notification/usecase/mark_as_read"
 	"github.com/supchat-lmrt/back-go/internal/search/group"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/delete_message"
 	edit_message2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/edit_message"
@@ -27,12 +32,8 @@ import (
 	edit_message3 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/edit_message"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/export_data_chat_message"
 	get_message3 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/get_message"
-	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/export_data_user_workspace"
-	"github.com/supchat-lmrt/back-go/internal/mention/usecase/extract_mentions"
-	"github.com/supchat-lmrt/back-go/internal/mention/usecase/list_mentionnable_user"
-	"github.com/supchat-lmrt/back-go/internal/notification/usecase/list_notifications"
-	"github.com/supchat-lmrt/back-go/internal/notification/usecase/mark_as_read"
 	send_notification2 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/send_notification"
+	"github.com/supchat-lmrt/back-go/internal/workspace/usecase/export_data_user_workspace"
 	"log"
 	"os"
 	"reflect"
@@ -590,6 +591,9 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(list_recent_groups.NewListRecentGroupsUseCase),
 		dig.NewProvider(list_group_chat_messages.NewListGroupChatMessagesUseCase),
 		dig.NewProvider(save_group_chat_message.NewSaveGroupChatMessageUseCase),
+		dig.NewProvider(save_group_chat_message.NewSendNotificationObserver, uberdig.Group("send_groupmessage_notification_channel")),
+		dig.NewProvider(send_notification3.NewEmailChannel, uberdig.Group("send_groupmessage_notification_channel")),
+		dig.NewProvider(send_notification3.NewSendMessageNotificationUseCase),
 		dig.NewProvider(save_message2.NewDeleteGroupChatMessageUseCase),
 		dig.NewProvider(edit_message.NewEditGroupChatMessageUseCase),
 		dig.NewProvider(get_message.NewGetMessageUseCase),

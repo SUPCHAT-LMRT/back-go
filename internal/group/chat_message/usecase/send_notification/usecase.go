@@ -12,7 +12,7 @@ import (
 
 type SendMessageNotificationUseCaseDeps struct {
 	uberdig.In
-	Channels                  []Channel `group:"send_channelmessage_notification_channel"`
+	Channels                  []Channel `group:"send_groupmessage_notification_channel"`
 	CreateNotificationUseCase *create_notification.CreateNotificationUseCase
 }
 
@@ -33,7 +33,7 @@ func (uc *SendMessageNotificationUseCase) Execute(ctx context.Context, req SendM
 
 	notification := &entity.Notification{
 		UserId: req.ReceiverId,
-		Type:   entity.NotificationTypeChannelMessage,
+		Type:   entity.NotificationTypeGroupeMessage,
 		IsRead: false,
 		GroupMessageData: &entity.GroupMessageNotificationData{
 			SenderId:  req.SenderId,

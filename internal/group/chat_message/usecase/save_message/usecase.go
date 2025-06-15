@@ -25,6 +25,7 @@ type SaveGroupChatMessageUseCaseDeps struct {
 	uberdig.In
 	ChatMessageRepository    repository.ChatMessageRepository
 	SearchMessageSyncManager message.SearchMessageSyncManager
+	Observers                []MessageSavedObserver `group:"send_groupmessage_notification_channel"`
 }
 
 type SaveGroupChatMessageUseCase struct {
@@ -58,6 +59,10 @@ func (u *SaveGroupChatMessageUseCase) Execute(
 	})
 	if err != nil {
 		return err
+	}
+	// Notifier les observateurs
+	for _, observer := range u.deps.Observers {
+		observer.NotifyMessageSaved(msg)
 	}
 
 	return nil
