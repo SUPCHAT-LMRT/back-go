@@ -21,6 +21,16 @@ func NewGetPublicProfileHandler(deps GetPublicProfileHandlerDeps) *GetPublicProf
 	return &GetPublicProfileHandler{deps: deps}
 }
 
+// Handle récupère le profil public d'un utilisateur
+// @Summary Profil public d'un utilisateur
+// @Description Récupère les informations publiques d'un utilisateur spécifique
+// @Tags account
+// @Accept json
+// @Produce json
+// @Param user_id path string true "ID de l'utilisateur"
+// @Success 200 {object} public_profile.PublicProfileResponse "Informations du profil public"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/account/{user_id}/profile [get]
 func (h *GetPublicProfileHandler) Handle(c *gin.Context) {
 	userId := c.Param("user_id")
 

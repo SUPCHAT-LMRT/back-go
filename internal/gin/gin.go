@@ -9,6 +9,10 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/leave_group"
 	create_attachment2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/create_attachment"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/create_attachment"
+	"github.com/supchat-lmrt/back-go/internal/mention/usecase/list_mentionnable_user"
+	"github.com/supchat-lmrt/back-go/internal/notification/usecase/mark_as_read"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +28,7 @@ import (
 	validator2 "github.com/supchat-lmrt/back-go/internal/gin/validator"
 	list_group_chat_messages "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/list_messages"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/add_member"
+	"github.com/supchat-lmrt/back-go/internal/notification/usecase/list_notifications"
 	"github.com/supchat-lmrt/back-go/internal/search/usecase/search"
 	entity2 "github.com/supchat-lmrt/back-go/internal/user/app_jobs/entity"
 	has_job "github.com/supchat-lmrt/back-go/internal/user/app_jobs/gin/middlewares"
@@ -73,7 +78,7 @@ import (
 	get_data_token_invite2 "github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/get_data_token_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/invite_link_workspace/usecase/join_workspace_invite"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/kick_member"
-	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workpace_members"
+	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/list_workspace_members"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/entity"
 	middlewares2 "github.com/supchat-lmrt/back-go/internal/workspace/roles/gin/middlewares"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/assign_role"
@@ -123,7 +128,7 @@ type GinRouterDeps struct {
 	CreateWorkspaceHandler            *create_workspace.CreateWorkspaceHandler
 	UpdateWorkspaceIconHandler        *update_icon.UpdateWorkspaceIconHandler
 	UpdateWorkspaceBannerHandler      *update_banner.UpdateWorkspaceBannerHandler
-	ListWorkspaceMembersHandler       *list_workpace_members.ListWorkspaceMembersHandler
+	ListWorkspaceMembersHandler       *list_workspace_members.ListWorkspaceMembersHandler
 	UpdateWorkspaceInfosHandler       *update_info_workspaces.UpdateInfoWorkspacesHandler
 	UpdateWorkspaceTypeHandler        *update_type_workspace.UpdateTypeWorkspaceHandler
 	GetWorkspaceHandler               *get_workspace.GetWorkspaceHandler
@@ -136,6 +141,16 @@ type GinRouterDeps struct {
 	KickMemberHandler                 *kick_member.KickGroupMemberHandler
 	GetMemberIdHandler                *get_member_id.GetMemberIdHandler
 	// Workspaces channels
+	ListChannelsHandler              *list_channels.ListChannelsHandler
+	ListPrivateChannelsHandler       *list_private_channels.GetPrivateChannelsHandler
+	CreateChannelHandler             *create_channel.CreateChannelHandler
+	ReorderChannelHandler            *reoder_channels.ReorderChannelHandler
+	ListChannelMessagesHandler       *list_messages.ListChannelMessagesHandler
+	GetChannelHandler                *get_channel.GetChannelHandler
+	DeleteChannelHandler             *delete_channels.DeleteChannelHandler
+	ListPrivateChannelMembersHandler *list_user_private_channel.ListPrivateChannelMembersHandler
+	// Workspace channels mention
+	ListMentionnableUserHandler *list_mentionnable_user.ListMentionnableUserHandler
 	ListChannelsHandler                   *list_channels.ListChannelsHandler
 	ListPrivateChannelsHandler            *list_private_channels.GetPrivateChannelsHandler
 	CreateChannelHandler                  *create_channel.CreateChannelHandler
@@ -217,6 +232,9 @@ type GinRouterDeps struct {
 	DeletePollHandler       *delete_poll.DeletePollHandler
 	VoteOptionPollHandler   *vote_option_poll.VoteOptionPollHandler
 	UnvoteOptionPollHandler *unvote_option_poll.UnvoteOptionPollHandler
+	// Notifications
+	ListNotificationsHandler *list_notifications.ListNotificationsHandler
+	MarkAsReadHandler        *mark_as_read.MarkAsReadHandler
 }
 
 func NewGinRouter(deps GinRouterDeps) GinRouter {
@@ -225,6 +243,7 @@ func NewGinRouter(deps GinRouterDeps) GinRouter {
 }
 
 func (d *DefaultGinRouter) RegisterRoutes() {
+	d.Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	authMiddleware := d.deps.AuthMiddleware.Execute
 	userInWorkspaceMiddleware := d.deps.UserInWorkspaceMiddleware.Execute
 	hasPermissionsMiddleware := d.deps.HasMembersPermissionsMiddleware.Execute
@@ -404,8 +423,8 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				channelGroup.DELETE("/:channel_id", d.deps.DeleteChannelHandler.Handle)
 				channelGroup.GET(
 					"/:channel_id/members",
-					d.deps.ListPrivateChannelMembersHandler.Handle,
-				)
+					d.deps.ListPrivateChannelMembersHandler.Handle)
+				channelGroup.GET("/:channel_id/mentionnable-users", d.deps.ListMentionnableUserHandler.Handle)
 			}
 
 			roleGroup := specificWorkspaceGroup.Group("/roles")
@@ -451,6 +470,12 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 	}
 
 	apiGroup.GET("/search", authMiddleware, d.deps.SearchTermHandler.Handle)
+
+	notificationGroup := apiGroup.Group("/notifications", authMiddleware)
+	{
+		notificationGroup.PATCH("/:id/read", d.deps.MarkAsReadHandler.Handle)
+		notificationGroup.GET("", d.deps.ListNotificationsHandler.Handle)
+	}
 }
 
 func (d *DefaultGinRouter) AddCorsHeaders() {

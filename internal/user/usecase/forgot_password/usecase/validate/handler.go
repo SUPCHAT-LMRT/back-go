@@ -21,6 +21,17 @@ func NewValidateForgotPasswordHandler(
 	}
 }
 
+// Handle valide un jeton de réinitialisation de mot de passe oublié et définit le nouveau mot de passe
+// @Summary Valider la réinitialisation de mot de passe
+// @Description Vérifie un jeton de réinitialisation et définit un nouveau mot de passe pour l'utilisateur
+// @Tags account
+// @Accept json
+// @Produce json
+// @Param request body ValidateForgotPasswordRequest true "Token de réinitialisation et nouveau mot de passe"
+// @Success 204 "Mot de passe modifié avec succès"
+// @Failure 400 {object} map[string]string "Paramètres invalides ou mots de passe différents"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/account/forgot-password/validate [post]
 func (h *ValidateForgotPasswordHandler) Handle(c *gin.Context) {
 	var request ValidateForgotPasswordRequest
 	if err := c.ShouldBindJSON(&request); err != nil {

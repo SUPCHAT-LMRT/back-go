@@ -17,6 +17,19 @@ func NewGetWorkspaceDetailsHandler(
 	return &GetWorkspaceDetailsHandler{useCase: useCase}
 }
 
+// Handle récupère les détails complets d'un espace de travail
+// @Summary Détails complets d'un espace de travail
+// @Description Récupère les informations détaillées d'un espace de travail spécifique avec statistiques
+// @Tags workspace
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Success 200 {object} get_workspace_details.WorkspaceDetailsResponse "Détails complets de l'espace de travail"
+// @Failure 400 {object} map[string]string "ID de l'espace de travail manquant"
+// @Failure 403 {object} map[string]string "Utilisateur non autorisé dans cet espace de travail"
+// @Failure 500 {object} map[string]string "Erreur lors de la récupération des détails"
+// @Router /api/workspaces/{workspace_id}/details [get]
+// @Security ApiKeyAuth
 func (h *GetWorkspaceDetailsHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {

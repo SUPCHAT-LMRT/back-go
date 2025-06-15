@@ -14,6 +14,17 @@ func NewGetInviteLinkDataHandler(usecase *GetInviteLinkDataUseCase) *GetInviteLi
 	return &GetInviteLinkDataHandler{usecase: usecase}
 }
 
+// Handle récupère les données associées à un lien d'invitation
+// @Summary Obtenir les données d'un lien d'invitation
+// @Description Récupère les informations associées à un lien d'invitation spécifique
+// @Tags account
+// @Accept json
+// @Produce json
+// @Param token path string true "Token unique du lien d'invitation"
+// @Success 200 {object} get_data_token_invite.InviteLinkDataResponse "Données de l'invitation"
+// @Failure 400 {object} map[string]string "Token manquant"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/account/invite-link/{token} [get]
 func (h *GetInviteLinkDataHandler) Handle(c *gin.Context) {
 	token := c.Param("token")
 	if token == "" {

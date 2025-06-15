@@ -16,6 +16,19 @@ func NewListChannelsHandler(useCase *ListChannelsUseCase) *ListChannelsHandler {
 }
 
 // TODO: filter out the channels that the user is not a member of
+
+// Handle récupère la liste des canaux d'un espace de travail
+// @Summary Liste des canaux
+// @Description Retourne tous les canaux publics d'un espace de travail
+// @Tags workspace,channel
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Success 200 {array} ListChannelResponse "Liste des canaux"
+// @Failure 400 {object} map[string]string "ID de workspace manquant"
+// @Failure 500 {object} map[string]string "Erreur lors de la récupération des canaux"
+// @Router /api/workspaces/{workspace_id}/channels [get]
+// @Security ApiKeyAuth
 func (h *ListChannelsHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {

@@ -28,6 +28,21 @@ func NewAddMemberHandler(deps AddMemberHandlerDeps) *AddMemberHandler {
 	return &AddMemberHandler{deps: deps}
 }
 
+// Handle permet à un utilisateur de rejoindre un espace de travail public
+// @Summary Rejoindre un espace de travail
+// @Description Permet à l'utilisateur authentifié de rejoindre un espace de travail public
+// @Tags workspace,member
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail à rejoindre"
+// @Success 200 {string} string "Utilisateur ajouté à l'espace de travail"
+// @Failure 400 {object} map[string]string "ID de workspace manquant"
+// @Failure 403 {object} map[string]string "L'espace de travail est privé"
+// @Failure 404 {object} map[string]string "Espace de travail non trouvé"
+// @Failure 409 {object} map[string]string "L'utilisateur est déjà membre de cet espace de travail"
+// @Failure 500 {object} map[string]string "Erreur lors de l'ajout de l'utilisateur à l'espace de travail"
+// @Router /api/workspaces/{workspace_id}/join [get]
+// @Security ApiKeyAuth
 func (h *AddMemberHandler) Handle(c *gin.Context) {
 	user := c.MustGet("user").(*user_entity.User) //nolint:revive
 	workspaceId := c.Param("workspace_id")

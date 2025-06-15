@@ -17,6 +17,19 @@ func NewGetPollsListHandler(usecase *GetPollsListUseCase) *GetPollsListHandler {
 	return &GetPollsListHandler{usecase: usecase}
 }
 
+// Handle récupère la liste des sondages d'un espace de travail
+// @Summary Lister les sondages
+// @Description Récupère tous les sondages disponibles dans un espace de travail
+// @Tags poll
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Success 200 {array} PollResponse "Liste des sondages"
+// @Failure 400 {object} map[string]string "ID de l'espace de travail manquant"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/workspaces/{workspace_id}/poll [get]
+// @Security ApiKeyAuth
 func (h *GetPollsListHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	if workspaceId == "" {

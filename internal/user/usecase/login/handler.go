@@ -40,6 +40,17 @@ type LoginUserResponse struct {
 	Status    string `json:"status"`
 }
 
+// Handle traite une demande de connexion
+// @Summary Connexion utilisateur
+// @Description Authentifie un utilisateur avec email et mot de passe
+// @Tags account
+// @Accept json
+// @Produce json
+// @Param request body login.LoginRequest true "Informations de connexion"
+// @Success 200 {object} login.LoginUserResponse "Informations de l'utilisateur connecté"
+// @Failure 400 {object} map[string]string "Paramètres invalides ou identifiants incorrects"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/account/auth/login [post]
 func (l LoginHandler) Handle(c *gin.Context) {
 	var request LoginRequest
 	if err := c.ShouldBindJSON(&request); err != nil {

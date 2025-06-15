@@ -1,10 +1,10 @@
 package permissions
 
 import (
+	"github.com/gin-gonic/gin"
+	_ "github.com/supchat-lmrt/back-go/internal/models"
 	user_entity "github.com/supchat-lmrt/back-go/internal/user/entity"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
 type CheckUserPermissionsHandler struct {
@@ -17,6 +17,20 @@ func NewCheckUserPermissionsHandler(
 	return &CheckUserPermissionsHandler{checkPermissionUseCase: useCase}
 }
 
+// Handle vérifie si un utilisateur possède les permissions demandées
+// @Summary Vérifier les permissions d'un utilisateur
+// @Description Vérifie si un utilisateur spécifié possède les permissions demandées
+// @Tags job
+// @Accept json
+// @Produce json
+// @Param user_id path string true "ID de l'utilisateur"
+// @Param request body models.CheckPermissionsRequest true "Paramètres de vérification des permissions"
+// @Success 200 {object} models.CheckPermissionsResponse "Résultat de la vérification"
+// @Failure 400 {object} map[string]string "Erreur de paramètre"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/job/check-permissions/{user_id} [post]
+// @Security ApiKeyAuth
 func (h *CheckUserPermissionsHandler) Handle(c *gin.Context) {
 	userId := c.Param("user_id")
 	if userId == "" {

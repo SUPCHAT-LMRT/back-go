@@ -1,11 +1,11 @@
 package list_jobs
 
 import (
+	"github.com/gin-gonic/gin"
+	_ "github.com/supchat-lmrt/back-go/internal/models"
 	"net/http"
 	"sort"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
 type ListJobsHandler struct {
@@ -17,6 +17,18 @@ func NewListJobsHandler(useCase *ListJobsUseCase) *ListJobsHandler {
 }
 
 //nolint:revive
+
+// Handle récupère la liste de tous les rôles de travail dans le système
+// @Summary Lister les rôles de travail
+// @Description Récupère la liste complète des rôles de travail avec leurs ID, noms et permissions
+// @Tags job
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.ListJobsResponse "Liste des rôles de travail"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/job [get]
+// @Security ApiKeyAuth
 func (h *ListJobsHandler) Handle(c *gin.Context) {
 	jobs, err := h.useCase.Execute(c)
 	if err != nil {

@@ -24,6 +24,21 @@ func NewListPrivateChannelMembersHandler(
 	return &ListPrivateChannelMembersHandler{deps: deps}
 }
 
+// Handle récupère la liste des membres d'un canal privé
+// @Summary Liste des membres d'un canal privé
+// @Description Retourne tous les utilisateurs qui ont accès à un canal privé spécifique
+// @Tags workspace,channel,members
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Param channel_id path string true "ID du canal privé"
+// @Success 200 {array} Member "Liste des membres du canal privé"
+// @Failure 400 {object} map[string]string "ID de canal manquant"
+// @Failure 403 {object} map[string]string "Permissions insuffisantes pour accéder à ce canal"
+// @Failure 404 {object} map[string]string "Canal non trouvé"
+// @Failure 500 {object} map[string]string "Erreur lors de la récupération des membres du canal"
+// @Router /api/workspaces/{workspace_id}/channels/{channel_id}/members [get]
+// @Security ApiKeyAuth
 func (h *ListPrivateChannelMembersHandler) Handle(c *gin.Context) {
 	channelId := c.Param("channel_id")
 	membersIds, err := h.deps.ListPrivateChannelMembersUseCase.Execute(

@@ -2,9 +2,9 @@ package create_job
 
 import (
 	"fmt"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	_ "github.com/supchat-lmrt/back-go/internal/models"
+	"net/http"
 )
 
 type CreateJobHandler struct {
@@ -15,6 +15,20 @@ func NewCreateJobHandler(useCase *CreateJobUseCase) *CreateJobHandler {
 	return &CreateJobHandler{useCase: useCase}
 }
 
+// Handle crée un nouveau rôle de travail dans le système
+// @Summary Créer un rôle de travail
+// @Description Crée un nouveau rôle de travail avec le nom fourni
+// @Tags job
+// @Accept json
+// @Produce json
+// @Param request body models.CreateJobRequest true "Informations du rôle à créer"
+// @Success 200 {object} models.CreateJobResponse "Rôle créé avec succès"
+// @Failure 400 {object} map[string]string "Erreur de paramètre"
+// @Failure 401 {object} map[string]string "Non autorisé"
+// @Failure 409 {object} map[string]string "Conflit - Le rôle existe déjà"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/job [post]
+// @Security ApiKeyAuth
 func (h *CreateJobHandler) Handle(c *gin.Context) {
 	var request struct {
 		Name string `json:"name" binding:"required"`

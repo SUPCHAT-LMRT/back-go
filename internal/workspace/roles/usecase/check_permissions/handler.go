@@ -1,12 +1,12 @@
 package check_permissions
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	_ "github.com/supchat-lmrt/back-go/internal/models" // Import pour que Swagger trouve les modèles
 	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/entity"
 	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/member/entity"
 	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/permissions"
+	"net/http"
 )
 
 type CheckPermissionsHandler struct {
@@ -19,6 +19,20 @@ func NewCheckPermissionsHandler(
 	return &CheckPermissionsHandler{checkPermissionUseCase: checkPermissionUseCase}
 }
 
+// Handle vérifie si l'utilisateur possède des permissions spécifiques dans l'espace de travail
+// @Summary Vérification de permissions
+// @Description Vérifie si l'utilisateur courant possède un ensemble de permissions dans l'espace de travail
+// @Tags workspace,permissions
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Param request body models.CheckPermissionsRequest true "Permissions à vérifier"
+// @Success 200 {object} models.CheckPermissionsResponse "Résultat de la vérification des permissions"
+// @Failure 400 {object} map[string]string "ID de l'espace de travail manquant ou requête invalide"
+// @Failure 403 {object} map[string]string "Utilisateur non membre de l'espace de travail"
+// @Failure 500 {object} map[string]string "Erreur lors de la vérification des permissions"
+// @Router /api/workspaces/{workspace_id}/permissions/check [post]
+// @Security ApiKeyAuth
 func (h *CheckPermissionsHandler) Handle(c *gin.Context) {
 	workspaceMember := c.MustGet("workspace_member").(*workspace_entity.WorkspaceMember) //nolint:revive
 	workspaceId := c.Param("workspace_id")

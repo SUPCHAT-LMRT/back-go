@@ -1,10 +1,10 @@
 package request
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	_ "github.com/supchat-lmrt/back-go/internal/models" // Import pour que Swagger trouve les modèles
 	user_repository "github.com/supchat-lmrt/back-go/internal/user/repository"
+	"net/http"
 )
 
 type RequestForgotPasswordHandler struct {
@@ -22,6 +22,17 @@ func NewRequestForgotPasswordHandler(
 	}
 }
 
+// Handle traite les demandes de récupération de mot de passe
+// @Summary Demander une récupération de mot de passe
+// @Description Envoie un email avec un lien pour réinitialiser le mot de passe d'un utilisateur
+// @Tags account
+// @Accept json
+// @Produce json
+// @Param request body models.RequestForgotPasswordRequest true "Email pour réinitialiser le mot de passe"
+// @Success 200 {object} models.RequestForgotPasswordResponse "Email envoyé avec succès"
+// @Failure 400 {object} map[string]string "Paramètres invalides"
+// @Failure 500 {object} map[string]string "Erreur interne du serveur"
+// @Router /api/account/forgot-password/request [post]
 func (h *RequestForgotPasswordHandler) Handle(c *gin.Context) {
 	var body struct {
 		Email string `json:"email" binding:"required"`

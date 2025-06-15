@@ -1,4 +1,4 @@
-package send_message_notification
+package send_notification
 
 import (
 	"context"
@@ -48,6 +48,7 @@ func (c *EmailChannel) SendNotification(
 		),
 	)
 	message.AddTo(receiver.Email)
+	message.SetFrom(c.deps.Mailer.From)
 
 	err = c.deps.Mailer.Send(message)
 	if err != nil {

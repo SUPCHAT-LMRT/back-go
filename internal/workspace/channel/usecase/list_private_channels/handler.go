@@ -16,6 +16,19 @@ func NewGetPrivateChannelsHandler(useCase *GetPrivateChannelsUseCase) *GetPrivat
 	return &GetPrivateChannelsHandler{useCase: useCase}
 }
 
+// Handle récupère la liste des canaux privés accessibles par l'utilisateur
+// @Summary Liste des canaux privés
+// @Description Retourne tous les canaux privés auxquels l'utilisateur a accès dans un espace de travail
+// @Tags workspace,channel
+// @Accept json
+// @Produce json
+// @Param workspace_id path string true "ID de l'espace de travail"
+// @Success 200 {array} GetPrivateChannelResponse "Liste des canaux privés accessibles"
+// @Failure 400 {object} map[string]string "ID de workspace manquant"
+// @Failure 401 {object} map[string]string "Utilisateur non authentifié ou non membre du workspace"
+// @Failure 500 {object} map[string]string "Erreur lors de la récupération des canaux"
+// @Router /api/workspaces/{workspace_id}/channels/private [get]
+// @Security ApiKeyAuth
 func (h *GetPrivateChannelsHandler) Handle(c *gin.Context) {
 	workspaceId := c.Param("workspace_id")
 	workspaceMember, ok := c.MustGet("workspace_member").(*workspace_member_entity.WorkspaceMember)
