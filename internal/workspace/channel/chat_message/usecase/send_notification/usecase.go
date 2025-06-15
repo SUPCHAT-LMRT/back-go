@@ -37,7 +37,7 @@ func (uc *SendMessageNotificationUseCase) Execute(ctx context.Context, req SendM
 		Type:   entity.NotificationTypeChannelMessage,
 		IsRead: false,
 		ChannelMessageData: &entity.ChannelMessageNotificationData{
-			SenderId:    req.ReceiverId,
+			SenderId:    req.SenderId,
 			ChannelId:   req.ChannelId,
 			WorkspaceId: req.WorkspaceId,
 			MessageId:   req.MessageId,
