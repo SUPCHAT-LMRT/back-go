@@ -13,8 +13,7 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8080",
-    "basePath": "/api",
+    "host": "localhost:3000",
     "paths": {
         "/api/account/auth/delete/{userId}": {
             "delete": {

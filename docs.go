@@ -18,8 +18,8 @@ import (
 // @in header
 // @name Authorization
 
-// @host      localhost:8080
-// @BasePath  /api
+// @host      localhost:3000
+// @BasePath
 func SwaggerInfo() {
 	// Cette fonction ne fait rien, elle sert uniquement à contenir les annotations Swagger
 }
