@@ -33,14 +33,13 @@ func (c *EmailChannel) SendNotification(
 		log.Printf("Erreur lors de la récupération de l'utilisateur par son ID: %v", err)
 		return err
 	}
+	// get receiver notification preferences
+	//if !receiver.NotificationPreferences.Email {
+	//	log.Printf("L'utilisateur %s a désactivé les notifications par email", receiver.Email)
+	//	return nil
+	//}
 
-	// Vérifier si les notifications sont activées pour cet utilisateur
-	if !receiver.NotificationsEnabled {
-		log.Printf("L'utilisateur %s a désactivé les notifications", receiver.Email)
-		return nil
-	}
-
-	message := mail.NewTextPlainMessage(
+	message := mail.NewHTMLMessage(
 		"Nouveau message privé",
 		fmt.Sprintf(
 			"Vous avez reçu un message de %s avec le contenu %s",
