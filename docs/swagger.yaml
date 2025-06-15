@@ -943,7 +943,7 @@ definitions:
 host: localhost:3000
 info:
   contact:
-    email: support@supchat.io
+    email: supinfo@supinfo.com
     name: Support API SupChat
   description: API pour le service de messagerie SupChat
   license:
@@ -4457,8 +4457,8 @@ paths:
       - workspace
       - discovery
 securityDefinitions:
-  ApiKeyAuth:
-    in: header
-    name: Authorization
+  CookieAuth:
+    in: cookie
+    name: session_token
     type: apiKey
 swagger: "2.0"

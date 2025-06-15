@@ -11,7 +11,7 @@ const docTemplate = `{
         "title": "{{.Title}}",
         "contact": {
             "name": "Support API SupChat",
-            "email": "support@supchat.io"
+            "email": "supinfo@supinfo.com"
         },
         "license": {
             "name": "Apache 2.0",
@@ -6768,10 +6768,10 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
-        "ApiKeyAuth": {
+        "CookieAuth": {
             "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
+            "name": "session_token",
+            "in": "cookie"
         }
     }
 }`

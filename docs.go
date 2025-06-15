@@ -9,14 +9,14 @@ import (
 // @description  API pour le service de messagerie SupChat
 
 // @contact.name  Support API SupChat
-// @contact.email support@supchat.io
+// @contact.email supinfo@supinfo.com
 
 // @license.name  Apache 2.0
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @securityDefinitions.apikey ApiKeyAuth
-// @in header
-// @name Authorization
+// @securityDefinitions.apikey CookieAuth
+// @in cookie
+// @name session_token
 
 // @host      localhost:3000
 // @BasePath
