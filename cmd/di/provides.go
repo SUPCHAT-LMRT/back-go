@@ -18,11 +18,13 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/transfer_ownership"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/search/group"
+	create_attachment2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/create_attachment"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/delete_message"
 	edit_message2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/edit_message"
 	"github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/export_data_chat_direct"
 	get_message2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/get_message"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/export_user_data"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/create_attachment"
 	delete_message2 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/delete_message"
 	edit_message3 "github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/edit_message"
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/export_data_chat_message"
@@ -337,11 +339,15 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(count_messages_by_workspace.NewCountMessagesUseCase),
 		// Workspace channels chat handlers
 		dig.NewProvider(list_messages.NewListChannelMessagesHandler),
+		dig.NewProvider(create_attachment.NewCreateChannelMessageAttachmentHandler),
 		// Workspace channels chat messages usecases
 		dig.NewProvider(save_message.NewSaveChannelMessageUseCase),
 		dig.NewProvider(get_message3.NewGetMessageUseCase),
 		dig.NewProvider(edit_message3.NewEditChannelChatMessageUseCase),
 		dig.NewProvider(delete_message2.NewDeleteChannelChatMessageUseCase),
+		dig.NewProvider(create_attachment.NewCreateChatDirectAttachmentUseCase),
+		dig.NewProvider(create_attachment.NewS3FileUploadStrategy),
+		dig.NewProvider(create_attachment.NewNotifyWebsocketObserver, uberdig.Group("create_channel_messages_attachment_observer")),
 		// Workspace time series
 		// Workspace time series message sent
 		// Workspace time series message sent repository
@@ -466,8 +472,12 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(is_first_message.NewIsFirstMessageUseCase),
 		dig.NewProvider(list_direct_messages.NewListDirectMessagesUseCase),
 		dig.NewProvider(toggle_chat_direct_reaction.NewToggleReactionDirectMessageUseCase),
+		dig.NewProvider(create_attachment2.NewCreateChatDirectAttachmentUseCase),
+		dig.NewProvider(create_attachment2.NewS3FileUploadStrategy),
+		dig.NewProvider(create_attachment2.NewNotifyWebsocketObserver, uberdig.Group("create_chat_direct_attachment_observer")),
 		// USer chat direct handlers
 		dig.NewProvider(list_direct_messages.NewListDirectMessagesHandler),
+		dig.NewProvider(create_attachment2.NewCreateChatDirectAttachmentHandler),
 		// User Oauth handler & usecase
 		dig.NewProvider(oauth.NewRegisterOAuthHandler),
 		dig.NewProvider(oauth.NewLoginOAuthUseCase),

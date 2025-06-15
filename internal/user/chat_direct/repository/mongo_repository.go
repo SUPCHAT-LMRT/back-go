@@ -21,20 +21,26 @@ var (
 )
 
 type MongoChatDirect struct {
-	Id        bson.ObjectID              `bson:"_id"`
-	SenderId  bson.ObjectID              `bson:"sender_id"`
-	User1Id   bson.ObjectID              `bson:"user1Id"`
-	User2Id   bson.ObjectID              `bson:"user2Id"`
-	Content   string                     `bson:"content"`
-	Reactions []*MongoChatDirectReaction `bson:"reactions"`
-	CreatedAt time.Time                  `bson:"created_at"`
-	UpdatedAt time.Time                  `bson:"updated_at"`
+	Id          bson.ObjectID                `bson:"_id"`
+	SenderId    bson.ObjectID                `bson:"sender_id"`
+	User1Id     bson.ObjectID                `bson:"user1Id"`
+	User2Id     bson.ObjectID                `bson:"user2Id"`
+	Content     string                       `bson:"content"`
+	Reactions   []*MongoChatDirectReaction   `bson:"reactions"`
+	Attachments []*MongoChatDirectAttachment `bson:"attachments"`
+	CreatedAt   time.Time                    `bson:"created_at"`
+	UpdatedAt   time.Time                    `bson:"updated_at"`
 }
 
 type MongoChatDirectReaction struct {
 	Id       bson.ObjectID   `bson:"_id"`
 	Users    []bson.ObjectID `bson:"user_ids"`
 	Reaction string          `bson:"reaction"`
+}
+
+type MongoChatDirectAttachment struct {
+	Id       bson.ObjectID `bson:"_id"`
+	FileName string        `bson:"file_name"`
 }
 
 type MongoChatDirectRepositoryDeps struct {

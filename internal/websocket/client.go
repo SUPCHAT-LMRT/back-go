@@ -933,7 +933,6 @@ func (c *Client) toOutboundSendChannelMessageSender(
 		UserId:            user.Id,
 		Pseudo:            user.FullName(),
 		WorkspaceMemberId: workspaceMember.Id,
-		WorkspacePseudo:   user.FullName(),
 	}, nil
 }
 

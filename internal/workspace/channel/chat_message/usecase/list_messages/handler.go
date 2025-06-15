@@ -99,12 +99,21 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 			}
 		}
 
+		attachments := make([]ChannelMessageAttachmentResponse, len(message.Attachments))
+		for k, attachment := range message.Attachments {
+			attachments[k] = ChannelMessageAttachmentResponse{
+				Id:   attachment.Id.String(),
+				Name: attachment.FileName,
+			}
+		}
+
 		response[i] = ChannelMessageResponse{
-			Id:        message.Id.String(),
-			ChannelId: message.ChannelId.String(),
-			Content:   message.Content,
-			CreatedAt: message.CreatedAt,
-			Reactions: reactions,
+			Id:          message.Id.String(),
+			ChannelId:   message.ChannelId.String(),
+			Content:     message.Content,
+			CreatedAt:   message.CreatedAt,
+			Reactions:   reactions,
+			Attachments: attachments,
 		}
 
 		member, err := h.deps.GetWorkspaceMemberUseCase.Execute(
@@ -123,8 +132,8 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 
 		response[i].Author = ChannelMessageAuthorResponse{
 			UserId:            message.AuthorId.String(),
+			Pseudo:            user.FullName(),
 			WorkspaceMemberId: member.Id.String(),
-			WorkspacePseudo:   user.FullName(),
 		}
 	}
 
@@ -132,18 +141,19 @@ func (h *ListChannelMessagesHandler) Handle(c *gin.Context) {
 }
 
 type ChannelMessageResponse struct {
-	Id        string                           `json:"id"`
-	ChannelId string                           `json:"channelId"`
-	Content   string                           `json:"content"`
-	Author    ChannelMessageAuthorResponse     `json:"author"`
-	CreatedAt time.Time                        `json:"createdAt"`
-	Reactions []ChannelMessageReactionResponse `json:"reactions"`
+	Id          string                             `json:"id"`
+	ChannelId   string                             `json:"channelId"`
+	Content     string                             `json:"content"`
+	Author      ChannelMessageAuthorResponse       `json:"author"`
+	CreatedAt   time.Time                          `json:"createdAt"`
+	Reactions   []ChannelMessageReactionResponse   `json:"reactions"`
+	Attachments []ChannelMessageAttachmentResponse `json:"attachments"`
 }
 
 type ChannelMessageAuthorResponse struct {
 	UserId            string `json:"userId"`
+	Pseudo            string `json:"pseudo"`
 	WorkspaceMemberId string `json:"workspaceMemberId"`
-	WorkspacePseudo   string `json:"workspacePseudo"`
 }
 
 type ChannelMessageReactionResponse struct {
@@ -153,6 +163,11 @@ type ChannelMessageReactionResponse struct {
 }
 
 type ChannelMessageReactionUserResponse struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type ChannelMessageAttachmentResponse struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }

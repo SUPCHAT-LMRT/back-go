@@ -32,14 +32,23 @@ func (m ChannelMessageMapper) MapToEntity(
 		}
 	}
 
+	attachments := make([]*entity.ChannelMessageAttachment, len(mongo.Attachments))
+	for i, attachment := range mongo.Attachments {
+		attachments[i] = &entity.ChannelMessageAttachment{
+			Id:       entity.ChannelMessageAttachmentId(attachment.Id.Hex()),
+			FileName: attachment.FileName,
+		}
+	}
+
 	return &entity.ChannelMessage{
-		Id:        entity.ChannelMessageId(mongo.Id.Hex()),
-		ChannelId: channel_entity.ChannelId(mongo.ChannelId.Hex()),
-		AuthorId:  user_entity.UserId(mongo.AuthorId.Hex()),
-		Content:   mongo.Content,
-		CreatedAt: mongo.CreatedAt,
-		UpdatedAt: mongo.UpdatedAt,
-		Reactions: reactions,
+		Id:          entity.ChannelMessageId(mongo.Id.Hex()),
+		ChannelId:   channel_entity.ChannelId(mongo.ChannelId.Hex()),
+		AuthorId:    user_entity.UserId(mongo.AuthorId.Hex()),
+		Content:     mongo.Content,
+		CreatedAt:   mongo.CreatedAt,
+		UpdatedAt:   mongo.UpdatedAt,
+		Reactions:   reactions,
+		Attachments: attachments,
 	}, nil
 }
 
@@ -84,12 +93,26 @@ func (m ChannelMessageMapper) MapFromEntity(
 		}
 	}
 
+	attachments := make([]*MongoChannelMessageAttachment, len(channelMessage.Attachments))
+	for i, attachment := range channelMessage.Attachments {
+		attachmentObjectId, err := bson.ObjectIDFromHex(string(attachment.Id))
+		if err != nil {
+			return nil, err
+		}
+
+		attachments[i] = &MongoChannelMessageAttachment{
+			Id:       attachmentObjectId,
+			FileName: attachment.FileName,
+		}
+	}
+
 	return &MongoChannelMessage{
-		Id:        messageObjectId,
-		ChannelId: channelObjectId,
-		AuthorId:  authorObjectId,
-		Content:   channelMessage.Content,
-		CreatedAt: channelMessage.CreatedAt,
-		Reactions: reactions,
+		Id:          messageObjectId,
+		ChannelId:   channelObjectId,
+		AuthorId:    authorObjectId,
+		Content:     channelMessage.Content,
+		CreatedAt:   channelMessage.CreatedAt,
+		Reactions:   reactions,
+		Attachments: attachments,
 	}, nil
 }

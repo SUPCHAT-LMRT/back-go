@@ -6,6 +6,8 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/create_group"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/group_info"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/leave_group"
+	create_attachment2 "github.com/supchat-lmrt/back-go/internal/user/chat_direct/usecase/create_attachment"
+	"github.com/supchat-lmrt/back-go/internal/workspace/channel/chat_message/usecase/create_attachment"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -133,14 +135,15 @@ type GinRouterDeps struct {
 	KickMemberHandler                 *kick_member.KickGroupMemberHandler
 	GetMemberIdHandler                *get_member_id.GetMemberIdHandler
 	// Workspaces channels
-	ListChannelsHandler              *list_channels.ListChannelsHandler
-	ListPrivateChannelsHandler       *list_private_channels.GetPrivateChannelsHandler
-	CreateChannelHandler             *create_channel.CreateChannelHandler
-	ReorderChannelHandler            *reoder_channels.ReorderChannelHandler
-	ListChannelMessagesHandler       *list_messages.ListChannelMessagesHandler
-	GetChannelHandler                *get_channel.GetChannelHandler
-	DeleteChannelHandler             *delete_channels.DeleteChannelHandler
-	ListPrivateChannelMembersHandler *list_user_private_channel.ListPrivateChannelMembersHandler
+	ListChannelsHandler                   *list_channels.ListChannelsHandler
+	ListPrivateChannelsHandler            *list_private_channels.GetPrivateChannelsHandler
+	CreateChannelHandler                  *create_channel.CreateChannelHandler
+	ReorderChannelHandler                 *reoder_channels.ReorderChannelHandler
+	ListChannelMessagesHandler            *list_messages.ListChannelMessagesHandler
+	CreateChannelMessageAttachmentHandler *create_attachment.CreateChannelMessageAttachmentHandler
+	GetChannelHandler                     *get_channel.GetChannelHandler
+	DeleteChannelHandler                  *delete_channels.DeleteChannelHandler
+	ListPrivateChannelMembersHandler      *list_user_private_channel.ListPrivateChannelMembersHandler
 	// Workspace roles
 	CreateRoleHandler        *create_role.CreateRoleHandler
 	GetRoleHandler           *get_role.GetRoleHandler
@@ -152,7 +155,8 @@ type GinRouterDeps struct {
 	GetRolesForMemberHandler *get_roles_for_member.GetRolesForMemberHandler
 	CheckPermissionsHandler  *check_permissions.CheckPermissionsHandler
 	// User chat
-	ListDirectMessagesHandler *list_direct_messages.ListDirectMessagesHandler
+	ListDirectMessagesHandler         *list_direct_messages.ListDirectMessagesHandler
+	CreateChatDirectAttachmentHandler *create_attachment2.CreateChatDirectAttachmentHandler
 	// User
 	GetMyAccountHandler                      *get_my_account.GetMyUserAccountHandler
 	LoginHandler                             *login.LoginHandler
@@ -299,6 +303,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 		directChatGroup := chatGroup.Group("direct")
 		{
 			directChatGroup.GET(":other_user_id/messages", d.deps.ListDirectMessagesHandler.Handle)
+			directChatGroup.POST(":other_user_id/files", d.deps.CreateChatDirectAttachmentHandler.Handle)
 		}
 	}
 
@@ -389,6 +394,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				// TODO: add middleware to check if the user can access the channel
 				channelGroup.GET("/:channel_id", d.deps.GetChannelHandler.Handle)
 				channelGroup.GET("/:channel_id/messages", d.deps.ListChannelMessagesHandler.Handle)
+				channelGroup.POST("/:channel_id/files", d.deps.CreateChannelMessageAttachmentHandler.Handle)
 				channelGroup.Use(hasPermissionsMiddleware(entity.PermissionManageChannels))
 				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
 				channelGroup.POST("/reorder", d.deps.ReorderChannelHandler.Handle)

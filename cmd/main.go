@@ -53,6 +53,9 @@ func main() {
 			"workspaces-banners",
 			"users-avatars",
 			"messages-files",
+			"channels-attachments",
+			"chat-direct-attachments",
+			"groups-attachments",
 		}
 
 		bucketsCreated := make([]string, 0, len(bucketsToCreate))

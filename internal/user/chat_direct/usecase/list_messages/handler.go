@@ -90,11 +90,20 @@ func (h *ListDirectMessagesHandler) Handle(c *gin.Context) {
 			}
 		}
 
+		attachments := make([]DirectMessageAttachmentResponse, len(message.Attachments))
+		for k, attachment := range message.Attachments {
+			attachments[k] = DirectMessageAttachmentResponse{
+				Id:   attachment.Id.String(),
+				Name: attachment.FileName,
+			}
+		}
+
 		response[i] = DirectMessageResponse{
-			Id:        message.Id.String(),
-			Content:   message.Content,
-			CreatedAt: message.CreatedAt,
-			Reactions: reactions,
+			Id:          message.Id.String(),
+			Content:     message.Content,
+			CreatedAt:   message.CreatedAt,
+			Reactions:   reactions,
+			Attachments: attachments,
 		}
 
 		user, err := h.deps.GetUserByIdUseCase.Execute(c, message.SenderId)
@@ -117,11 +126,12 @@ func (h *ListDirectMessagesHandler) Handle(c *gin.Context) {
 }
 
 type DirectMessageResponse struct {
-	Id        string                          `json:"id"`
-	Content   string                          `json:"content"`
-	Author    DirectMessageAuthorResponse     `json:"author"`
-	CreatedAt time.Time                       `json:"createdAt"`
-	Reactions []DirectMessageReactionResponse `json:"reactions"`
+	Id          string                            `json:"id"`
+	Content     string                            `json:"content"`
+	Author      DirectMessageAuthorResponse       `json:"author"`
+	CreatedAt   time.Time                         `json:"createdAt"`
+	Reactions   []DirectMessageReactionResponse   `json:"reactions"`
+	Attachments []DirectMessageAttachmentResponse `json:"attachments"`
 }
 
 type DirectMessageAuthorResponse struct {
@@ -137,6 +147,11 @@ type DirectMessageReactionResponse struct {
 }
 
 type DirectMessageReactionUserResponse struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type DirectMessageAttachmentResponse struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }
