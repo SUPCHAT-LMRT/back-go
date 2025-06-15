@@ -408,6 +408,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				// TODO: add middleware to check if the user can access the channel
 				channelGroup.GET("/:channel_id", d.deps.GetChannelHandler.Handle)
 				channelGroup.GET("/:channel_id/messages", d.deps.ListChannelMessagesHandler.Handle)
+				channelGroup.GET("/:channel_id/mentionnable-users", d.deps.ListMentionnableUserHandler.Handle)
 				channelGroup.POST("/:channel_id/files", hasPermissionsMiddleware(entity.PermissionAttachFiles), d.deps.CreateChannelMessageAttachmentHandler.Handle)
 				channelGroup.Use(hasPermissionsMiddleware(entity.PermissionManageChannels))
 				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
@@ -416,7 +417,6 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				channelGroup.GET(
 					"/:channel_id/members",
 					d.deps.ListPrivateChannelMembersHandler.Handle)
-				channelGroup.GET("/:channel_id/mentionnable-users", d.deps.ListMentionnableUserHandler.Handle)
 			}
 
 			roleGroup := specificWorkspaceGroup.Group("/roles")
