@@ -584,7 +584,7 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 	server.Deps.EventBus.Subscribe(event.ChatDirectAttachmentSentEventType, func(evt event.Event) {
 		chatDirectAttachmentSentEvent, ok := evt.(*event.ChatDirectAttachmentSentEvent)
 		if !ok {
-			server.Deps.Logger.Error().Msg("failed to cast event to ChannelAttachmentSentEvent")
+			server.Deps.Logger.Error().Msg("failed to cast event to ChatDirectAttachmentSentEvent")
 			return
 		}
 
@@ -623,6 +623,66 @@ func NewWsServer(deps WebSocketDeps) (*WsServer, error) {
 					AttachmentFileId:   chatDirectAttachmentSentEvent.ChatDirect.Attachments[0].Id.String(),
 					AttachmentFileName: chatDirectAttachmentSentEvent.ChatDirect.Attachments[0].FileName,
 					CreatedAt:          chatDirectAttachmentSentEvent.ChatDirect.CreatedAt,
+				},
+			})
+			if err != nil {
+				logg.Error().Err(err).
+					Msg("failed to send attachment sent message to client")
+				return
+			}
+		}
+	})
+
+	server.Deps.EventBus.Subscribe(event.GroupAttachmentSentEventType, func(evt event.Event) {
+		groupAttachmentSentEvent, ok := evt.(*event.GroupAttachmentSentEvent)
+		if !ok {
+			server.Deps.Logger.Error().Msg("failed to cast event to GroupAttachmentSentEvent")
+			return
+		}
+
+		if len(groupAttachmentSentEvent.GroupChatMessage.Attachments) == 0 {
+			server.Deps.Logger.Error().Msg("groupAttachmentSentEvent has no attachments")
+			return
+		}
+
+		logg := deps.Logger.With().
+			Str("groupId", groupAttachmentSentEvent.GroupChatMessage.GroupId.String()).
+			Str("attachmentId", groupAttachmentSentEvent.GroupChatMessage.Attachments[0].Id.String()).Logger()
+
+		groupMembers, err := server.Deps.ListGroupMembersUseCase.Execute(context.Background(), groupAttachmentSentEvent.GroupChatMessage.GroupId)
+		if err != nil {
+			logg.Error().Err(err).
+				Msg("failed to list group members")
+			return
+		}
+
+		for _, groupMember := range groupMembers {
+			client := server.findClientByUserId(groupMember.UserId)
+			if client == nil {
+				logg.Warn().Str("groupMemberId", groupMember.Id.String()).
+					Str("userId", groupMember.UserId.String()).
+					Msg("client not found for user, skipping")
+				return
+			}
+
+			authorUser, err := deps.GetUserByIdUseCase.Execute(context.Background(), groupAttachmentSentEvent.GroupChatMessage.AuthorId)
+			if err != nil {
+				logg.Error().Err(err).
+					Str("userId", groupAttachmentSentEvent.GroupChatMessage.AuthorId.String()).
+					Msg("failed to get user by ID")
+				return
+			}
+
+			err = client.SendMessage(&outbound.OutboundGroupAttachmentCreated{
+				GroupId: groupAttachmentSentEvent.GroupChatMessage.GroupId,
+				Message: &outbound.OutboundGroupAttachmentCreatedMessage{
+					Id:                 groupAttachmentSentEvent.GroupChatMessage.Id.String(),
+					AuthorUserId:       authorUser.Id.String(),
+					AuthorFirstName:    authorUser.FirstName,
+					AuthorLastName:     authorUser.LastName,
+					AttachmentFileId:   groupAttachmentSentEvent.GroupChatMessage.Attachments[0].Id.String(),
+					AttachmentFileName: groupAttachmentSentEvent.GroupChatMessage.Attachments[0].FileName,
+					CreatedAt:          groupAttachmentSentEvent.GroupChatMessage.CreatedAt,
 				},
 			})
 			if err != nil {

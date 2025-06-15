@@ -3,6 +3,7 @@ package gin
 
 import (
 	"github.com/supchat-lmrt/back-go/internal/data/usecase/export_all_user_data"
+	create_attachment3 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/create_attachment"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/create_group"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/group_info"
 	"github.com/supchat-lmrt/back-go/internal/group/usecase/leave_group"
@@ -197,6 +198,7 @@ type GinRouterDeps struct {
 	KickGroupMemberHandler  *kick_member.KickGroupMemberHandler
 	// Group chat
 	ListGroupChatMessagesHandler *list_group_chat_messages.ListGroupChatMessagesHandler
+	CreateGroupAttachmentHandler *create_attachment3.CreateGroupAttachmentHandler
 	// Search
 	SearchTermHandler *search.SearchTermHandler
 	// Job
@@ -318,6 +320,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 			authMiddleware,
 			d.deps.ListGroupChatMessagesHandler.Handle,
 		)
+		groupGroup.POST("/:group_id/files", authMiddleware, d.deps.CreateGroupAttachmentHandler.Handle)
 		groupGroup.DELETE("/:group_id", authMiddleware, d.deps.LeaveGroupHandler.Handle)
 		groupGroup.DELETE("/:group_id/members", authMiddleware, d.deps.KickMemberHandler.Handle)
 	}

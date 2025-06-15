@@ -3,6 +3,7 @@ package di
 import (
 	"fmt"
 	"github.com/supchat-lmrt/back-go/internal/data/usecase/export_all_user_data"
+	create_attachment3 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/create_attachment"
 	save_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/delete_message"
 	"github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/edit_message"
 	get_last_message2 "github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/get_last_message"
@@ -595,8 +596,12 @@ func NewDi() *uberdig.Container {
 		dig.NewProvider(toggle_reaction2.NewToggleGroupChatReactionUseCase),
 		dig.NewProvider(transfer_ownership.NewTransferGroupOwnershipUseCase),
 		dig.NewProvider(transfer_ownership.NewNotifyTransferGroupOwnershipObserver, uberdig.Group("transfer_group_ownership_observers")),
+		dig.NewProvider(create_attachment3.NewCreateGroupAttachmentUseCase),
+		dig.NewProvider(create_attachment3.NewS3FileUploadStrategy),
+		dig.NewProvider(create_attachment3.NewNotifyWebsocketObserver, uberdig.Group("create_group_attachment_observer")),
 		// Group chats handlers
 		dig.NewProvider(list_group_chat_messages.NewListGroupChatMessagesHandler),
+		dig.NewProvider(create_attachment3.NewCreateGroupAttachmentHandler),
 		// Search
 		// Search usecases
 		dig.NewProvider(search.NewSearchTermUseCase),

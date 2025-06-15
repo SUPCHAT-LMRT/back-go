@@ -84,12 +84,21 @@ func (h *ListGroupChatMessagesHandler) Handle(c *gin.Context) {
 			}
 		}
 
+		attachments := make([]GroupMessageAttachmentResponse, len(message.Attachments))
+		for k, attachment := range message.Attachments {
+			attachments[k] = GroupMessageAttachmentResponse{
+				Id:   attachment.Id.String(),
+				Name: attachment.FileName,
+			}
+		}
+
 		response[i] = GroupChatMessageResponse{
-			Id:        message.Id.String(),
-			GroupId:   message.GroupId.String(),
-			Content:   message.Content,
-			Reactions: reactions,
-			CreatedAt: message.CreatedAt,
+			Id:          message.Id.String(),
+			GroupId:     message.GroupId.String(),
+			Content:     message.Content,
+			Reactions:   reactions,
+			Attachments: attachments,
+			CreatedAt:   message.CreatedAt,
 		}
 
 		user, err := h.deps.GetUserByIdUseCase.Execute(c, message.AuthorId)
@@ -112,12 +121,13 @@ func (h *ListGroupChatMessagesHandler) Handle(c *gin.Context) {
 }
 
 type GroupChatMessageResponse struct {
-	Id        string                         `json:"id"`
-	GroupId   string                         `json:"groupId"`
-	Content   string                         `json:"content"`
-	Author    GroupMessageAuthorResponse     `json:"author"`
-	Reactions []GroupMessageReactionResponse `json:"reactions"`
-	CreatedAt time.Time                      `json:"createdAt"`
+	Id          string                           `json:"id"`
+	GroupId     string                           `json:"groupId"`
+	Content     string                           `json:"content"`
+	Author      GroupMessageAuthorResponse       `json:"author"`
+	Reactions   []GroupMessageReactionResponse   `json:"reactions"`
+	Attachments []GroupMessageAttachmentResponse `json:"attachments"`
+	CreatedAt   time.Time                        `json:"createdAt"`
 }
 
 type GroupMessageAuthorResponse struct {
@@ -133,6 +143,11 @@ type GroupMessageReactionResponse struct {
 }
 
 type GroupMessageReactionUserResponse struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type GroupMessageAttachmentResponse struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }

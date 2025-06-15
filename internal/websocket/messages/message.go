@@ -27,6 +27,7 @@ const (
 	OutboundChannelMessageContentEditedAction     Action = "channel-message-content-edited"
 	OutboundChannelMessageAttachmentCreatedAction Action = "channel-message-attachment-created"
 	OutboundDirectMessageAttachmentCreatedAction  Action = "direct-attachment-created"
+	OutboundGroupMessageAttachmentCreatedAction   Action = "group-attachment-created"
 	OutboundDirectMessageContentEditedAction      Action = "direct-message-content-edited"
 	OutboundGroupOwnershipTransferredAction       Action = "group-ownership-transferred"
 	OutboundGroupMessageDeletedAction             Action = "group-message-deleted"
