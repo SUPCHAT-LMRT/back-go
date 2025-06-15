@@ -2,6 +2,7 @@ package save_message
 
 import (
 	"context"
+	"fmt"
 	"github.com/supchat-lmrt/back-go/internal/logger"
 	"github.com/supchat-lmrt/back-go/internal/mention/usecase/extract_mentions"
 	"github.com/supchat-lmrt/back-go/internal/user/usecase/get_by_id"
@@ -30,10 +31,12 @@ func NewGetMentionObserver(deps GetMentionObserverDeps) MessageSavedObserver {
 }
 
 func (o GetMentionObserver) NotifyMessageSaved(msg *entity.ChannelMessage) {
+	fmt.Println("1")
 	userIds := o.deps.ExtractMentionsUseCase.Execute(msg.Content)
 	if len(userIds) == 0 {
 		return
 	}
+	fmt.Println("2")
 
 	sender, err := o.deps.GetUserByIdUseCase.Execute(context.Background(), msg.AuthorId)
 	if err != nil {
@@ -43,6 +46,7 @@ func (o GetMentionObserver) NotifyMessageSaved(msg *entity.ChannelMessage) {
 		return
 	}
 
+	fmt.Println("3")
 	channel, err := o.deps.GetChannelUseCase.Execute(context.Background(), msg.ChannelId)
 	if err != nil {
 		o.deps.Logger.Error().
@@ -51,12 +55,14 @@ func (o GetMentionObserver) NotifyMessageSaved(msg *entity.ChannelMessage) {
 		return
 	}
 
+	fmt.Println("4")
 	for _, userId := range userIds {
 		mentionnedUserId := userId
 		if userId == msg.AuthorId {
 			continue
 		}
 
+		fmt.Println("5")
 		err = o.deps.SendMessageNotificationUseCase.Execute(
 			context.Background(),
 			send_notification.SendMessageNotificationRequest{

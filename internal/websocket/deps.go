@@ -17,6 +17,7 @@ import (
 	"github.com/supchat-lmrt/back-go/internal/workspace/channel/usecase/get_channel"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/get_workpace_member"
 	"github.com/supchat-lmrt/back-go/internal/workspace/member/usecase/is_user_in_workspace"
+	"github.com/supchat-lmrt/back-go/internal/workspace/roles/usecase/permissions"
 	uberdig "go.uber.org/dig"
 )
 
@@ -47,4 +48,5 @@ type WebSocketDeps struct {
 	ListGroupMembersUseCase             *list_members.ListGroupMembersUseCase
 	GetMemberByUserUseCase              *get_member_by_user.GetMemberByUserUseCase
 	GetPublicStatusUseCase              *get_public_status.GetPublicStatusUseCase
+	CheckPermissionUseCase              *permissions.CheckPermissionUseCase
 }

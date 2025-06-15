@@ -5,6 +5,8 @@ import (
 	"fmt"
 	group_chat_entity "github.com/supchat-lmrt/back-go/internal/group/chat_message/entity"
 	"github.com/supchat-lmrt/back-go/internal/group/chat_message/usecase/toggle_reaction"
+	workspace_entity "github.com/supchat-lmrt/back-go/internal/workspace/entity"
+	entity2 "github.com/supchat-lmrt/back-go/internal/workspace/roles/entity"
 	"log"
 	"reflect"
 	"strings"
@@ -112,7 +114,6 @@ func (c *Client) HandleNewMessage(jsonMessage []byte) {
 			log.Printf("Error on unmarshal JSON message %s %s", err, string(jsonMessage))
 			return
 		}
-
 		c.handleSendMessageToChannel(&sendMessage)
 	case messages.InboundSendDirectMessageAction:
 		sendMessage := inbound.InboundSendDirectMessage{DefaultMessage: message}
@@ -235,9 +236,22 @@ func (c *Client) handleSendMessageToChannel(message *inbound.InboundSendMessageT
 		return
 	}
 
-	channelSender, err := c.toOutboundSendChannelMessageSender(roomId)
+	channelSender, workspaceId, err := c.toOutboundSendChannelMessageSender(roomId)
 	if err != nil {
 		c.wsServer.Deps.Logger.Error().Err(err).Msg("Error on creating sender")
+		return
+	}
+	hasPermission, err := c.wsServer.Deps.CheckPermissionUseCase.Execute(context.Background(), channelSender.WorkspaceMemberId, workspaceId, entity2.PermissionSendMessages)
+	if err != nil {
+		c.wsServer.Deps.Logger.Error().Err(err).Msg("Error checking permission")
+		return
+	}
+
+	if !hasPermission {
+		c.wsServer.Deps.Logger.Debug().
+			Str("userId", c.UserId.String()).
+			Str("channelId", roomId).
+			Msg("User does not have permission to send messages in this channel")
 		return
 	}
 
@@ -905,14 +919,14 @@ func (c *Client) disconnect() {
 
 func (c *Client) toOutboundSendChannelMessageSender(
 	roomId string,
-) (*outbound.OutboundSendMessageToChannelSender, error) {
+) (*outbound.OutboundSendMessageToChannelSender, workspace_entity.WorkspaceId, error) {
 	// The room id is the channel id
 	channel, err := c.wsServer.Deps.GetChannelUseCase.Execute(
 		context.Background(),
 		channel_entity.ChannelId(roomId),
 	)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	workspaceMember, err := c.wsServer.Deps.GetWorkspaceMemberUseCase.Execute(
@@ -921,19 +935,19 @@ func (c *Client) toOutboundSendChannelMessageSender(
 		c.UserId,
 	)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	user, err := c.wsServer.Deps.GetUserByIdUseCase.Execute(context.Background(), c.UserId)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	return &outbound.OutboundSendMessageToChannelSender{
 		UserId:            user.Id,
 		Pseudo:            user.FullName(),
 		WorkspaceMemberId: workspaceMember.Id,
-	}, nil
+	}, channel.WorkspaceId, nil
 }
 
 func (c *Client) toOutboundChannelMessageReactionMember(

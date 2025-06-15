@@ -408,7 +408,7 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 				// TODO: add middleware to check if the user can access the channel
 				channelGroup.GET("/:channel_id", d.deps.GetChannelHandler.Handle)
 				channelGroup.GET("/:channel_id/messages", d.deps.ListChannelMessagesHandler.Handle)
-				channelGroup.POST("/:channel_id/files", d.deps.CreateChannelMessageAttachmentHandler.Handle)
+				channelGroup.POST("/:channel_id/files", hasPermissionsMiddleware(entity.PermissionAttachFiles), d.deps.CreateChannelMessageAttachmentHandler.Handle)
 				channelGroup.Use(hasPermissionsMiddleware(entity.PermissionManageChannels))
 				channelGroup.POST("", d.deps.CreateChannelHandler.Handle)
 				channelGroup.POST("/reorder", d.deps.ReorderChannelHandler.Handle)
