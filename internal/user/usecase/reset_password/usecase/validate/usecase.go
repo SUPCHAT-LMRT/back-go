@@ -33,8 +33,6 @@ func (u *ValidateResetPasswordUseCase) Execute(
 		return err
 	}
 
-	// TODO: call observers here (ex: SendEmailObserver)
-
 	err = u.updatePasswordUseCase.Execute(ctx, user, password)
 	if err != nil {
 		return err
