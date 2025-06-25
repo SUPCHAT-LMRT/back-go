@@ -14,6 +14,7 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -472,7 +473,20 @@ func (d *DefaultGinRouter) RegisterRoutes() {
 
 func (d *DefaultGinRouter) AddCorsHeaders() {
 	d.Router.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", os.Getenv("CORS_ORIGIN"))
+		corsOrigin := os.Getenv("CORS_ORIGIN")
+		origins := strings.Split(corsOrigin, ",")
+		origin := c.Request.Header.Get("Origin")
+		allowed := false
+		for _, o := range origins {
+			if strings.TrimSpace(o) == origin {
+				allowed = true
+				break
+			}
+		}
+		if allowed {
+			c.Header("Access-Control-Allow-Origin", origin)
+		}
+		c.Header("Vary", "Origin")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		c.Header(
 			"Access-Control-Allow-Headers",
